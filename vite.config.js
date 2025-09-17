@@ -16,19 +16,15 @@ VitePWA({
         theme_color: '#667eea',
         background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'portrait',
+        orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: '/icons/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            src: '/icons/icon-144x144.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       }
@@ -47,7 +43,6 @@ VitePWA({
     }
   },
   server: {
-    https: true,
     port: 3000,
     host: true
   },

@@ -84,9 +84,8 @@ export const PHOTO_MODES = {
 export const CAMERA_CONSTRAINTS = {
   video: {
     facingMode: 'environment', // Use back camera by default
-    width: { ideal: 1280, max: 1920 },
-    height: { ideal: 960, max: 1440 },
-    aspectRatio: { ideal: 4/3 }
+    width: { ideal: 1280 },
+    height: { ideal: 960 }
   },
   audio: false
 };
