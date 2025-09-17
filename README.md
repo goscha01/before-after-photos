@@ -287,6 +287,33 @@ The architecture is designed for easy React Native conversion:
 - Styling: CSS → StyleSheet
 - File uploads: fetch → Expo FileSystem
 
+## 🚀 Deployment
+
+### Vercel Deployment
+
+The app is configured for easy Vercel deployment:
+
+1. **Push to GitHub** (or your preferred Git provider)
+2. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Import your repository
+   - Vercel will automatically detect it as a Vite project
+
+3. **Environment Variables** (in Vercel dashboard):
+   ```
+   VITE_GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
+   VITE_APP_NAME=Cleaning Photo App
+   VITE_VERSION=1.0.0
+   ```
+
+4. **Deploy**: Vercel will build and deploy automatically
+
+### Other Platforms
+
+- **Netlify**: Drag and drop the `dist` folder after running `npm run build`
+- **GitHub Pages**: Use GitHub Actions with the build output
+- **Firebase Hosting**: Use `firebase deploy` with the `dist` folder
+
 ## 🐛 Troubleshooting
 
 ### Camera Issues
@@ -298,6 +325,11 @@ The architecture is designed for easy React Native conversion:
 - **"Upload failed"**: Check Google Apps Script URL in .env
 - **"Network error"**: Photos queue for retry when online
 - **"Script error"**: Verify Google Apps Script deployment
+
+### Deployment Issues
+- **Vercel "Permission denied"**: Ensure `vercel.json` is present and `vercel-build` script exists
+- **Build fails on Vercel**: Check Node.js version compatibility (requires Node 18+)
+- **Environment variables**: Set all `VITE_*` variables in Vercel dashboard, not in code
 
 ### Performance
 - **Slow loading**: Check image compression settings
