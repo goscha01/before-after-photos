@@ -139,7 +139,57 @@
       console.log('🚀 Debug: About to load main.jsx');
     </script>
     
+    <!-- Simple JavaScript test -->
+    <script>
+      console.log('🧪 Debug: Testing basic JavaScript...');
+      
+      // Test if we can create DOM elements
+      try {
+        const testDiv = document.createElement('div');
+        testDiv.innerHTML = '<div style="color: green;">✅ Basic JavaScript Works!</div>';
+        document.getElementById('debug-info').appendChild(testDiv);
+        console.log('✅ Debug: Basic JavaScript works');
+      } catch (e) {
+        console.log('❌ Debug: Basic JavaScript failed:', e);
+      }
+      
+      // Test if we can fetch (for checking if the app files exist)
+      fetch('/src/main.jsx')
+        .then(response => {
+          console.log('✅ Debug: main.jsx file exists, status:', response.status);
+          if (response.status === 200) {
+            document.getElementById('debug-info').innerHTML += '<div style="color: green;">✅ main.jsx file exists</div>';
+          } else {
+            document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ main.jsx file not found (status: ' + response.status + ')</div>';
+          }
+        })
+        .catch(error => {
+          console.log('❌ Debug: Cannot fetch main.jsx:', error);
+          document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ Cannot fetch main.jsx: ' + error.message + '</div>';
+        });
+    </script>
+    
+    <!-- Try ES6 module first -->
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Fallback for browsers that don't support ES6 modules -->
+    <script nomodule>
+      console.log('❌ Debug: ES6 modules not supported, using fallback');
+      document.getElementById('debug-info').innerHTML += '<div style="color: orange;">⚠️ ES6 modules not supported</div>';
+      
+      // Show a simple message instead of React app
+      setTimeout(() => {
+        document.getElementById('root').innerHTML = `
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+            <h1>🚫 Browser Compatibility Issue</h1>
+            <p>Your browser doesn't support ES6 modules, which are required for this app.</p>
+            <p>Please update your browser or try a different browser.</p>
+            <p style="color: #666; font-size: 14px;">iOS Safari 10.3+ is required for ES6 module support.</p>
+          </div>
+        `;
+      }, 2000);
+    </script>
+    
     <script>
       // This will run after main.jsx loads (if it loads)
       console.log('✅ Debug: main.jsx script tag processed');
