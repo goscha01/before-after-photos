@@ -406,28 +406,28 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
                 <video id="camera-video" autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>
                 
-                <!-- Top overlay controls -->
-                <div style="position: absolute; top: 0; left: 0; right: 0; padding: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
-                  <!-- Camera switch button -->
-                  <button id="switch-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
-                    🔄
-                  </button>
-                  
-                  <!-- Video switcher button -->
-                  <button id="video-switcher-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
-                    📹
-                  </button>
-                  
-                  <!-- Close button -->
+                <!-- Top overlay - only close button -->
+                <div style="position: absolute; top: 0; right: 0; padding: 20px;">
                   <button id="close-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
                     ❌
                   </button>
                 </div>
                 
                 <!-- Bottom overlay controls -->
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; display: flex; justify-content: center;">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; display: flex; justify-content: center; align-items: center; gap: 20px;">
+                  <!-- Camera switch button -->
+                  <button id="switch-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
+                    🔄
+                  </button>
+                  
+                  <!-- Capture button -->
                   <button id="capture-btn" style="background: #10b981; color: white; border: none; padding: 20px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
                     📸
+                  </button>
+                  
+                  <!-- Video switcher button -->
+                  <button id="video-switcher-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
+                    📹
                   </button>
                 </div>
               </div>
@@ -440,6 +440,10 @@
             
             // Initialize in photo mode
             video.setAttribute('data-mode', 'photo');
+            
+            // Set initial button states for photo mode
+            document.getElementById('video-switcher-btn').textContent = '📹';
+            document.getElementById('capture-btn').textContent = '📸';
             
             // Store current facing mode
             let currentFacingMode = 'environment'; // Start with back camera
