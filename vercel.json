@@ -1,6 +1,15 @@
 {
   "routes": [
     {
+      "src": "/manifest.json",
+      "headers": { "Content-Type": "application/json" },
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/icons/(.*)",
+      "dest": "/icons/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
