@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import '@styles/global.css';
 
 // Import screens
+import DebugScreen from '@screens/DebugScreen';
 import LoginScreen from '@screens/LoginScreen';
 import PropertySelectionScreen from '@screens/PropertySelectionScreen';
 import PhotoCaptureScreen from '@screens/PhotoCaptureScreen';
@@ -16,12 +17,18 @@ import UploadStatusScreen from '@screens/UploadStatusScreen';
 import useAppStore from '@store/useAppStore';
 
 function App() {
+  console.log('🚀 Debug: App component loaded');
+  
   const { isAuthenticated } = useAppStore();
+  console.log('🚀 Debug: Store loaded, isAuthenticated:', isAuthenticated);
 
   return (
     <Router>
       <div className="App">
         <Routes>
+          {/* Debug route - always accessible */}
+          <Route path="/debug" element={<DebugScreen />} />
+
           {/* Public routes */}
           <Route path="/login" element={<LoginScreen />} />
 
@@ -42,13 +49,13 @@ function App() {
           {/* Default redirect */}
           <Route
             path="/"
-            element={<Navigate to={isAuthenticated ? "/properties" : "/login"} replace />}
+            element={<Navigate to="/debug" replace />}
           />
 
           {/* 404 fallback */}
           <Route
             path="*"
-            element={<Navigate to={isAuthenticated ? "/properties" : "/login"} replace />}
+            element={<Navigate to="/debug" replace />}
           />
         </Routes>
 

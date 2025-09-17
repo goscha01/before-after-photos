@@ -68,6 +68,20 @@
       #root:not(:empty) + .loading-container {
         display: none;
       }
+
+      /* Debug info */
+      .debug-info {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 10000;
+        max-width: 300px;
+      }
     </style>
   </head>
   <body>
@@ -75,6 +89,35 @@
     <div class="loading-container">
       <div class="loading-spinner"></div>
     </div>
+    
+    <!-- Debug info -->
+    <div class="debug-info" id="debug-info">
+      <div>🚀 HTML Loaded</div>
+      <div>📱 User Agent: <span id="user-agent">Loading...</span></div>
+      <div>🌐 Location: <span id="location">Loading...</span></div>
+      <div>⏰ Time: <span id="time">Loading...</span></div>
+    </div>
+    
+    <script>
+      // Basic debug info
+      console.log('🚀 Debug: HTML loaded');
+      console.log('🚀 Debug: User Agent:', navigator.userAgent);
+      console.log('🚀 Debug: Location:', window.location.href);
+      
+      // Update debug info
+      document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+      document.getElementById('location').textContent = window.location.href;
+      document.getElementById('time').textContent = new Date().toLocaleTimeString();
+      
+      // Check if we're on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      console.log('🚀 Debug: Is iOS:', isIOS);
+      
+      if (isIOS) {
+        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">🍎 iOS Detected</div>';
+      }
+    </script>
+    
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
