@@ -402,9 +402,14 @@
             `;
             
             modal.innerHTML = `
-              <!-- Fullscreen video with overlay controls -->
+              <!-- Fullscreen photo camera -->
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
-                <video id="camera-video" autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                
+                <!-- Photo frame overlay -->
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                </div>
                 
                 <!-- Top overlay - only close button -->
                 <div style="position: absolute; top: 0; right: 0; padding: 20px;">
@@ -424,11 +429,6 @@
                   <button id="capture-btn" style="background: #10b981; color: white; border: none; padding: 20px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
                     📸
                   </button>
-                  
-                  <!-- Video switcher button -->
-                  <button id="video-switcher-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
-                    📹
-                  </button>
                 </div>
               </div>
             `;
@@ -437,13 +437,6 @@
             
             const video = document.getElementById('camera-video');
             video.srcObject = stream;
-            
-            // Initialize in photo mode
-            video.setAttribute('data-mode', 'photo');
-            
-            // Set initial button states for photo mode
-            document.getElementById('video-switcher-btn').textContent = '📹';
-            document.getElementById('capture-btn').textContent = '📸';
             
             // Store current facing mode
             let currentFacingMode = 'environment'; // Start with back camera
@@ -478,44 +471,6 @@
               }
             });
             
-            // Video switcher functionality
-            document.getElementById('video-switcher-btn').addEventListener('click', async () => {
-              try {
-                // Stop current stream
-                stream.getTracks().forEach(track => track.stop());
-                
-                // Switch between photo and video mode
-                const isVideoMode = video.getAttribute('data-mode') === 'video';
-                
-                if (isVideoMode) {
-                  // Switch to photo mode
-                  video.setAttribute('data-mode', 'photo');
-                  document.getElementById('video-switcher-btn').textContent = '📹';
-                  document.getElementById('capture-btn').textContent = '📸';
-                } else {
-                  // Switch to video mode
-                  video.setAttribute('data-mode', 'video');
-                  document.getElementById('video-switcher-btn').textContent = '📸';
-                  document.getElementById('capture-btn').textContent = '🎥';
-                }
-                
-                // Get new stream
-                const newStream = await navigator.mediaDevices.getUserMedia({ 
-                  video: { facingMode: currentFacingMode }
-                });
-                
-                // Update video source
-                video.srcObject = newStream;
-                
-                // Update the stream reference
-                stream = newStream;
-                
-                console.log('Switched to', isVideoMode ? 'photo' : 'video', 'mode');
-              } catch (error) {
-                console.log('Mode switch failed:', error);
-                alert('Mode switch failed: ' + error.message);
-              }
-            });
             
             document.getElementById('close-camera-btn').addEventListener('click', () => {
               stream.getTracks().forEach(track => track.stop());
