@@ -135,6 +135,25 @@
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ JS Error: ' + e.error.message + '</div>';
       });
       
+      // Check for unhandled promise rejections
+      window.addEventListener('unhandledrejection', (e) => {
+        console.log('❌ Debug: Unhandled promise rejection:', e.reason);
+        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ Promise Error: ' + e.reason + '</div>';
+      });
+      
+      // Monitor script loading
+      const scripts = document.querySelectorAll('script[type="module"]');
+      scripts.forEach((script, index) => {
+        script.addEventListener('load', () => {
+          console.log('✅ Debug: Script ' + index + ' loaded successfully');
+          document.getElementById('debug-info').innerHTML += '<div style="color: green;">✅ Script ' + index + ' loaded</div>';
+        });
+        script.addEventListener('error', (e) => {
+          console.log('❌ Debug: Script ' + index + ' failed to load:', e);
+          document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ Script ' + index + ' failed: ' + e.message + '</div>';
+        });
+      });
+      
       // Check if main.jsx loads
       console.log('🚀 Debug: About to load main.jsx');
     </script>
@@ -168,6 +187,9 @@
           document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ Cannot fetch main.jsx: ' + error.message + '</div>';
         });
     </script>
+    
+    <!-- Try minimal test first -->
+    <script type="module" src="/src/test-minimal.jsx"></script>
     
     <!-- Try ES6 module first -->
     <script type="module" src="/src/main.jsx"></script>
