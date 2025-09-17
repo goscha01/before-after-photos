@@ -188,6 +188,25 @@
         });
     </script>
     
+    <!-- Try a very simple inline test first -->
+    <script>
+      console.log('🧪 Debug: Inline script starting...');
+      try {
+        const root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Inline Script Works!</h1><p>JavaScript is executing on iPhone!</p></div>';
+          console.log('✅ Debug: Inline script successful');
+        } else {
+          console.log('❌ Debug: Root element not found in inline script');
+        }
+      } catch (e) {
+        console.log('❌ Debug: Inline script error:', e);
+      }
+    </script>
+    
+    <!-- Try vanilla JS first -->
+    <script type="module" src="/src/main-vanilla.js"></script>
+    
     <!-- Try minimal test first -->
     <script type="module" src="/src/test-minimal.jsx"></script>
     
