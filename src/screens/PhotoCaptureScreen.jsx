@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Upload, ArrowLeft, Grid3X3, Eye, EyeOff } from 'lucide-react';
+import { Upload, ArrowLeft, Grid, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Container, { ScreenContainer } from '@components/Layout/Container';
 import Header from '@components/Layout/Header';

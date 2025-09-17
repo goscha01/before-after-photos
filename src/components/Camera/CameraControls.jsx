@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, RotateCcw, Zap, ZapOff, Grid3X3, Eye, EyeOff, Settings } from 'lucide-react';
+import { Camera, RotateCcw, Zap, ZapOff, Grid, Eye, EyeOff, Settings } from 'lucide-react';
 import Button from '@components/UI/Button';
 
 const CameraControls = ({
@@ -50,7 +50,7 @@ const CameraControls = ({
         <Button
           variant="ghost"
           size="small"
-          icon={Grid3X3}
+          icon={Grid}
           onClick={onToggleGrid}
           disabled={disabled}
           className={`text-white hover:bg-white hover:bg-opacity-20 ${

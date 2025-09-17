@@ -394,13 +394,13 @@ export const validateUploadData = (uploadData) => {
 
     uploadData.photos.forEach((photo, index) => {
       if (!photo.data) {
-        errors.push(\`Photo \${index + 1} is missing data\`);
+        errors.push(`Photo ${index + 1} is missing data`);
       }
       if (!photo.room) {
-        errors.push(\`Photo \${index + 1} is missing room information\`);
+        errors.push(`Photo ${index + 1} is missing room information`);
       }
       if (!photo.type) {
-        errors.push(\`Photo \${index + 1} is missing type information\`);
+        errors.push(`Photo ${index + 1} is missing type information`);
       }
     });
   }
