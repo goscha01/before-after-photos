@@ -441,47 +441,180 @@
           });
         }
         
-        showPhotoFullscreen(photo) {
+        async showPhotoFullscreen(photo) {
           const modal = document.createElement('div');
           modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
             background: rgba(0,0,0,0.95); z-index: 2000; display: flex; 
-            flex-direction: column; align-items: center; justify-content: center;
+            flex-direction: column;
           `;
           
-          modal.innerHTML = `
-            <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
-              <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: cover;" />
-              
-              <!-- Photo info overlay -->
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
-                <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">
-                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+          if (photo.mode === 'before') {
+            // Split screen: before photo on top, camera on bottom
+            modal.innerHTML = `
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
+                <!-- Before photo (top half) -->
+                <div style="position: relative; width: 100%; height: 50%; background: black;">
+                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  
+                  <!-- Photo info overlay -->
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 20px; text-align: center; color: white;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
+                      ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - BEFORE
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                      ${new Date(photo.timestamp).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
-                <div style="font-size: 16px; opacity: 0.9;">
-                  ${new Date(photo.timestamp).toLocaleString()}
+                
+                <!-- Camera (bottom half) -->
+                <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
+                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  
+                  <!-- Photo frame overlay for camera -->
+                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  </div>
+                  
+                  <!-- Camera controls -->
+                  <div style="position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 20px;">
+                    <!-- Camera switch button -->
+                    <button id="comparison-switch-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 12px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px);">
+                      🔄
+                    </button>
+                    
+                    <!-- Capture button -->
+                    <button id="comparison-capture-btn" style="background: #10b981; color: white; border: none; padding: 18px; border-radius: 50%; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                      📸
+                    </button>
+                  </div>
                 </div>
+                
+                <!-- Close button -->
+                <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 24px; cursor: pointer; backdrop-filter: blur(10px);">
+                  ❌
+                </button>
               </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Initialize camera for comparison
+            try {
+              let stream;
+              try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                  video: { facingMode: 'environment' } // Default to back camera
+                });
+              } catch (backCameraError) {
+                console.log('Back camera not available, trying any camera:', backCameraError);
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              }
               
-              <!-- Close button -->
-              <button id="close-photo-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 24px; cursor: pointer; backdrop-filter: blur(10px);">
-                ❌
-              </button>
-            </div>
-          `;
-          
-          document.body.appendChild(modal);
-          
-          document.getElementById('close-photo-btn').addEventListener('click', () => {
-            document.body.removeChild(modal);
-          });
-          
-          // Close on background click
-          modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+              const video = document.getElementById('comparison-camera');
+              video.srcObject = stream;
+              
+              let currentFacingMode = 'environment';
+              
+              // Capture button
+              document.getElementById('comparison-capture-btn').addEventListener('click', () => {
+                this.captureComparisonPhoto(video, stream, photo);
+              });
+              
+              // Camera switch button
+              document.getElementById('comparison-switch-camera-btn').addEventListener('click', async () => {
+                try {
+                  stream.getTracks().forEach(track => track.stop());
+                  currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                  const newStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: currentFacingMode }
+                  });
+                  video.srcObject = newStream;
+                  stream = newStream;
+                } catch (error) {
+                  console.log('Camera switch failed:', error);
+                  alert('Camera switch failed: ' + error.message);
+                }
+              });
+              
+              // Close button
+              document.getElementById('close-comparison-btn').addEventListener('click', () => {
+                stream.getTracks().forEach(track => track.stop());
+                document.body.removeChild(modal);
+              });
+              
+            } catch (error) {
+              alert('Camera access denied or failed: ' + error.message);
               document.body.removeChild(modal);
             }
-          });
+            
+          } else {
+            // Regular fullscreen for after photos
+            modal.innerHTML = `
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
+                <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: cover;" />
+                
+                <!-- Photo info overlay -->
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
+                  <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">
+                    ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+                  </div>
+                  <div style="font-size: 16px; opacity: 0.9;">
+                    ${new Date(photo.timestamp).toLocaleString()}
+                  </div>
+                </div>
+                
+                <!-- Close button -->
+                <button id="close-photo-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 24px; cursor: pointer; backdrop-filter: blur(10px);">
+                  ❌
+                </button>
+              </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('close-photo-btn').addEventListener('click', () => {
+              document.body.removeChild(modal);
+            });
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+              if (e.target === modal) {
+                document.body.removeChild(modal);
+              }
+            });
+          }
+        }
+        
+        captureComparisonPhoto(video, stream, beforePhoto) {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          ctx.drawImage(video, 0, 0);
+          
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          
+          const afterPhoto = {
+            id: Date.now(),
+            dataUrl: dataUrl,
+            room: beforePhoto.room,
+            mode: 'after',
+            timestamp: Date.now()
+          };
+          
+          this.photos.push(afterPhoto);
+          this.savePhotos();
+          
+          // Close the comparison view and refresh the app
+          stream.getTracks().forEach(track => track.stop());
+          document.body.removeChild(document.querySelector('[style*="position: fixed"]'));
+          this.init();
+          
+          alert(`After photo captured for ${beforePhoto.room}!`);
         }
         
         async openCamera() {
