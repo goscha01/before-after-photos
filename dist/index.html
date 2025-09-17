@@ -413,6 +413,11 @@
                     🔄
                   </button>
                   
+                  <!-- Video switcher button -->
+                  <button id="video-switcher-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
+                    📹
+                  </button>
+                  
                   <!-- Close button -->
                   <button id="close-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
                     ❌
@@ -432,6 +437,9 @@
             
             const video = document.getElementById('camera-video');
             video.srcObject = stream;
+            
+            // Initialize in photo mode
+            video.setAttribute('data-mode', 'photo');
             
             // Store current facing mode
             let currentFacingMode = 'environment'; // Start with back camera
@@ -463,6 +471,45 @@
               } catch (error) {
                 console.log('Camera switch failed:', error);
                 alert('Camera switch failed: ' + error.message);
+              }
+            });
+            
+            // Video switcher functionality
+            document.getElementById('video-switcher-btn').addEventListener('click', async () => {
+              try {
+                // Stop current stream
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Switch between photo and video mode
+                const isVideoMode = video.getAttribute('data-mode') === 'video';
+                
+                if (isVideoMode) {
+                  // Switch to photo mode
+                  video.setAttribute('data-mode', 'photo');
+                  document.getElementById('video-switcher-btn').textContent = '📹';
+                  document.getElementById('capture-btn').textContent = '📸';
+                } else {
+                  // Switch to video mode
+                  video.setAttribute('data-mode', 'video');
+                  document.getElementById('video-switcher-btn').textContent = '📸';
+                  document.getElementById('capture-btn').textContent = '🎥';
+                }
+                
+                // Get new stream
+                const newStream = await navigator.mediaDevices.getUserMedia({ 
+                  video: { facingMode: currentFacingMode }
+                });
+                
+                // Update video source
+                video.srcObject = newStream;
+                
+                // Update the stream reference
+                stream = newStream;
+                
+                console.log('Switched to', isVideoMode ? 'photo' : 'video', 'mode');
+              } catch (error) {
+                console.log('Mode switch failed:', error);
+                alert('Mode switch failed: ' + error.message);
               }
             });
             
