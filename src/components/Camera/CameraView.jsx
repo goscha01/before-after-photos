@@ -11,7 +11,8 @@ const CameraView = ({
   onError,
   className = '',
   showControls = true,
-  autoStart = true
+  autoStart = true,
+  fallbackOnError = true
 }) => {
   const canvasRef = useRef(null);
   const [isFlashOn, setIsFlashOn] = useState(false);
@@ -32,10 +33,18 @@ const CameraView = ({
     canTakePhoto
   } = useCamera();
 
-  // Initialize camera on mount
+  // Initialize camera on mount with delay for iOS compatibility
   useEffect(() => {
     if (autoStart) {
-      initializeCamera();
+      // Add a small delay to ensure DOM is ready, especially important for iOS
+      const timer = setTimeout(() => {
+        initializeCamera();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+        stopCamera();
+      };
     }
 
     // Cleanup on unmount
@@ -122,7 +131,7 @@ const CameraView = ({
             icon={CameraOff}
             className="bg-red-900 border-red-700 text-white"
           >
-            <div className="mt-3">
+            <div className="mt-3 space-y-2">
               <Button
                 variant="outline"
                 size="small"
@@ -131,6 +140,19 @@ const CameraView = ({
               >
                 Try Again
               </Button>
+              {fallbackOnError && (
+                <div className="text-center">
+                  <p className="text-sm opacity-75 mb-2">Camera not available?</p>
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    onClick={() => onPhotoCapture && onPhotoCapture(null)}
+                    className="text-white hover:bg-white hover:text-red-900"
+                  >
+                    Continue Without Camera
+                  </Button>
+                </div>
+              )}
             </div>
           </StatusMessage>
         </div>

@@ -38,6 +38,15 @@ const useCamera = () => {
         }
       };
 
+      // iOS Safari compatibility: remove constraints that might cause issues
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // Simplify constraints for iOS Safari
+        constraints.video = {
+          facingMode: facingMode,
+          ...customConstraints.video
+        };
+      }
+
       // Get user media stream
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
 
