@@ -116,8 +116,33 @@
       if (isIOS) {
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">🍎 iOS Detected</div>';
       }
+      
+      // Check if React loads
+      let reactLoadTimer = setTimeout(() => {
+        console.log('❌ Debug: React failed to load within 10 seconds');
+        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ React Failed to Load</div>';
+      }, 10000);
+      
+      // Clear timer when React loads
+      window.addEventListener('load', () => {
+        clearTimeout(reactLoadTimer);
+        console.log('✅ Debug: Page fully loaded');
+      });
+      
+      // Check for React errors
+      window.addEventListener('error', (e) => {
+        console.log('❌ Debug: JavaScript error:', e.error);
+        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ JS Error: ' + e.error.message + '</div>';
+      });
+      
+      // Check if main.jsx loads
+      console.log('🚀 Debug: About to load main.jsx');
     </script>
     
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // This will run after main.jsx loads (if it loads)
+      console.log('✅ Debug: main.jsx script tag processed');
+    </script>
   </body>
 </html>
