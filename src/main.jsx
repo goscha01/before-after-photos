@@ -1,8 +1,10 @@
+console.log('🚀 Debug: main.jsx starting...');
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 
-console.log('🚀 Debug: Bundled React app starting...');
+console.log('🚀 Debug: Imports loaded successfully');
 
 // Test basic functionality first
 try {

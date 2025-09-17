@@ -51,7 +51,7 @@ VitePWA({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        format: 'iife', // Use IIFE instead of ES modules
+        format: 'es', // Keep ES format but bundle everything
         manualChunks: undefined, // Don't split into chunks
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',

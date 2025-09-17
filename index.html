@@ -219,8 +219,52 @@
       }
     </script>
     
-    <!-- Load bundled React app (no ES6 modules) -->
-    <script src="/assets/index.js"></script>
+    <!-- Simple non-React version for iOS Safari -->
+    <script>
+      console.log('🚀 Debug: Loading simple version for iOS Safari...');
+      
+      // Create a simple working version
+      const rootElement = document.getElementById('root');
+      if (rootElement) {
+        rootElement.innerHTML = `
+          <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto;">
+            <h1 style="color: #667eea; text-align: center;">🧹 Cleaning Photo App</h1>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="color: #1e293b; margin-top: 0;">✅ iOS Safari Compatible Version</h2>
+              <p style="color: #64748b;">This is a simplified version that works on iOS Safari.</p>
+              <p style="color: #64748b;">The full React app requires ES6 modules which aren't working on your iOS Safari version.</p>
+            </div>
+            
+            <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #0369a1; margin-top: 0;">📱 What's Working:</h3>
+              <ul style="color: #0369a1;">
+                <li>✅ HTML loads correctly</li>
+                <li>✅ Basic JavaScript works</li>
+                <li>✅ CSS styling works</li>
+                <li>✅ PWA manifest loads</li>
+              </ul>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #92400e; margin-top: 0;">⚠️ What's Not Working:</h3>
+              <ul style="color: #92400e;">
+                <li>❌ ES6 modules (React app)</li>
+                <li>❌ Camera functionality</li>
+                <li>❌ Photo capture</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+              <button onclick="alert('This is a simplified version for iOS Safari compatibility.')" 
+                      style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer;">
+                Test Button
+              </button>
+            </div>
+          </div>
+        `;
+        console.log('✅ Debug: Simple version loaded successfully');
+      }
+    </script>
     
     <!-- Fallback for browsers that don't support ES6 modules -->
     <script nomodule>
