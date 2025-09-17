@@ -83,7 +83,6 @@
         max-width: 300px;
       }
     </style>
-    <script async type="module" crossorigin src="/assets/index.js"></script>
   <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
@@ -91,8 +90,8 @@
       <div class="loading-spinner"></div>
     </div>
     
-    <!-- Debug info -->
-    <div class="debug-info" id="debug-info">
+    <!-- Debug info (hidden by default) -->
+    <div class="debug-info" id="debug-info" style="display: none;">
       <div>🚀 HTML Loaded</div>
       <div>📱 User Agent: <span id="user-agent">Loading...</span></div>
       <div>🌐 Location: <span id="location">Loading...</span></div>
@@ -220,8 +219,253 @@
       }
     </script>
     
-    <!-- Load bundled React app (no ES6 modules) -->
-    <script src="/assets/index.js"></script>
+    <!-- iOS Safari Compatible Cleaning Photo App -->
+    <script>
+      console.log('🚀 Debug: Loading iOS Safari compatible version...');
+      
+      // Simple photo documentation app
+      class CleaningPhotoApp {
+        constructor() {
+          this.photos = [];
+          this.currentRoom = 'kitchen';
+          this.currentMode = 'before';
+          this.init();
+        }
+        
+        init() {
+          const rootElement = document.getElementById('root');
+          if (rootElement) {
+            rootElement.innerHTML = this.getAppHTML();
+            this.attachEventListeners();
+            this.loadPhotos();
+          }
+        }
+        
+        getAppHTML() {
+          return `
+            <div style="min-height: 100vh; background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+              <!-- Header -->
+              <div style="background: #667eea; color: white; padding: 20px; text-align: center;">
+                <h1 style="margin: 0; font-size: 24px;">🧹 Cleaning Photo App</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.9;">iOS Safari Compatible Version</p>
+              </div>
+              
+              <!-- Main Content -->
+              <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
+                
+                <!-- Room Selector -->
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <h3 style="margin: 0 0 15px 0; color: #1e293b;">Select Room</h3>
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    ${this.getRoomButtons()}
+                  </div>
+                </div>
+                
+                <!-- Mode Selector -->
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <h3 style="margin: 0 0 15px 0; color: #1e293b;">Photo Type</h3>
+                  <div style="display: flex; gap: 10px;">
+                    <button id="before-btn" style="flex: 1; padding: 12px; border: 2px solid #667eea; background: #667eea; color: white; border-radius: 8px; font-size: 16px;">
+                      📸 Before
+                    </button>
+                    <button id="after-btn" style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; background: white; color: #64748b; border-radius: 8px; font-size: 16px;">
+                      📸 After
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Camera Section -->
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <h3 style="margin: 0 0 15px 0; color: #1e293b;">Take Photo</h3>
+                  <div style="text-align: center;">
+                    <button id="camera-btn" style="background: #10b981; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer;">
+                      📷 Open Camera
+                    </button>
+                    <p style="color: #64748b; font-size: 14px; margin: 10px 0 0 0;">
+                      Note: Camera access requires HTTPS and user permission
+                    </p>
+                  </div>
+                </div>
+                
+                <!-- Photos Gallery -->
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <h3 style="margin: 0 0 15px 0; color: #1e293b;">Photos (${this.photos.length})</h3>
+                  <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    ${this.getPhotosHTML()}
+                  </div>
+                </div>
+                
+                <!-- Status -->
+                <div style="background: #e0f2fe; border-radius: 12px; padding: 15px; text-align: center;">
+                  <p style="margin: 0; color: #0369a1; font-size: 14px;">
+                    📱 This version works on iOS Safari without ES6 modules
+                  </p>
+                </div>
+                
+              </div>
+            </div>
+          `;
+        }
+        
+        getRoomButtons() {
+          const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
+          return rooms.map(room => `
+            <button class="room-btn" data-room="${room}" 
+                    style="padding: 10px; border: 1px solid #e2e8f0; background: ${this.currentRoom === room ? '#667eea' : 'white'}; color: ${this.currentRoom === room ? 'white' : '#64748b'}; border-radius: 6px; font-size: 14px;">
+              ${room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ')}
+            </button>
+          `).join('');
+        }
+        
+        getPhotosHTML() {
+          if (this.photos.length === 0) {
+            return '<p style="grid-column: 1 / -1; text-align: center; color: #64748b; font-style: italic;">No photos yet</p>';
+          }
+          return this.photos.map((photo, index) => `
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <img src="${photo.dataUrl}" style="width: 100%; height: 120px; object-fit: cover;" />
+              <div style="padding: 8px; font-size: 12px; color: #64748b;">
+                <div>${photo.room} - ${photo.mode}</div>
+                <div>${new Date(photo.timestamp).toLocaleTimeString()}</div>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        attachEventListeners() {
+          // Room selection
+          document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              this.currentRoom = e.target.dataset.room;
+              this.init();
+            });
+          });
+          
+          // Mode selection
+          document.getElementById('before-btn').addEventListener('click', () => {
+            this.currentMode = 'before';
+            this.updateModeButtons();
+          });
+          
+          document.getElementById('after-btn').addEventListener('click', () => {
+            this.currentMode = 'after';
+            this.updateModeButtons();
+          });
+          
+          // Camera
+          document.getElementById('camera-btn').addEventListener('click', () => {
+            this.openCamera();
+          });
+        }
+        
+        updateModeButtons() {
+          const beforeBtn = document.getElementById('before-btn');
+          const afterBtn = document.getElementById('after-btn');
+          
+          if (this.currentMode === 'before') {
+            beforeBtn.style.background = '#667eea';
+            beforeBtn.style.color = 'white';
+            afterBtn.style.background = 'white';
+            afterBtn.style.color = '#64748b';
+          } else {
+            beforeBtn.style.background = 'white';
+            beforeBtn.style.color = '#64748b';
+            afterBtn.style.background = '#667eea';
+            afterBtn.style.color = 'white';
+          }
+        }
+        
+        async openCamera() {
+          try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              alert('Camera not supported on this device');
+              return;
+            }
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            
+            // Create camera modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+              position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+              background: rgba(0,0,0,0.8); z-index: 1000; display: flex; 
+              flex-direction: column; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+              <video id="camera-video" autoplay style="max-width: 90%; max-height: 70%; border-radius: 8px;"></video>
+              <div style="margin-top: 20px; display: flex; gap: 15px;">
+                <button id="capture-btn" style="background: #10b981; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px;">
+                  📸 Capture
+                </button>
+                <button id="close-camera-btn" style="background: #ef4444; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px;">
+                  ❌ Close
+                </button>
+              </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const video = document.getElementById('camera-video');
+            video.srcObject = stream;
+            
+            document.getElementById('capture-btn').addEventListener('click', () => {
+              this.capturePhoto(video, stream);
+            });
+            
+            document.getElementById('close-camera-btn').addEventListener('click', () => {
+              stream.getTracks().forEach(track => track.stop());
+              document.body.removeChild(modal);
+            });
+            
+          } catch (error) {
+            alert('Camera access denied or failed: ' + error.message);
+          }
+        }
+        
+        capturePhoto(video, stream) {
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          context.drawImage(video, 0, 0);
+          
+          const photo = {
+            dataUrl: canvas.toDataURL('image/jpeg', 0.8),
+            room: this.currentRoom,
+            mode: this.currentMode,
+            timestamp: Date.now()
+          };
+          
+          this.photos.push(photo);
+          this.savePhotos();
+          
+          // Close camera
+          stream.getTracks().forEach(track => track.stop());
+          document.body.removeChild(document.querySelector('[style*="position: fixed"]'));
+          
+          // Refresh display
+          this.init();
+        }
+        
+        savePhotos() {
+          localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+        }
+        
+        loadPhotos() {
+          const saved = localStorage.getItem('cleaning-photos');
+          if (saved) {
+            this.photos = JSON.parse(saved);
+          }
+        }
+      }
+      
+      // Initialize app
+      new CleaningPhotoApp();
+      console.log('✅ Debug: iOS Safari compatible app loaded successfully');
+    </script>
     
     <!-- Fallback for browsers that don't support ES6 modules -->
     <script nomodule>
