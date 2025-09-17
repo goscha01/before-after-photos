@@ -777,22 +777,95 @@
         }
         
         saveComparisonPhoto(afterPhotoDataUrl, beforePhoto) {
-          const afterPhoto = {
-            id: Date.now(),
-            dataUrl: afterPhotoDataUrl,
-            room: beforePhoto.room,
-            mode: 'after',
-            timestamp: Date.now()
-          };
-          
-          this.photos.push(afterPhoto);
-          this.savePhotos();
+          // Create a combined before/after photo
+          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room);
           
           // Close the comparison view and refresh the app
           document.body.removeChild(document.querySelector('[style*="position: fixed"]'));
           this.init();
           
-          alert(`After photo saved for ${beforePhoto.room}! Both photos are now in the Mix tab.`);
+          alert(`Before/After photo saved for ${beforePhoto.room}! Check the Mix tab to see the combined photo.`);
+        }
+        
+        createCombinedPhoto(beforeDataUrl, afterDataUrl, room) {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Create image objects to get dimensions
+          const beforeImg = new Image();
+          const afterImg = new Image();
+          
+          beforeImg.onload = () => {
+            afterImg.onload = () => {
+              // Calculate dimensions for the combined photo
+              const maxWidth = 800; // Maximum width for the combined photo
+              const maxHeight = 600; // Maximum height for each half
+              
+              // Calculate the width and height for each half
+              let halfWidth = Math.min(beforeImg.width, afterImg.width, maxWidth / 2);
+              let halfHeight = Math.min(beforeImg.height, afterImg.height, maxHeight);
+              
+              // Ensure both halves have the same dimensions
+              halfWidth = Math.min(halfWidth, maxWidth / 2);
+              halfHeight = Math.min(halfHeight, maxHeight);
+              
+              // Set canvas dimensions (double width + line width)
+              canvas.width = (halfWidth * 2) + 4; // 4px for the divider line
+              canvas.height = halfHeight;
+              
+              // Fill background with white
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              
+              // Draw before photo (left half)
+              ctx.drawImage(beforeImg, 0, 0, halfWidth, halfHeight);
+              
+              // Draw divider line
+              ctx.strokeStyle = '#000000';
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(halfWidth + 2, 0);
+              ctx.lineTo(halfWidth + 2, halfHeight);
+              ctx.stroke();
+              
+              // Draw after photo (right half)
+              ctx.drawImage(afterImg, halfWidth + 4, 0, halfWidth, halfHeight);
+              
+              // Add labels
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 24px Arial';
+              ctx.textAlign = 'center';
+              
+              // Before label
+              ctx.fillRect(halfWidth/2 - 40, 10, 80, 30);
+              ctx.fillStyle = '#000000';
+              ctx.fillText('BEFORE', halfWidth/2, 30);
+              
+              // After label
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(halfWidth + 4 + halfWidth/2 - 40, 10, 80, 30);
+              ctx.fillStyle = '#000000';
+              ctx.fillText('AFTER', halfWidth + 4 + halfWidth/2, 30);
+              
+              // Convert to data URL and save
+              const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              
+              const combinedPhoto = {
+                id: Date.now(),
+                dataUrl: combinedDataUrl,
+                room: room,
+                mode: 'mix',
+                timestamp: Date.now()
+              };
+              
+              this.photos.push(combinedPhoto);
+              this.savePhotos();
+            };
+            
+            afterImg.src = afterDataUrl;
+          };
+          
+          beforeImg.src = beforeDataUrl;
         }
         
         async openCamera() {
