@@ -51,12 +51,11 @@ VitePWA({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          store: ['zustand'],
-          icons: ['lucide-react']
-        }
+        format: 'iife', // Use IIFE instead of ES modules
+        manualChunks: undefined, // Don't split into chunks
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
       }
     }
   }

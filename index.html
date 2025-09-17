@@ -211,7 +211,7 @@
       try {
         const rootElement = document.getElementById('root');
         if (rootElement) {
-          rootElement.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Regular Script Works!</h1><p>This proves regular JavaScript works on iOS Safari.</p><p>The issue is with ES6 modules.</p></div>';
+          rootElement.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Regular Script Works!</h1><p>This proves regular JavaScript works on iOS Safari.</p><p>Now loading bundled React app...</p></div>';
           console.log('✅ Debug: Regular script execution successful');
         }
       } catch (error) {
@@ -219,14 +219,8 @@
       }
     </script>
     
-    <!-- Try vanilla JS first -->
-    <script type="module" src="/src/main-vanilla.js"></script>
-    
-    <!-- Try minimal test first -->
-    <script type="module" src="/src/test-minimal.jsx"></script>
-    
-    <!-- Try ES6 module first -->
-    <script type="module" src="/src/main.jsx"></script>
+    <!-- Load bundled React app (no ES6 modules) -->
+    <script src="/assets/index.js"></script>
     
     <!-- Fallback for browsers that don't support ES6 modules -->
     <script nomodule>
