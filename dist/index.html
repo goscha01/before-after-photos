@@ -393,26 +393,38 @@
               stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
             
-            // Create camera modal
+            // Create fullscreen camera modal
             const modal = document.createElement('div');
             modal.style.cssText = `
-              position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-              background: rgba(0,0,0,0.8); z-index: 1000; display: flex; 
+              position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+              background: black; z-index: 1000; display: flex; 
               flex-direction: column; align-items: center; justify-content: center;
             `;
             
             modal.innerHTML = `
-              <video id="camera-video" autoplay style="max-width: 90%; max-height: 70%; border-radius: 8px;"></video>
-              <div style="margin-top: 20px; display: flex; gap: 15px;">
-                <button id="capture-btn" style="background: #10b981; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px;">
-                  📸 Capture
-                </button>
-                <button id="switch-camera-btn" style="background: #667eea; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px;">
-                  🔄 Switch
-                </button>
-                <button id="close-camera-btn" style="background: #ef4444; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px;">
-                  ❌ Close
-                </button>
+              <!-- Fullscreen video with overlay controls -->
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
+                <video id="camera-video" autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>
+                
+                <!-- Top overlay controls -->
+                <div style="position: absolute; top: 0; left: 0; right: 0; padding: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
+                  <!-- Camera switch button -->
+                  <button id="switch-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
+                    🔄
+                  </button>
+                  
+                  <!-- Close button -->
+                  <button id="close-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 20px; cursor: pointer; backdrop-filter: blur(10px);">
+                    ❌
+                  </button>
+                </div>
+                
+                <!-- Bottom overlay controls -->
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; display: flex; justify-content: center;">
+                  <button id="capture-btn" style="background: #10b981; color: white; border: none; padding: 20px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    📸
+                  </button>
+                </div>
               </div>
             `;
             
