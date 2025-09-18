@@ -277,7 +277,10 @@
                 
                 <!-- Photos Gallery -->
                 <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                  <h3 style="margin: 0 0 15px 0; color: #1e293b;">${this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ')} Gallery</h3>
+                  <div style="margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 5px 0; color: #1e293b;">${this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ')} Gallery</h3>
+                    <div style="font-size: 14px; color: #64748b; font-weight: 500;">Album: ${this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ')} Cleaning Documentation</div>
+                  </div>
                   
                   <!-- Photo tabs -->
                   <div style="display: flex; gap: 5px; margin-bottom: 15px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
@@ -324,18 +327,32 @@
           if (filteredPhotos.length === 0) {
             return '<p style="grid-column: 1 / -1; text-align: center; color: #64748b; font-style: italic;">No photos in this category</p>';
           }
-          return filteredPhotos.map((photo, index) => `
-            <div class="photo-item" data-photo-index="${this.photos.indexOf(photo)}" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
-              <img src="${photo.dataUrl}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
-              <div style="padding: 8px; font-size: 12px; color: #64748b;">
-                <div>${new Date(photo.timestamp).toLocaleTimeString()}</div>
+          
+          // Sort photos alphabetically by name (descending order)
+          const sortedPhotos = filteredPhotos.sort((a, b) => {
+            const nameA = a.name || `${a.room}_${a.mode}_${a.timestamp}`;
+            const nameB = b.name || `${b.room}_${b.mode}_${b.timestamp}`;
+            return nameB.localeCompare(nameA);
+          });
+          
+          return sortedPhotos.map((photo, index) => {
+            const photoName = photo.name || `${photo.room}_${photo.mode}_${photo.timestamp}`;
+            const displayName = photoName.replace(/_/g, ' ').replace(/\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/, '');
+            
+            return `
+              <div class="photo-item" data-photo-index="${this.photos.indexOf(photo)}" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
+                <img src="${photo.dataUrl}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
+                <div style="padding: 8px; font-size: 11px; color: #64748b;">
+                  <div style="font-weight: bold; margin-bottom: 2px;">${displayName}</div>
+                  <div style="font-size: 10px; opacity: 0.8;">${new Date(photo.timestamp).toLocaleString()}</div>
+                </div>
+                <!-- Delete button -->
+                <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(photo)}" style="position: absolute; top: 5px; right: 5px; background: rgba(239,68,68,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                  🗑️
+                </button>
               </div>
-              <!-- Delete button -->
-              <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(photo)}" style="position: absolute; top: 5px; right: 5px; background: rgba(239,68,68,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
-                🗑️
-              </button>
-            </div>
-          `).join('');
+            `;
+          }).join('');
         }
         
         getRoomPhotosByType(type) {
@@ -964,12 +981,17 @@
           const beforePhoto = roomPhotos.find(photo => photo.mode === 'before');
           const afterPhoto = roomPhotos.find(photo => photo.mode === 'after');
           
+          // Create meaningful name for the combined photo
+          const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
+          const combinedPhotoName = `${roomName}_Combined_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+          
           // Create the combined photo
           const combinedPhoto = {
             id: Date.now(),
             dataUrl: combinedDataUrl,
             room: room,
             mode: 'mix',
+            name: combinedPhotoName,
             timestamp: Date.now()
           };
           
@@ -1137,10 +1159,16 @@
             photoMode = 'before';
           }
           
+          // Create meaningful name for the photo
+          const roomName = this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ');
+          const photoName = `${roomName}_${photoMode}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+          
           const photo = {
+            id: Date.now(),
             dataUrl: canvas.toDataURL('image/jpeg', 0.8),
             room: this.currentRoom,
             mode: photoMode,
+            name: photoName,
             timestamp: Date.now()
           };
           
