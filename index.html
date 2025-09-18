@@ -301,12 +301,6 @@
                     <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
                   </div>
                   
-                  <!-- Camera controls -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center; padding-bottom: 20px;">
-                    <!-- Capture button -->
-                    <button id="capture-btn" style="background: #F2C31B; color: #303030; border: none; padding: 18px; border-radius: 50%; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3);">
-                    </button>
-                  </div>
                   
                   <!-- Before label -->
                   <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
@@ -351,12 +345,6 @@
                     <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
                   </div>
                   
-                  <!-- Camera controls -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center; padding-bottom: 20px;">
-                    <!-- Capture button -->
-                    <button id="capture-btn" style="background: #F2C31B; color: #303030; border: none; padding: 18px; border-radius: 50%; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3);">
-                    </button>
-                  </div>
                 </div>
                 
                 <!-- Divider line -->
@@ -417,17 +405,6 @@
                     <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
                   </div>
                   
-                  <!-- Camera controls -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 20px; padding-bottom: 20px;">
-                    <!-- Camera switch button -->
-                    <button id="comparison-switch-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 12px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px);">
-                      🔄
-                    </button>
-                    
-                    <!-- Capture button -->
-                    <button id="comparison-capture-btn" style="background: #F2C31B; color: #303030; border: none; padding: 18px; border-radius: 50%; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3);">
-                    </button>
-                  </div>
                   
                   <!-- After label -->
                   <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
@@ -472,17 +449,6 @@
                     <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
                   </div>
                   
-                  <!-- Camera controls -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 20px; padding-bottom: 20px;">
-                    <!-- Camera switch button -->
-                    <button id="comparison-switch-camera-btn" style="background: rgba(0,0,0,0.6); color: white; border: none; padding: 12px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px);">
-                      🔄
-                    </button>
-                    
-                    <!-- Capture button -->
-                    <button id="comparison-capture-btn" style="background: #F2C31B; color: #303030; border: none; padding: 18px; border-radius: 50%; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3);">
-                    </button>
-                  </div>
                 </div>
                 
                 <!-- Close button -->
@@ -956,7 +922,15 @@
           
           // Camera
           document.getElementById('camera-btn').addEventListener('click', () => {
-            this.openCamera();
+            // Check if we're in comparison mode (after mode)
+            const comparisonModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]');
+            if (comparisonModal && comparisonModal.innerHTML.includes('comparison-camera')) {
+              // We're in comparison mode, capture the after photo
+              this.captureFromComparisonMode();
+            } else {
+              // We're in regular camera mode, capture the before photo
+              this.openCamera();
+            }
           });
           
           // Header upload button (dummy functionality)
@@ -1083,26 +1057,6 @@
               
               let currentFacingMode = 'environment';
               
-              // Capture button
-              document.getElementById('comparison-capture-btn').addEventListener('click', () => {
-                this.captureComparisonPhoto(video, stream, photo);
-              });
-              
-              // Camera switch button
-              document.getElementById('comparison-switch-camera-btn').addEventListener('click', async () => {
-                try {
-                  stream.getTracks().forEach(track => track.stop());
-                  currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-                  const newStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: currentFacingMode }
-                  });
-                  video.srcObject = newStream;
-                  stream = newStream;
-                } catch (error) {
-                  console.log('Camera switch failed:', error);
-                  alert('Camera switch failed: ' + error.message);
-                }
-              });
               
               // Close button
               document.getElementById('close-comparison-btn').addEventListener('click', () => {
@@ -1597,12 +1551,6 @@
             // Store current facing mode
             let currentFacingMode = 'environment'; // Start with back camera
             
-            document.getElementById('capture-btn').addEventListener('click', () => {
-              console.log('Capture button clicked');
-              console.log('Video element:', video);
-              console.log('Stream:', stream);
-              this.capturePhoto(video, stream);
-            });
             
             
             
@@ -1616,6 +1564,36 @@
           } catch (error) {
             alert('Camera access denied or failed: ' + error.message);
           }
+        }
+        
+        captureFromComparisonMode() {
+          // Get the comparison camera video element
+          const video = document.getElementById('comparison-camera');
+          if (!video || !video.srcObject) {
+            console.error('Comparison camera not found or no stream');
+            return;
+          }
+          
+          // Get the stream from the video element
+          const stream = video.srcObject;
+          
+          // Get the before photo from the comparison modal
+          const beforePhotoImg = document.querySelector('[style*="object-fit: cover"]');
+          if (!beforePhotoImg) {
+            console.error('Before photo not found in comparison modal');
+            return;
+          }
+          
+          // Create a before photo object from the image
+          const beforePhoto = {
+            dataUrl: beforePhotoImg.src,
+            room: this.currentRoom,
+            mode: 'before',
+            timestamp: Date.now()
+          };
+          
+          // Capture the after photo
+          this.captureComparisonPhoto(video, stream, beforePhoto);
         }
         
         capturePhoto(video, stream) {
