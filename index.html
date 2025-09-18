@@ -721,11 +721,11 @@
               return '';
             }
 
-            // Calculate positioning
+            // Calculate positioning with smaller gaps
             const isActive = relativePosition === 0;
-            const translateX = relativePosition * 120; // 120px spacing between tabs
-            const opacity = distance === 0 ? 1 : Math.max(0.4, 1 - (distance * 0.3));
-            const scale = distance === 0 ? 1 : Math.max(0.8, 1 - (distance * 0.1));
+            const translateX = relativePosition * 80; // Reduced from 120px to 80px
+            const opacity = distance === 0 ? 1 : Math.max(0.5, 1 - (distance * 0.25));
+            const scale = distance === 0 ? 1.1 : Math.max(0.85, 1 - (distance * 0.08));
 
             return `
               <button class="room-tab" data-room="${room}" data-position="${relativePosition}"
@@ -733,18 +733,20 @@
                              left: 50%;
                              top: 50%;
                              transform: translate(-50%, -50%) translateX(${translateX}px) scale(${scale});
-                             padding: 12px 16px;
+                             padding: 10px 14px;
                              border: none;
-                             border-radius: 8px;
-                             font-size: 14px;
+                             border-radius: 12px;
+                             font-size: ${isActive ? '15px' : '13px'};
                              cursor: pointer;
-                             background: ${isActive ? '#F2C31B' : 'rgba(225,225,225,0.8)'};
-                             color: ${isActive ? '#303030' : '#B3B3B3'};
-                             transition: all 0.3s ease;
+                             background: ${isActive ? '#F2C31B' : 'rgba(225,225,225,0.9)'};
+                             color: ${isActive ? '#303030' : '#666'};
+                             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
                              opacity: ${opacity};
                              white-space: nowrap;
                              z-index: ${10 - distance};
-                             font-weight: ${isActive ? 'bold' : 'normal'};">
+                             font-weight: ${isActive ? '600' : '400'};
+                             box-shadow: ${isActive ? '0 4px 12px rgba(242,195,27,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'};
+                             letter-spacing: ${isActive ? '0.5px' : '0px'};">
                 ${room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ')}
               </button>
             `;
