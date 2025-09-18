@@ -266,7 +266,7 @@
             rootElement.innerHTML = this.getAppHTML();
             this.attachEventListeners();
             this.loadPhotos();
-            this.scrollToActiveTab(); // Center the active tab
+            this.updateTabsCarousel(); // Update carousel layout
           }
           
           // Listen for orientation changes
@@ -586,9 +586,9 @@
               
               <!-- Sticky Room Tabs -->
               <div id="sticky-tabs-container" style="position: sticky; top: 0; z-index: 50; background: #f8fafc; padding: 10px; max-width: 100vw; box-sizing: border-box; display: flex; justify-content: center;">
-                <div id="room-tabs-container" style="overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; max-width: calc(100vw - 20px);">
-                  <div style="display: flex; gap: 5px; background: #E1E1E1; padding: 4px; border-radius: 8px; min-width: max-content;">
-                    ${this.getRoomTabs()}
+                <div id="room-tabs-container" style="position: relative; width: 100vw; height: 60px; overflow: hidden;">
+                  <div id="tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
+                    ${this.getRoomTabsCarousel()}
                   </div>
                 </div>
               </div>
@@ -704,22 +704,51 @@
           return [...photoElements, ...dummyElements].join('');
         }
         
-        getRoomTabs() {
+        getRoomTabsCarousel() {
           const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
           const currentIndex = rooms.indexOf(this.currentRoom);
-          
-          return rooms.map((room, index) => {
-            const distance = Math.abs(index - currentIndex);
-            const opacity = distance === 0 ? 1 : Math.max(0.3, 1 - (distance * 0.2));
-            const scale = distance === 0 ? 1 : 0.9;
-            
+
+          // Create extended array for infinite loop effect (3x the original)
+          const extendedRooms = [...rooms, ...rooms, ...rooms];
+          const centerIndex = rooms.length + currentIndex; // Middle set + current position
+
+          return extendedRooms.map((room, index) => {
+            const relativePosition = index - centerIndex;
+            const distance = Math.abs(relativePosition);
+
+            // Only show tabs that are close to center (within 2 positions)
+            if (distance > 2) {
+              return '';
+            }
+
+            // Calculate positioning
+            const isActive = relativePosition === 0;
+            const translateX = relativePosition * 120; // 120px spacing between tabs
+            const opacity = distance === 0 ? 1 : Math.max(0.4, 1 - (distance * 0.3));
+            const scale = distance === 0 ? 1 : Math.max(0.8, 1 - (distance * 0.1));
+
             return `
-              <button class="room-tab" data-room="${room}" 
-                      style="padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; background: ${this.currentRoom === room ? '#F2C31B' : 'transparent'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; transition: all 0.3s; opacity: ${opacity}; transform: scale(${scale}); white-space: nowrap;">
+              <button class="room-tab" data-room="${room}" data-position="${relativePosition}"
+                      style="position: absolute;
+                             left: 50%;
+                             top: 50%;
+                             transform: translate(-50%, -50%) translateX(${translateX}px) scale(${scale});
+                             padding: 12px 16px;
+                             border: none;
+                             border-radius: 8px;
+                             font-size: 14px;
+                             cursor: pointer;
+                             background: ${isActive ? '#F2C31B' : 'rgba(225,225,225,0.8)'};
+                             color: ${isActive ? '#303030' : '#B3B3B3'};
+                             transition: all 0.3s ease;
+                             opacity: ${opacity};
+                             white-space: nowrap;
+                             z-index: ${10 - distance};
+                             font-weight: ${isActive ? 'bold' : 'normal'};">
                 ${room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ')}
               </button>
             `;
-          }).join('');
+          }).filter(tab => tab !== '').join('');
         }
         
         getPhotosHTML() {
@@ -848,9 +877,9 @@
               this.currentTab = 'photo';
               this.init();
               
-              // Delay tab centering to ensure DOM is ready
+              // Delay carousel update to ensure DOM is ready
               setTimeout(() => {
-                this.scrollToActiveTab();
+                this.updateTabsCarousel();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }, 200);
             }
@@ -873,67 +902,22 @@
               this.currentTab = 'photo';
               this.init();
               
-              // Delay tab centering to ensure DOM is ready
+              // Delay carousel update to ensure DOM is ready
               setTimeout(() => {
-                this.scrollToActiveTab();
+                this.updateTabsCarousel();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }, 200);
             }
           });
         }
         
-        scrollToActiveTab() {
-          setTimeout(() => {
-            const tabsContainer = document.getElementById('room-tabs-container');
-            const activeTab = document.querySelector('.room-tab[data-room="' + this.currentRoom + '"]');
-
-            console.log('scrollToActiveTab - Current room:', this.currentRoom);
-            console.log('scrollToActiveTab - Tabs container:', tabsContainer);
-            console.log('scrollToActiveTab - Active tab:', activeTab);
-
-            if (tabsContainer && activeTab) {
-              const containerWidth = tabsContainer.clientWidth;
-              const tabOffsetLeft = activeTab.offsetLeft;
-              const tabWidth = activeTab.clientWidth;
-              const scrollWidth = tabsContainer.scrollWidth;
-
-              // Calculate the center position of the active tab
-              const tabCenter = tabOffsetLeft + (tabWidth / 2);
-
-              // Calculate the desired scroll position to center the tab
-              // We want the tab center to align with the container center
-              const containerCenter = containerWidth / 2;
-              const maxScroll = scrollWidth - containerWidth;
-
-              let scrollLeft;
-              if (maxScroll <= 0) {
-                // No scrollable content, don't scroll
-                scrollLeft = 0;
-              } else {
-                // Calculate ideal scroll position to center the tab
-                scrollLeft = tabCenter - containerCenter;
-                // Ensure scroll position is within bounds [0, maxScroll]
-                scrollLeft = Math.max(0, Math.min(scrollLeft, maxScroll));
-              }
-
-              console.log('scrollToActiveTab - Container width:', containerWidth);
-              console.log('scrollToActiveTab - Scroll width:', scrollWidth);
-              console.log('scrollToActiveTab - Tab offset left:', tabOffsetLeft);
-              console.log('scrollToActiveTab - Tab width:', tabWidth);
-              console.log('scrollToActiveTab - Tab center:', tabCenter);
-              console.log('scrollToActiveTab - Container center:', containerCenter);
-              console.log('scrollToActiveTab - Calculated scroll:', tabCenter - containerCenter);
-              console.log('scrollToActiveTab - Max scroll:', maxScroll);
-              console.log('scrollToActiveTab - Final scroll left:', scrollLeft);
-
-              tabsContainer.scrollTo({
-                left: scrollLeft,
-                behavior: 'smooth'
-              });
-            } else {
-              console.log('scrollToActiveTab - Elements not found');
-            }
-          }, 150);
+        updateTabsCarousel() {
+          // Just re-render the tabs - the carousel positioning is handled in getRoomTabsCarousel()
+          const tabsCarousel = document.getElementById('tabs-carousel');
+          if (tabsCarousel) {
+            tabsCarousel.innerHTML = this.getRoomTabsCarousel();
+            console.log('Carousel updated for room:', this.currentRoom);
+          }
         }
         
         attachEventListeners() {
@@ -944,9 +928,9 @@
               this.currentTab = 'photo'; // Reset to photo tab when switching rooms
               this.init();
               
-              // Delay tab centering to ensure DOM is ready
+              // Delay carousel update to ensure DOM is ready
               setTimeout(() => {
-                this.scrollToActiveTab();
+                this.updateTabsCarousel();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }, 200);
             });
