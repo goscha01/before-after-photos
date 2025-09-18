@@ -533,7 +533,7 @@
           return `
             <div style="min-height: 100vh; background: #f8fafc; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif; display: flex; flex-direction: column; overflow-x: hidden;">
               <!-- Header -->
-              <div style="background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw;">
+              <div style="background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; position: relative; z-index: 200;">
                 <!-- Location dropdown -->
                 <select id="location-select" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; max-width: 120px;">
                   <option value="tampa">Tampa</option>
@@ -1112,17 +1112,31 @@
           if (retakeBtn) {
             retakeBtn.addEventListener('click', () => {
               if (this.currentSplitScreen) {
+                // Store the room before closing split screen
+                const room = this.currentSplitScreen.room;
+
                 // Close current split screen
                 this.closeSplitScreenPreview();
 
-                // Find the before photo and reopen comparison camera
-                const beforePhoto = this.photos.find(p =>
-                  p.room === this.currentSplitScreen.room && p.mode === 'before'
-                );
+                // Clean up any remaining modals
+                const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
+                existingModals.forEach(modal => {
+                  if (modal.parentNode && !modal.id.includes('bottom-panel')) {
+                    document.body.removeChild(modal);
+                  }
+                });
 
-                if (beforePhoto) {
-                  this.showPhotoFullscreen(beforePhoto);
-                }
+                // Small delay to ensure cleanup completes
+                setTimeout(() => {
+                  // Find the before photo and reopen comparison camera
+                  const beforePhoto = this.photos.find(p =>
+                    p.room === room && p.mode === 'before'
+                  );
+
+                  if (beforePhoto) {
+                    this.showPhotoFullscreen(beforePhoto);
+                  }
+                }, 100);
               }
             });
           }
@@ -1204,10 +1218,18 @@
         }
         
         async showPhotoFullscreen(photo) {
+          // Clean up any existing photo fullscreen modals first
+          const existingPhotoModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
+          existingPhotoModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
           const modal = document.createElement('div');
           modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: rgba(0,0,0,0.95); z-index: 2000; display: flex; 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
             flex-direction: column;
           `;
           
@@ -1287,28 +1309,33 @@
         captureComparisonPhoto(video, stream, beforePhoto) {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          
+
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-          
+
           ctx.drawImage(video, 0, 0);
-          
+
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          
+
           // Automatically save the "after" photo
           this.saveAfterPhotoToAll(dataUrl, beforePhoto);
 
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
 
-          // Close current modal
-          const currentModal = document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]');
-          if (currentModal && currentModal.parentNode) {
-            document.body.removeChild(currentModal);
-          }
+          // Close ALL existing modals to prevent overlapping
+          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
+          existingModals.forEach(modal => {
+            if (modal.parentNode) {
+              document.body.removeChild(modal);
+            }
+          });
 
-          // Go directly to split screen preview
-          this.showSplitScreenPreview(beforePhoto.dataUrl, dataUrl, beforePhoto.room);
+          // Small delay to ensure cleanup completes before creating new modal
+          setTimeout(() => {
+            // Go directly to split screen preview
+            this.showSplitScreenPreview(beforePhoto.dataUrl, dataUrl, beforePhoto.room);
+          }, 100);
         }
         
         saveAfterPhotoToAll(afterPhotoDataUrl, beforePhoto) {
@@ -1333,6 +1360,14 @@
         
         
         showSplitScreenPreview(beforeDataUrl, afterDataUrl, room) {
+          // Clean up any existing split screen modals first
+          const existingSplitScreens = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
+          existingSplitScreens.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
           // Create a new modal for split screen preview
           const modal = document.createElement('div');
           modal.style.cssText = `
@@ -1367,6 +1402,14 @@
               document.body.removeChild(this.currentSplitScreen.modal);
             }
           }
+
+          // Clean up any remaining split screen modals that might be orphaned
+          const splitScreenModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
+          splitScreenModals.forEach(modal => {
+            if (modal.parentNode) {
+              document.body.removeChild(modal);
+            }
+          });
 
           // Hide action buttons and show camera button
           this.hideActionButtons();
@@ -1543,18 +1586,26 @@
               alert('Camera not supported on this device');
               return;
             }
-            
+
+            // Clean up any existing camera modals first
+            const existingCameraModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 1000"]');
+            existingCameraModals.forEach(existing => {
+              if (existing.parentNode) {
+                document.body.removeChild(existing);
+              }
+            });
+
             // Try to use back camera first, fallback to any camera
             let stream;
             try {
-              stream = await navigator.mediaDevices.getUserMedia({ 
+              stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment' } // Back camera
               });
             } catch (backCameraError) {
               console.log('Back camera not available, trying any camera:', backCameraError);
               stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
-            
+
             // Create fullscreen camera modal
             const modal = document.createElement('div');
             modal.style.cssText = `
