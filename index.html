@@ -675,7 +675,7 @@
               </div>
               
               <!-- Fixed Action Buttons Panel (only for camera modals) -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: white; box-shadow: 0 -2px 8px rgba(0,0,0,0.1);">
+              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
@@ -1017,10 +1017,28 @@
           const retakeBtn = document.getElementById('btn-retake');
           const saveBtn = document.getElementById('btn-save');
           const cameraBtn = document.getElementById('camera-btn');
+          const bottomPanel = document.getElementById('bottom-panel');
 
           if (retakeBtn) retakeBtn.style.display = 'flex';
           if (saveBtn) saveBtn.style.display = 'flex';
           if (cameraBtn) cameraBtn.style.display = 'none';
+          
+          // Check if we're in after mode (comparison camera modal) and make bottom panel transparent
+          if (bottomPanel) {
+            const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
+            
+            if (cameraModal && cameraModal.innerHTML.includes('comparison-camera')) {
+              // After mode - make bottom panel transparent
+              bottomPanel.style.background = 'transparent';
+              bottomPanel.style.boxShadow = 'none';
+            } else {
+              // Before mode - use original styling
+              bottomPanel.style.background = 'white';
+              bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+            }
+          }
         }
 
         hideActionButtons() {
@@ -1028,9 +1046,16 @@
           const retakeBtn = document.getElementById('btn-retake');
           const saveBtn = document.getElementById('btn-save');
           const cameraBtn = document.getElementById('camera-btn');
+          const bottomPanel = document.getElementById('bottom-panel');
 
           if (retakeBtn) retakeBtn.style.display = 'none';
           if (saveBtn) saveBtn.style.display = 'none';
+          
+          // Reset bottom panel styling to original
+          if (bottomPanel) {
+            bottomPanel.style.background = 'white';
+            bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+          }
           
           // Check if we're in a camera modal - if so, keep camera button visible
           const isInCameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') !== null ||
@@ -1048,13 +1073,65 @@
         showCameraButton() {
           // Show camera button during photo capture screens
           const cameraBtn = document.getElementById('camera-btn');
+          const bottomPanel = document.getElementById('bottom-panel');
+          
           if (cameraBtn) cameraBtn.style.display = 'block';
+          
+          // Check if we're in a camera modal and apply appropriate styling
+          if (bottomPanel && cameraBtn) {
+            const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
+            
+            if (cameraModal) {
+              // Both before and after modes - transparent panel, yellow button with white border
+              bottomPanel.style.background = 'transparent';
+              bottomPanel.style.boxShadow = 'none';
+              
+              // Make individual sections transparent as well
+              const sections = bottomPanel.querySelectorAll('div');
+              sections.forEach(section => {
+                section.style.background = 'transparent';
+              });
+              
+              cameraBtn.style.background = '#F2C31B';
+              cameraBtn.style.border = '2px solid rgba(255,255,255,0.8)';
+              cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
+            } else {
+              // Not in camera modal - use original styling
+              bottomPanel.style.background = 'white';
+              bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+              cameraBtn.style.background = '#F2C31B';
+              cameraBtn.style.border = 'none';
+              cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
+            }
+          }
         }
 
         hideCameraButton() {
-          // Hide camera button
+          // Hide camera button and reset styling
           const cameraBtn = document.getElementById('camera-btn');
-          if (cameraBtn) cameraBtn.style.display = 'none';
+          const bottomPanel = document.getElementById('bottom-panel');
+          
+          if (cameraBtn) {
+            cameraBtn.style.display = 'none';
+            // Reset camera button styling to original
+            cameraBtn.style.background = '#F2C31B';
+            cameraBtn.style.border = 'none';
+            cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
+          }
+          
+          // Reset bottom panel styling to original
+          if (bottomPanel) {
+            bottomPanel.style.background = 'white';
+            bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+            
+            // Reset individual sections to default
+            const sections = bottomPanel.querySelectorAll('div');
+            sections.forEach(section => {
+              section.style.background = '';
+            });
+          }
         }
 
         addScrollListener() {
@@ -1660,7 +1737,92 @@
             
             // Clear the before photo reference
             this.currentBeforePhoto = null;
+            
+            // Auto-cycle to next unpaired before photo
+            this.autoCycleToNextBeforePhoto(beforePhoto.room);
           }, 100);
+        }
+        
+        autoCycleToNextBeforePhoto(room) {
+          // Find all before photos in this room that don't have corresponding after photos
+          const beforePhotos = this.photos.filter(p => p.room === room && p.mode === 'before');
+          const afterPhotos = this.photos.filter(p => p.room === room && p.mode === 'after');
+          
+          // Find before photos that don't have a corresponding after photo
+          const unpairedBeforePhotos = beforePhotos.filter(beforePhoto => {
+            return !afterPhotos.some(afterPhoto => afterPhoto.beforePhotoId === beforePhoto.id);
+          });
+          
+          if (unpairedBeforePhotos.length > 0) {
+            // Sort by timestamp to get the next one chronologically
+            unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
+            const nextBeforePhoto = unpairedBeforePhotos[0];
+            
+            console.log('Auto-cycling to next before photo:', nextBeforePhoto);
+            
+            // Open comparison modal with the next before photo
+            this.openComparisonModal(nextBeforePhoto);
+          } else {
+            console.log('All before photos in room', room, 'have been paired with after photos');
+            // Could show a message or return to gallery
+          }
+        }
+        
+        openComparisonModal(beforePhoto) {
+          // Create modal container
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: black; z-index: 2000; display: flex; align-items: center; justify-content: center;
+          `;
+          
+          // Store the specific before photo that was clicked for later reference
+          this.currentBeforePhoto = beforePhoto;
+          
+          // Split screen: before photo and camera
+          modal.innerHTML = this.getComparisonModalHTML(beforePhoto);
+          
+          document.body.appendChild(modal);
+          
+          // Show camera button for photo capture
+          this.showCameraButton();
+          
+          // Initialize camera for comparison
+          this.initializeComparisonCamera(modal);
+        }
+        
+        async initializeComparisonCamera(modal) {
+          try {
+            let stream;
+            try {
+              // Try to get back camera first
+              stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } 
+              });
+            } catch (backCameraError) {
+              console.log('Back camera not available, trying any camera:', backCameraError);
+              stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
+            
+            const video = document.getElementById('comparison-camera');
+            video.srcObject = stream;
+            
+            let currentFacingMode = 'environment';
+            
+            // Close button
+            document.getElementById('close-comparison-btn').addEventListener('click', () => {
+              stream.getTracks().forEach(track => track.stop());
+              document.body.removeChild(modal);
+              this.hideCameraButton();
+              this.currentBeforePhoto = null; // Clear the reference
+            });
+            
+          } catch (error) {
+            alert('Camera access denied or failed: ' + error.message);
+            document.body.removeChild(modal);
+            this.hideCameraButton();
+            this.currentBeforePhoto = null; // Clear the reference
+          }
         }
         
         generatePhotoName(room, mode) {
