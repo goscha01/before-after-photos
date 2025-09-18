@@ -1,9 +1,9 @@
 {
-  "name": "Cleaning Photo App",
-  "short_name": "CleaningApp",
-  "description": "Mobile-first cleaning photo documentation app",
-  "theme_color": "#667eea",
-  "background_color": "#ffffff",
+  "name": "Professional Before & After Photos",
+  "short_name": "BeforeAfter",
+  "description": "Professional cleaning photo documentation app",
+  "theme_color": "#F2C31B",
+  "background_color": "#f8fafc",
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",
@@ -16,20 +16,6 @@
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Take Photos",
-      "short_name": "Photos",
-      "description": "Start taking before/after photos",
-      "url": "/capture",
-      "icons": [
-        {
-          "src": "/icons/icon-144x144.png",
-          "sizes": "144x144"
-        }
-      ]
     }
   ]
 }
