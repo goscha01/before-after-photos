@@ -727,7 +727,7 @@
           const dummyElements = [];
           for (let i = 0; i < dummyCount; i++) {
             dummyElements.push(`
-              <div style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 24px;">
+              <div class="dummy-photo" data-room="${room}" style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#F2C31B'; this.style.color='#303030';" onmouseout="this.style.background='#E1E1E1'; this.style.color='#B3B3B3';">
                 ${roomIcons[room]}
               </div>
             `);
@@ -773,7 +773,7 @@
           
           for (let i = filteredPhotos.length; i < dummyCount; i++) {
             dummySquares.push(`
-              <div style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 32px;">
+              <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 32px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#F2C31B'; this.style.color='#303030';" onmouseout="this.style.background='#E1E1E1'; this.style.color='#B3B3B3';">
                 ${roomIcons[this.currentRoom] || '📷'}
               </div>
             `);
@@ -932,6 +932,23 @@
                 
                 // Scroll to top of the page
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+              });
+            });
+            
+            // Dummy photos click handlers
+            document.querySelectorAll('.dummy-photo').forEach(dummy => {
+              dummy.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent room section click
+                const room = e.currentTarget.dataset.room;
+                
+                // Switch to the room if it's different
+                if (this.currentRoom !== room) {
+                  this.currentRoom = room;
+                  this.currentTab = 'photo';
+                }
+                
+                // Open camera in "before" mode
+                this.openCameraForRoom(room);
               });
             });
           }, 100);
@@ -1525,6 +1542,14 @@
           this.init();
           
           // Photo saved successfully - no popup needed
+        }
+        
+        async openCameraForRoom(room) {
+          // Set the current room
+          this.currentRoom = room;
+          
+          // Open camera
+          await this.openCamera();
         }
         
         async openCamera() {
