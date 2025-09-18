@@ -570,13 +570,18 @@
                 
               </div>
               
-              <!-- Fixed Action Buttons Panel (Camera button removed) -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr; height: 80px; align-items: center; background: transparent;">
+              <!-- Fixed Action Buttons Panel -->
+              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: transparent;">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
                     🔄 Retake
                   </button>
+                </div>
+
+                <!-- Center Section - Camera Button (hidden by default for gallery, shown during photo capture) -->
+                <div style="display: flex; justify-content: center;">
+                  <button id="camera-btn" style="background: #F2C31B; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3); display: none;"></button>
                 </div>
 
                 <!-- Right Section - Save Button (hidden by default) -->
@@ -863,21 +868,37 @@
         }
 
         showActionButtons() {
-          // Show retake and save buttons
+          // Show retake and save buttons, hide camera button
           const retakeBtn = document.getElementById('btn-retake');
           const saveBtn = document.getElementById('btn-save');
+          const cameraBtn = document.getElementById('camera-btn');
 
           if (retakeBtn) retakeBtn.style.display = 'flex';
           if (saveBtn) saveBtn.style.display = 'flex';
+          if (cameraBtn) cameraBtn.style.display = 'none';
         }
 
         hideActionButtons() {
-          // Hide retake and save buttons
+          // Hide retake and save buttons, keep camera button hidden for gallery
           const retakeBtn = document.getElementById('btn-retake');
           const saveBtn = document.getElementById('btn-save');
+          const cameraBtn = document.getElementById('camera-btn');
 
           if (retakeBtn) retakeBtn.style.display = 'none';
           if (saveBtn) saveBtn.style.display = 'none';
+          if (cameraBtn) cameraBtn.style.display = 'none'; // Keep hidden for gallery
+        }
+
+        showCameraButton() {
+          // Show camera button during photo capture screens
+          const cameraBtn = document.getElementById('camera-btn');
+          if (cameraBtn) cameraBtn.style.display = 'block';
+        }
+
+        hideCameraButton() {
+          // Hide camera button
+          const cameraBtn = document.getElementById('camera-btn');
+          if (cameraBtn) cameraBtn.style.display = 'none';
         }
 
         addScrollListener() {
@@ -966,13 +987,19 @@
                 if (room && room !== this.currentRoom) {
                   this.currentRoom = room;
                   this.currentTab = 'photo'; // Reset to photo tab when switching rooms
-                  this.init();
 
-                  // Delay carousel update to ensure DOM is ready
+                  // Update only the content area instead of full re-init
+                  const photosContainer = document.getElementById('photos-container');
+                  if (photosContainer) {
+                    photosContainer.innerHTML = this.getPhotosHTML();
+                    this.attachPhotoListeners();
+                  }
+
+                  // Update carousel and scroll
                   setTimeout(() => {
                     this.updateTabsCarousel();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }, 200);
+                  }, 100);
                 }
               });
 
@@ -985,7 +1012,29 @@
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
 
-          // Camera button removed - users click on dummy squares to open camera
+          // Camera button - only visible during photo capture screens
+          const cameraBtn = document.getElementById('camera-btn');
+          if (cameraBtn) {
+            cameraBtn.addEventListener('click', () => {
+              // Check if we're in a camera modal (before or after mode)
+              const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
+                                 document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
+                                 document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
+
+              if (cameraModal) {
+                // We're in a camera modal, capture photo
+                if (cameraModal.innerHTML.includes('camera-video')) {
+                  // Before mode - regular camera
+                  console.log('Capturing from regular camera modal');
+                  this.captureFromCameraModal();
+                } else if (cameraModal.innerHTML.includes('comparison-camera')) {
+                  // After mode - comparison camera
+                  console.log('Capturing from comparison camera modal');
+                  this.captureFromComparisonModal();
+                }
+              }
+            });
+          }
           
           // Header upload button (dummy functionality)
           const headerUploadBtn = document.getElementById('header-upload-btn');
@@ -1123,8 +1172,11 @@
           if (photo.mode === 'before') {
             // Split screen: before photo and camera
             modal.innerHTML = this.getComparisonModalHTML(photo);
-            
+
             document.body.appendChild(modal);
+
+            // Show camera button for photo capture
+            this.showCameraButton();
             
             // Initialize camera for comparison
             try {
@@ -1148,11 +1200,13 @@
               document.getElementById('close-comparison-btn').addEventListener('click', () => {
                 stream.getTracks().forEach(track => track.stop());
                 document.body.removeChild(modal);
+                this.hideCameraButton();
               });
               
             } catch (error) {
               alert('Camera access denied or failed: ' + error.message);
               document.body.removeChild(modal);
+              this.hideCameraButton();
             }
             
           } else {
@@ -1550,6 +1604,9 @@
             
             document.body.appendChild(modal);
             console.log('Camera modal created and added to DOM');
+
+            // Show camera button for photo capture
+            this.showCameraButton();
             
             const video = document.getElementById('camera-video');
             console.log('Video element found:', video);
@@ -1571,11 +1628,13 @@
                 document.body.removeChild(modal);
               }
               this.isOpeningCamera = false; // Reset flag
+              this.hideCameraButton(); // Hide camera button when closing modal
             });
             
           } catch (error) {
             alert('Camera access denied or failed: ' + error.message);
             this.isOpeningCamera = false; // Reset flag on error
+            this.hideCameraButton();
           }
         }
         
@@ -1661,6 +1720,9 @@
 
           // Reset camera opening flag
           this.isOpeningCamera = false;
+
+          // Hide camera button when returning to gallery
+          this.hideCameraButton();
 
           // Update photo grid without full DOM regeneration
           const photosContainer = document.getElementById('photos-container');
