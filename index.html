@@ -254,6 +254,7 @@
           this.currentRoom = 'kitchen';
           this.currentTab = 'photo';
           this.isLandscape = false;
+          this.loadPhotos(); // Load photos first
           this.init();
         }
         
@@ -265,7 +266,6 @@
           if (rootElement) {
             rootElement.innerHTML = this.getAppHTML();
             this.attachEventListeners();
-            this.loadPhotos();
             this.updateTabsCarousel(); // Update carousel layout
           }
           
