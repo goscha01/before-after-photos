@@ -287,6 +287,9 @@
                     <button id="tab-combined" class="photo-tab" data-tab="combined" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: ${this.currentTab === 'combined' ? '#667eea' : 'transparent'}; color: ${this.currentTab === 'combined' ? 'white' : '#64748b'}; transition: all 0.2s;">
                       Combined (${this.getRoomPhotosByType('combined').length})
                     </button>
+                    <button id="tab-all" class="photo-tab" data-tab="all" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: ${this.currentTab === 'all' ? '#667eea' : 'transparent'}; color: ${this.currentTab === 'all' ? 'white' : '#64748b'}; transition: all 0.2s;">
+                      All (${this.getRoomPhotosByType('all').length})
+                    </button>
                   </div>
                   
                   <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
@@ -341,6 +344,8 @@
             return roomPhotos.filter(photo => photo.mode === 'before' || photo.mode === 'after');
           } else if (type === 'combined') {
             return roomPhotos.filter(photo => photo.mode === 'mix');
+          } else if (type === 'all') {
+            return roomPhotos.filter(photo => photo.mode === 'archived');
           }
           return roomPhotos;
         }
@@ -954,6 +959,12 @@
         }
         
         saveCombinedPhoto(combinedDataUrl, room) {
+          // Find the before and after photos for this room
+          const roomPhotos = this.photos.filter(photo => photo.room === room);
+          const beforePhoto = roomPhotos.find(photo => photo.mode === 'before');
+          const afterPhoto = roomPhotos.find(photo => photo.mode === 'after');
+          
+          // Create the combined photo
           const combinedPhoto = {
             id: Date.now(),
             dataUrl: combinedDataUrl,
@@ -962,7 +973,17 @@
             timestamp: Date.now()
           };
           
+          // Add the combined photo
           this.photos.push(combinedPhoto);
+          
+          // Move before and after photos to "archived" mode (All tab)
+          if (beforePhoto) {
+            beforePhoto.mode = 'archived';
+          }
+          if (afterPhoto) {
+            afterPhoto.mode = 'archived';
+          }
+          
           this.savePhotos();
           
           // Close the modal and refresh
