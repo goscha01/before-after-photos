@@ -782,12 +782,21 @@
         
         getRoomPhotosByType(type) {
           const roomPhotos = this.photos.filter(photo => photo.room === this.currentRoom);
+          console.log('getRoomPhotosByType - Type:', type, 'Current room:', this.currentRoom);
+          console.log('getRoomPhotosByType - Room photos:', roomPhotos);
+          
           if (type === 'photo') {
-            return roomPhotos.filter(photo => photo.mode === 'before' || photo.mode === 'after');
+            const result = roomPhotos.filter(photo => photo.mode === 'before' || photo.mode === 'after');
+            console.log('getRoomPhotosByType - Photo result:', result);
+            return result;
           } else if (type === 'combined') {
-            return roomPhotos.filter(photo => photo.mode === 'mix');
+            const result = roomPhotos.filter(photo => photo.mode === 'mix');
+            console.log('getRoomPhotosByType - Combined result:', result);
+            return result;
           } else if (type === 'all') {
-            return roomPhotos.filter(photo => photo.mode === 'archived');
+            const result = roomPhotos.filter(photo => photo.mode === 'archived');
+            console.log('getRoomPhotosByType - All result:', result);
+            return result;
           }
           return roomPhotos;
         }
@@ -947,7 +956,21 @@
           
           // Camera
           document.getElementById('camera-btn').addEventListener('click', () => {
-            this.openCamera();
+            // Check if we're in a camera modal (before or after mode)
+            const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]');
+            if (cameraModal) {
+              // We're in a camera modal, capture photo
+              if (cameraModal.innerHTML.includes('camera-video')) {
+                // Before mode - regular camera
+                this.captureFromCameraModal();
+              } else if (cameraModal.innerHTML.includes('comparison-camera')) {
+                // After mode - comparison camera
+                this.captureFromComparisonModal();
+              }
+            } else {
+              // No camera modal open, open camera
+              this.openCamera();
+            }
           });
           
           // Header upload button (dummy functionality)
@@ -971,9 +994,14 @@
           const combinedBtn = document.getElementById('btn-combined');
           if (combinedBtn) {
             combinedBtn.addEventListener('click', () => {
+              console.log('Combined button clicked');
+              console.log('Current tab before:', this.currentTab);
               this.currentTab = 'combined';
+              console.log('Current tab after:', this.currentTab);
               this.init();
             });
+          } else {
+            console.log('Combined button not found');
           }
           
           const allBtn = document.getElementById('btn-all');
@@ -1587,7 +1615,22 @@
           }
         }
         
-        captureFromComparisonMode() {
+        captureFromCameraModal() {
+          // Get the camera video element
+          const video = document.getElementById('camera-video');
+          if (!video || !video.srcObject) {
+            console.error('Camera not found or no stream');
+            return;
+          }
+          
+          // Get the stream from the video element
+          const stream = video.srcObject;
+          
+          // Capture the before photo
+          this.capturePhoto(video, stream);
+        }
+        
+        captureFromComparisonModal() {
           // Get the comparison camera video element
           const video = document.getElementById('comparison-camera');
           if (!video || !video.srcObject) {
