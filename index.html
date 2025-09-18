@@ -903,11 +903,18 @@
               // Calculate the desired scroll position to center the tab
               // We want the tab center to align with the container center
               const containerCenter = containerWidth / 2;
-              let scrollLeft = tabCenter - containerCenter;
-
-              // Ensure scroll position is within bounds
               const maxScroll = scrollWidth - containerWidth;
-              scrollLeft = Math.max(0, Math.min(scrollLeft, maxScroll));
+
+              let scrollLeft;
+              if (maxScroll <= 0) {
+                // No scrollable content, don't scroll
+                scrollLeft = 0;
+              } else {
+                // Calculate ideal scroll position to center the tab
+                scrollLeft = tabCenter - containerCenter;
+                // Ensure scroll position is within bounds [0, maxScroll]
+                scrollLeft = Math.max(0, Math.min(scrollLeft, maxScroll));
+              }
 
               console.log('scrollToActiveTab - Container width:', containerWidth);
               console.log('scrollToActiveTab - Scroll width:', scrollWidth);
