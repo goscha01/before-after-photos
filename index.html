@@ -1121,8 +1121,16 @@
                 // Clean up any remaining modals
                 const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
                 existingModals.forEach(modal => {
-                  if (modal.parentNode && !modal.id.includes('bottom-panel')) {
-                    document.body.removeChild(modal);
+                  try {
+                    if (modal.parentNode && !modal.id.includes('bottom-panel')) {
+                      if (modal.parentNode === document.body) {
+                        document.body.removeChild(modal);
+                      } else {
+                        modal.parentNode.removeChild(modal);
+                      }
+                    }
+                  } catch (error) {
+                    console.log('Modal already removed:', error);
                   }
                 });
 
@@ -1326,8 +1334,14 @@
           // Close ALL existing modals to prevent overlapping
           const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
           existingModals.forEach(modal => {
-            if (modal.parentNode) {
-              document.body.removeChild(modal);
+            try {
+              if (modal.parentNode && modal.parentNode === document.body) {
+                document.body.removeChild(modal);
+              } else if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+              }
+            } catch (error) {
+              console.log('Modal already removed:', error);
             }
           });
 
@@ -1398,16 +1412,32 @@
 
         closeSplitScreenPreview() {
           if (this.currentSplitScreen && this.currentSplitScreen.modal) {
-            if (this.currentSplitScreen.modal.parentNode) {
-              document.body.removeChild(this.currentSplitScreen.modal);
+            try {
+              if (this.currentSplitScreen.modal.parentNode) {
+                if (this.currentSplitScreen.modal.parentNode === document.body) {
+                  document.body.removeChild(this.currentSplitScreen.modal);
+                } else {
+                  this.currentSplitScreen.modal.parentNode.removeChild(this.currentSplitScreen.modal);
+                }
+              }
+            } catch (error) {
+              console.log('Split screen modal already removed:', error);
             }
           }
 
           // Clean up any remaining split screen modals that might be orphaned
           const splitScreenModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
           splitScreenModals.forEach(modal => {
-            if (modal.parentNode) {
-              document.body.removeChild(modal);
+            try {
+              if (modal.parentNode) {
+                if (modal.parentNode === document.body) {
+                  document.body.removeChild(modal);
+                } else {
+                  modal.parentNode.removeChild(modal);
+                }
+              }
+            } catch (error) {
+              console.log('Modal already removed:', error);
             }
           });
 
