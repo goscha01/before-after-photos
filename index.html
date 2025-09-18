@@ -570,18 +570,13 @@
                 
               </div>
               
-              <!-- Fixed Camera Button with Action Buttons -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: transparent;">
+              <!-- Fixed Action Buttons Panel (Camera button removed) -->
+              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr; height: 80px; align-items: center; background: transparent;">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
                     🔄 Retake
                   </button>
-                </div>
-
-                <!-- Center Section - Camera Button -->
-                <div style="display: flex; justify-content: center;">
-                  <button id="camera-btn" style="background: #F2C31B; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3);"></button>
                 </div>
 
                 <!-- Right Section - Save Button (hidden by default) -->
@@ -668,25 +663,9 @@
 
           console.log('Before photos (chronological):', beforePhotos);
 
-          // Create dynamic grid layout
+          // Create grid layout with 8 uniform dummy squares
           const gridItems = [];
-
-          // Start with minimum 6 slots (3 rows x 2 columns)
-          let totalSlots;
-
-          if (beforePhotos.length === 0) {
-            // No photos yet - show 6 empty squares with last one as camera
-            totalSlots = 6;
-          } else if (beforePhotos.length < 5) {
-            // Still filling initial 6 squares - keep 6 total with last one as camera
-            totalSlots = 6;
-          } else {
-            // 5 or more photos - expand grid dynamically
-            // Always keep one empty camera slot
-            const filledSlots = beforePhotos.length;
-            const minRows = Math.ceil((filledSlots + 1) / 2); // +1 for camera slot
-            totalSlots = minRows * 2; // Always even number for 2-column layout
-          }
+          const totalSlots = 8; // Always show 8 squares (4 rows x 2 columns)
 
           console.log(`Grid calculation: ${beforePhotos.length} photos, ${totalSlots} total slots`);
 
@@ -759,38 +738,12 @@
                 `);
               }
             } else {
-              // Empty slots
-              const isLastSlot = i === totalSlots - 1;
-              const currentRow = Math.floor(i / 2);
-              const currentCol = i % 2;
-
-              // Camera placeholder logic:
-              // - If we have fewer than 5 photos, camera goes in last slot of initial 6
-              // - If we have 5+ photos, camera goes in the new row
-              let isCameraSlot = false;
-
-              if (beforePhotos.length < 5) {
-                // Initial 6 slots - camera in position 5 (last slot)
-                isCameraSlot = i === 5;
-              } else {
-                // Dynamic expansion - camera in last slot
-                isCameraSlot = isLastSlot;
-              }
-
-              if (isCameraSlot) {
-                gridItems.push(`
-                  <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 32px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#F2C31B'; this.style.color='#303030';" onmouseout="this.style.background='#E1E1E1'; this.style.color='#B3B3B3';">
-                    ${roomIcons[this.currentRoom] || '📷'}
-                  </div>
-                `);
-              } else {
-                // Empty dummy square (not camera)
-                gridItems.push(`
-                  <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
-                    ${roomIcons[this.currentRoom] || '📷'}
-                  </div>
-                `);
-              }
+              // Empty dummy squares - all look the same
+              gridItems.push(`
+                <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
+                  ${roomIcons[this.currentRoom] || '📷'}
+                </div>
+              `);
             }
           }
 
@@ -910,25 +863,21 @@
         }
 
         showActionButtons() {
-          // Show retake and save buttons, hide camera button
+          // Show retake and save buttons
           const retakeBtn = document.getElementById('btn-retake');
           const saveBtn = document.getElementById('btn-save');
-          const cameraBtn = document.getElementById('camera-btn');
 
           if (retakeBtn) retakeBtn.style.display = 'flex';
           if (saveBtn) saveBtn.style.display = 'flex';
-          if (cameraBtn) cameraBtn.style.display = 'none';
         }
 
         hideActionButtons() {
-          // Hide retake and save buttons, show camera button
+          // Hide retake and save buttons
           const retakeBtn = document.getElementById('btn-retake');
           const saveBtn = document.getElementById('btn-save');
-          const cameraBtn = document.getElementById('camera-btn');
 
           if (retakeBtn) retakeBtn.style.display = 'none';
           if (saveBtn) saveBtn.style.display = 'none';
-          if (cameraBtn) cameraBtn.style.display = 'block';
         }
 
         addScrollListener() {
@@ -1016,30 +965,7 @@
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
 
-          // Camera
-          document.getElementById('camera-btn').addEventListener('click', () => {
-            // Check if we're in a camera modal (before or after mode)
-            const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
-                               document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
-                               document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
-
-            if (cameraModal) {
-              // We're in a camera modal, capture photo
-              if (cameraModal.innerHTML.includes('camera-video')) {
-                // Before mode - regular camera
-                console.log('Capturing from regular camera modal');
-                this.captureFromCameraModal();
-              } else if (cameraModal.innerHTML.includes('comparison-camera')) {
-                // After mode - comparison camera
-                console.log('Capturing from comparison camera modal');
-                this.captureFromComparisonModal();
-              }
-            } else {
-              // No camera modal open, open camera
-              console.log('Opening new camera');
-              this.openCamera();
-            }
-          });
+          // Camera button removed - users click on dummy squares to open camera
           
           // Header upload button (dummy functionality)
           const headerUploadBtn = document.getElementById('header-upload-btn');
