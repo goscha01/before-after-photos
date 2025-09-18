@@ -1034,18 +1034,23 @@
           // Camera
           document.getElementById('camera-btn').addEventListener('click', () => {
             // Check if we're in a camera modal (before or after mode)
-            const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]');
+            const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]');
+
             if (cameraModal) {
               // We're in a camera modal, capture photo
               if (cameraModal.innerHTML.includes('camera-video')) {
                 // Before mode - regular camera
+                console.log('Capturing from regular camera modal');
                 this.captureFromCameraModal();
               } else if (cameraModal.innerHTML.includes('comparison-camera')) {
                 // After mode - comparison camera
+                console.log('Capturing from comparison camera modal');
                 this.captureFromComparisonModal();
               }
             } else {
               // No camera modal open, open camera
+              console.log('Opening new camera');
               this.openCamera();
             }
           });
