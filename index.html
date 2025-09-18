@@ -851,7 +851,7 @@
             console.log('getRoomPhotosByType - Combined result:', result);
             return result;
           } else if (type === 'all') {
-            const result = roomPhotos.filter(photo => photo.mode === 'archived');
+            const result = roomPhotos.filter(photo => photo.mode === 'archived' || photo.mode === 'mix');
             console.log('getRoomPhotosByType - All result:', result);
             return result;
           }
@@ -1373,7 +1373,10 @@
             });
             
             document.getElementById('close-preview-btn').addEventListener('click', () => {
-              document.body.removeChild(modal);
+              const modalToRemove = document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]');
+              if (modalToRemove && modalToRemove.parentNode) {
+                document.body.removeChild(modalToRemove);
+              }
             });
           }
         }
@@ -1480,28 +1483,42 @@
         }
         
         saveComparisonPhoto(afterPhotoDataUrl, beforePhoto) {
+          // Close the current modal first
+          const currentModal = document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]');
+          if (currentModal && currentModal.parentNode) {
+            document.body.removeChild(currentModal);
+          }
+
           // Show the split-screen combined photo preview
           this.showSplitScreenPreview(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room);
         }
         
         showSplitScreenPreview(beforeDataUrl, afterDataUrl, room) {
-          const modal = document.querySelector('[style*="position: fixed"]');
-          if (modal) {
-            modal.innerHTML = this.getSplitScreenPreviewHTML(beforeDataUrl, afterDataUrl, room);
-            
-            // Add event listeners
-            document.getElementById('retake-split-btn').addEventListener('click', () => {
-              this.retakeComparisonPhoto({dataUrl: beforeDataUrl, room: room}, null);
-            });
-            
-            document.getElementById('save-split-btn').addEventListener('click', () => {
-              this.captureSplitScreenPhoto(beforeDataUrl, afterDataUrl, room);
-            });
-            
-            document.getElementById('close-split-btn').addEventListener('click', () => {
+          // Create a new modal for split screen preview
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
+            flex-direction: column;
+          `;
+
+          modal.innerHTML = this.getSplitScreenPreviewHTML(beforeDataUrl, afterDataUrl, room);
+          document.body.appendChild(modal);
+
+          // Add event listeners
+          document.getElementById('retake-split-btn').addEventListener('click', () => {
+            this.retakeComparisonPhoto({dataUrl: beforeDataUrl, room: room}, null);
+          });
+
+          document.getElementById('save-split-btn').addEventListener('click', () => {
+            this.captureSplitScreenPhoto(beforeDataUrl, afterDataUrl, room);
+          });
+
+          document.getElementById('close-split-btn').addEventListener('click', () => {
+            if (modal && modal.parentNode) {
               document.body.removeChild(modal);
-            });
-          }
+            }
+          });
         }
         
         captureSplitScreenPhoto(beforeDataUrl, afterDataUrl, room) {
