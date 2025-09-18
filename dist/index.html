@@ -807,6 +807,10 @@
         }
         
         addSwipeListeners() {
+          // Only add listeners once
+          if (this.swipeListenersAdded) return;
+          this.swipeListenersAdded = true;
+          
           // Ensure room order matches the visual tab order exactly
           const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
           let startX = 0;
@@ -827,7 +831,7 @@
             // Only trigger swipe if horizontal movement is greater than vertical
             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
               const currentIndex = rooms.indexOf(this.currentRoom);
-              console.log('Current room:', this.currentRoom, 'Index:', currentIndex);
+              console.log('Swipe - Current room:', this.currentRoom, 'Index:', currentIndex);
               
               if (diffX > 0) {
                 // Swipe left - next room (following tab order)
@@ -843,10 +847,12 @@
               
               this.currentTab = 'photo';
               this.init();
-              this.scrollToActiveTab();
               
-              // Scroll to top to ensure sticky tabs are visible
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Delay tab centering to ensure DOM is ready
+              setTimeout(() => {
+                this.scrollToActiveTab();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 200);
             }
           });
           
@@ -866,10 +872,12 @@
               
               this.currentTab = 'photo';
               this.init();
-              this.scrollToActiveTab();
               
-              // Scroll to top to ensure sticky tabs are visible
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Delay tab centering to ensure DOM is ready
+              setTimeout(() => {
+                this.scrollToActiveTab();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 200);
             }
           });
         }
@@ -911,10 +919,12 @@
               this.currentRoom = e.target.dataset.room;
               this.currentTab = 'photo'; // Reset to photo tab when switching rooms
               this.init();
-              this.scrollToActiveTab();
               
-              // Scroll to top to ensure sticky tabs are visible
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Delay tab centering to ensure DOM is ready
+              setTimeout(() => {
+                this.scrollToActiveTab();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 200);
             });
           });
           
@@ -929,10 +939,12 @@
                 this.currentRoom = room;
                 this.currentTab = 'photo';
                 this.init();
-                this.scrollToActiveTab();
                 
-                // Scroll to top to ensure sticky tabs are visible
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Delay tab centering to ensure DOM is ready
+                setTimeout(() => {
+                  this.scrollToActiveTab();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 200);
               });
             });
             
