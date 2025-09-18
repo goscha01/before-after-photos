@@ -633,29 +633,8 @@
                   ${this.getPhotosHTML()}
                 </div>
                 
-                <!-- Dummy content for scrolling test -->
-                <div style="margin-top: 30px; padding: 20px;">
-                  <h3 style="color: #303030; margin-bottom: 15px;">Scroll Test Section</h3>
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
-                    ${this.getDummyScrollContent()}
-                  </div>
-                </div>
-                
-                <!-- More dummy content -->
-                <div style="margin-top: 20px; padding: 20px;">
-                  <h3 style="color: #303030; margin-bottom: 15px;">Additional Test Content</h3>
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
-                    ${this.getDummyScrollContent()}
-                  </div>
-                </div>
-                
-                <!-- Even more dummy content -->
-                <div style="margin-top: 20px; padding: 20px;">
-                  <h3 style="color: #303030; margin-bottom: 15px;">Final Test Section</h3>
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
-                    ${this.getDummyScrollContent()}
-                  </div>
-                </div>
+                <!-- Room sections for scrolling -->
+                ${this.getRoomScrollSections()}
                 
               </div>
               
@@ -684,16 +663,77 @@
           `;
         }
         
-        getDummyScrollContent() {
-          const dummyItems = [];
-          for (let i = 1; i <= 6; i++) {
-            dummyItems.push(`
+        getRoomScrollSections() {
+          const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
+          const roomIcons = {
+            'kitchen': '🍳',
+            'bathroom': '🛁',
+            'bedroom': '🛏️',
+            'living-room': '🛋️',
+            'dining-room': '🍽️',
+            'office': '💼'
+          };
+          
+          return rooms.map(room => {
+            const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
+            const roomPhotos = this.getRoomPhotosByType('photo');
+            const isActive = this.currentRoom === room;
+            
+            return `
+              <div class="room-section" data-room="${room}" style="margin-top: 30px; padding: 20px; border-radius: 12px; background: ${isActive ? '#F2C31B' : 'white'}; border: 2px solid ${isActive ? '#F2C31B' : '#E1E1E1'}; cursor: pointer; transition: all 0.3s;">
+                <!-- Room header -->
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                  <div style="font-size: 32px; margin-right: 15px;">${roomIcons[room]}</div>
+                  <div>
+                    <h3 style="color: ${isActive ? '#303030' : '#303030'}; margin: 0; font-size: 20px;">${roomName}</h3>
+                    <p style="color: ${isActive ? '#303030' : '#B3B3B3'}; margin: 5px 0 0 0; font-size: 14px;">${roomPhotos.length} photos</p>
+                  </div>
+                </div>
+                
+                <!-- Room photos preview -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
+                  ${this.getRoomPreviewPhotos(room)}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+        
+        getRoomPreviewPhotos(room) {
+          const roomPhotos = this.photos.filter(photo => photo.room === room && (photo.mode === 'before' || photo.mode === 'after'));
+          const roomIcons = {
+            'kitchen': '🍳',
+            'bathroom': '🛁',
+            'bedroom': '🛏️',
+            'living-room': '🛋️',
+            'dining-room': '🍽️',
+            'office': '💼'
+          };
+          
+          // Show up to 6 photos, fill with dummy squares if needed
+          const maxPhotos = 6;
+          const photosToShow = roomPhotos.slice(0, maxPhotos);
+          const dummyCount = Math.max(0, maxPhotos - photosToShow.length);
+          
+          const photoElements = photosToShow.map(photo => `
+            <div style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative;">
+              <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); padding: 4px; color: white; font-size: 10px;">
+                ${photo.mode.toUpperCase()}
+              </div>
+            </div>
+          `);
+          
+          const dummyElements = [];
+          for (let i = 0; i < dummyCount; i++) {
+            dummyElements.push(`
               <div style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 24px;">
-                ${i}
+                ${roomIcons[room]}
               </div>
             `);
           }
-          return dummyItems.join('');
+          
+          return [...photoElements, ...dummyElements].join('');
         }
         
         getRoomTabs() {
@@ -880,6 +920,21 @@
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
           
+          // Room sections click handlers
+          setTimeout(() => {
+            document.querySelectorAll('.room-section').forEach(section => {
+              section.addEventListener('click', (e) => {
+                const room = e.currentTarget.dataset.room;
+                this.currentRoom = room;
+                this.currentTab = 'photo';
+                this.init();
+                this.scrollToActiveTab();
+                
+                // Scroll to top of the page
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              });
+            });
+          }, 100);
           
           // Camera
           document.getElementById('camera-btn').addEventListener('click', () => {
@@ -1541,7 +1596,9 @@
             
             document.getElementById('close-camera-btn').addEventListener('click', () => {
               stream.getTracks().forEach(track => track.stop());
-              document.body.removeChild(modal);
+              if (modal && modal.parentNode) {
+                document.body.removeChild(modal);
+              }
             });
             
           } catch (error) {
@@ -1550,6 +1607,7 @@
         }
         
         capturePhoto(video, stream) {
+          console.log('Capturing photo...');
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
           
@@ -1574,15 +1632,23 @@
             timestamp: Date.now()
           };
           
+          console.log('Photo created:', photo);
           this.photos.push(photo);
+          console.log('Photos array length:', this.photos.length);
           this.savePhotos();
           
           // Close camera
           stream.getTracks().forEach(track => track.stop());
-          document.body.removeChild(document.querySelector('[style*="position: fixed"]'));
+          
+          // Remove the camera modal
+          const modal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]');
+          if (modal) {
+            document.body.removeChild(modal);
+          }
           
           // Refresh display
           this.init();
+          console.log('Photo capture completed');
         }
         
         savePhotos() {
