@@ -266,6 +266,7 @@
             rootElement.innerHTML = this.getAppHTML();
             this.attachEventListeners();
             this.loadPhotos();
+            this.scrollToActiveTab(); // Center the active tab
           }
           
           // Listen for orientation changes
@@ -571,8 +572,8 @@
               </div>
               
               <!-- Sticky Room Tabs -->
-              <div id="sticky-tabs-container" style="position: sticky; top: 0; z-index: 50; background: #f8fafc; padding: 10px; max-width: 100vw; box-sizing: border-box;">
-                <div id="room-tabs-container" style="overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;">
+              <div id="sticky-tabs-container" style="position: sticky; top: 0; z-index: 50; background: #f8fafc; padding: 10px; max-width: 100vw; box-sizing: border-box; display: flex; justify-content: center;">
+                <div id="room-tabs-container" style="overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; max-width: calc(100vw - 20px);">
                   <div style="display: flex; gap: 5px; background: #E1E1E1; padding: 4px; border-radius: 8px; min-width: max-content;">
                     ${this.getRoomTabs()}
                   </div>
@@ -593,7 +594,7 @@
               </div>
               
               <!-- Fixed Camera Button with Action Buttons -->
-              <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: rgba(248,250,252,0.95); backdrop-filter: blur(10px);">
+              <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: rgba(248,250,252,0.95); backdrop-filter: blur(10px);">
                 <!-- Left Section - Combined Button -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-combined" style="background: #B3B3B3; color: #303030; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">
@@ -856,16 +857,27 @@
             const tabsContainer = document.getElementById('room-tabs-container');
             const activeTab = document.querySelector('.room-tab[data-room="' + this.currentRoom + '"]');
             
+            console.log('scrollToActiveTab - Current room:', this.currentRoom);
+            console.log('scrollToActiveTab - Tabs container:', tabsContainer);
+            console.log('scrollToActiveTab - Active tab:', activeTab);
+            
             if (tabsContainer && activeTab) {
               const containerWidth = tabsContainer.clientWidth;
               const tabOffsetLeft = activeTab.offsetLeft;
               const tabWidth = activeTab.clientWidth;
               const scrollLeft = tabOffsetLeft - (containerWidth / 2) + (tabWidth / 2);
               
+              console.log('scrollToActiveTab - Container width:', containerWidth);
+              console.log('scrollToActiveTab - Tab offset left:', tabOffsetLeft);
+              console.log('scrollToActiveTab - Tab width:', tabWidth);
+              console.log('scrollToActiveTab - Scroll left:', scrollLeft);
+              
               tabsContainer.scrollTo({
                 left: scrollLeft,
                 behavior: 'smooth'
               });
+            } else {
+              console.log('scrollToActiveTab - Elements not found');
             }
           }, 150);
         }
