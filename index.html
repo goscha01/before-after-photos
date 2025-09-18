@@ -1129,7 +1129,8 @@
           document.getElementById('camera-btn').addEventListener('click', () => {
             // Check if we're in a camera modal (before or after mode)
             const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
-                               document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]');
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
+                               document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
 
             if (cameraModal) {
               // We're in a camera modal, capture photo
@@ -1286,7 +1287,7 @@
         
         async showPhotoFullscreen(photo) {
           // Clean up any existing photo fullscreen modals first
-          const existingPhotoModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
+          const existingPhotoModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
           existingPhotoModals.forEach(existing => {
             if (existing.parentNode) {
               document.body.removeChild(existing);
@@ -1434,7 +1435,7 @@
         
         showSplitScreenPreview(beforeDataUrl, afterDataUrl, room) {
           // Clean up any existing split screen modals first
-          const existingSplitScreens = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
+          const existingSplitScreens = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
           existingSplitScreens.forEach(existing => {
             if (existing.parentNode) {
               document.body.removeChild(existing);
@@ -1445,7 +1446,7 @@
           const modal = document.createElement('div');
           modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
+            background: rgba(0,0,0,0.95); z-index: 2002; display: flex;
             flex-direction: column;
           `;
 
@@ -1485,7 +1486,7 @@
           }
 
           // Clean up any remaining split screen modals that might be orphaned
-          const splitScreenModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"]');
+          const splitScreenModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
           splitScreenModals.forEach(modal => {
             try {
               if (modal.parentNode) {
