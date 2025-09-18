@@ -860,9 +860,10 @@
                   </div>
                 `);
               } else {
-                // Regular empty placeholder
+                // Empty dummy square (not camera)
                 gridItems.push(`
-                  <div style="aspect-ratio: 1; border-radius: 8px; background: transparent; display: flex; align-items: center; justify-content: center;">
+                  <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
+                    ${roomIcons[this.currentRoom] || '📷'}
                   </div>
                 `);
               }
