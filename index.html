@@ -602,49 +602,37 @@
               <!-- Main Content -->
               <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
                 
-                <!-- Room Selector -->
+                <!-- Room Gallery Combined -->
                 <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(48,48,48,0.1); border: 1px solid #E1E1E1;">
-                  <h3 style="margin: 0 0 15px 0; color: #303030; font-size: 16px;">Select Room</h3>
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                    ${this.getRoomButtons()}
+                  <!-- Room tabs -->
+                  <div style="display: flex; gap: 5px; margin-bottom: 15px; background: #E1E1E1; padding: 4px; border-radius: 8px;">
+                    ${this.getRoomTabs()}
                   </div>
-                </div>
-                
-                <!-- Photos Gallery -->
-                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(48,48,48,0.1); border: 1px solid #E1E1E1;">
+                  
+                  <!-- Gallery content -->
                   <div style="margin-bottom: 15px;">
                     <h3 style="margin: 0 0 5px 0; color: #303030;">${this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ')} Gallery</h3>
                     <div style="font-size: 14px; color: #B3B3B3; font-weight: 500;">Album: ${this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ')} Cleaning Documentation</div>
                   </div>
                   
-                  <!-- Photo tabs -->
-                  <div style="display: flex; gap: 5px; margin-bottom: 15px; background: #E1E1E1; padding: 4px; border-radius: 8px;">
-                    <button id="tab-photo" class="photo-tab" data-tab="photo" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: ${this.currentTab === 'photo' ? '#F2C31B' : 'transparent'}; color: ${this.currentTab === 'photo' ? '#303030' : '#B3B3B3'}; transition: all 0.2s;">
-                      Photo (${this.getRoomPhotosByType('photo').length})
-                    </button>
-                    <button id="tab-combined" class="photo-tab" data-tab="combined" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: ${this.currentTab === 'combined' ? '#F2C31B' : 'transparent'}; color: ${this.currentTab === 'combined' ? '#303030' : '#B3B3B3'}; transition: all 0.2s;">
-                      Combined (${this.getRoomPhotosByType('combined').length})
-                    </button>
-                    <button id="tab-all" class="photo-tab" data-tab="all" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: ${this.currentTab === 'all' ? '#F2C31B' : 'transparent'}; color: ${this.currentTab === 'all' ? '#303030' : '#B3B3B3'}; transition: all 0.2s;">
-                      All (${this.getRoomPhotosByType('all').length})
-                    </button>
+                  <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
+                    ${this.getPhotosHTML()}
                   </div>
                   
-                  <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                    ${this.getPhotosHTML()}
+                  <!-- Gallery action buttons -->
+                  <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="btn-combined" style="background: #B3B3B3; color: #303030; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold;">
+                      Combined (${this.getRoomPhotosByType('combined').length})
+                    </button>
+                    <button id="btn-all" style="background: #B3B3B3; color: #303030; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold;">
+                      All (${this.getRoomPhotosByType('all').length})
+                    </button>
                   </div>
                 </div>
                 
                 <!-- Camera Button -->
-                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(48,48,48,0.1); border: 1px solid #E1E1E1;">
-                  <div style="text-align: center;">
-                    <button id="camera-btn" style="background: #F2C31B; color: #303030; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold;">
-                      📷 Open Camera
-                    </button>
-                    <p style="color: #B3B3B3; font-size: 14px; margin: 10px 0 0 0;">
-                      Note: Camera access requires HTTPS and user permission
-                    </p>
-                  </div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <button id="camera-btn" style="background: #F2C31B; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3);"></button>
                 </div>
                 
               </div>
@@ -652,11 +640,11 @@
           `;
         }
         
-        getRoomButtons() {
+        getRoomTabs() {
           const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
           return rooms.map(room => `
-            <button class="room-btn" data-room="${room}" 
-                    style="padding: 8px; border: 1px solid ${this.currentRoom === room ? '#F2C31B' : '#E1E1E1'}; background: ${this.currentRoom === room ? '#F2C31B' : 'white'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; border-radius: 6px; font-size: 11px; font-weight: ${this.currentRoom === room ? 'bold' : 'normal'}; line-height: 1.2;">
+            <button class="room-tab" data-room="${room}" 
+                    style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; background: ${this.currentRoom === room ? '#F2C31B' : 'transparent'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; transition: all 0.2s;">
               ${room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ')}
             </button>
           `).join('');
@@ -708,15 +696,16 @@
         }
         
         getRoomFilteredPhotos() {
-          const activeTab = this.currentTab || 'photo';
-          return this.getRoomPhotosByType(activeTab);
+          // Always show photos by default, unless specifically viewing combined or all
+          return this.getRoomPhotosByType(this.currentTab || 'photo');
         }
         
         attachEventListeners() {
-          // Room selection
-          document.querySelectorAll('.room-btn').forEach(btn => {
+          // Room tabs
+          document.querySelectorAll('.room-tab').forEach(btn => {
             btn.addEventListener('click', (e) => {
               this.currentRoom = e.target.dataset.room;
+              this.currentTab = 'photo'; // Reset to photo tab when switching rooms
               this.init();
             });
           });
@@ -744,14 +733,22 @@
             });
           }
           
-          // Photo tabs
-          document.querySelectorAll('.photo-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-              this.currentTab = e.target.dataset.tab;
-              this.updateTabs();
+          // Gallery action buttons
+          const combinedBtn = document.getElementById('btn-combined');
+          if (combinedBtn) {
+            combinedBtn.addEventListener('click', () => {
+              this.currentTab = 'combined';
               this.init();
             });
-          });
+          }
+          
+          const allBtn = document.getElementById('btn-all');
+          if (allBtn) {
+            allBtn.addEventListener('click', () => {
+              this.currentTab = 'all';
+              this.init();
+            });
+          }
           
           // Photo click to view fullscreen and delete functionality
           setTimeout(() => {
