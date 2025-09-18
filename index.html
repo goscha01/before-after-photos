@@ -281,6 +281,9 @@
             this.checkOrientation();
             this.init();
           });
+
+          // Add scroll listener for auto tab switching
+          this.addScrollListener();
         }
         
         checkOrientation() {
@@ -585,7 +588,7 @@
               </div>
               
               <!-- Sticky Room Tabs -->
-              <div id="sticky-tabs-container" style="position: sticky; top: 0; z-index: 50; background: #f8fafc; padding: 10px; max-width: 100vw; box-sizing: border-box; display: flex; justify-content: center;">
+              <div id="sticky-tabs-container" style="position: sticky; top: 0; z-index: 100; background: #f8fafc; padding: 10px; max-width: 100vw; box-sizing: border-box; display: flex; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <div id="room-tabs-container" style="position: relative; width: 100vw; height: 60px; overflow: hidden;">
                   <div id="tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
                     ${this.getRoomTabsCarousel()}
@@ -919,6 +922,70 @@
           if (tabsCarousel) {
             tabsCarousel.innerHTML = this.getRoomTabsCarousel();
             console.log('Carousel updated for room:', this.currentRoom);
+          }
+        }
+
+        addScrollListener() {
+          // Throttle scroll events for performance
+          let scrollTimeout;
+
+          window.addEventListener('scroll', () => {
+            if (scrollTimeout) {
+              clearTimeout(scrollTimeout);
+            }
+
+            scrollTimeout = setTimeout(() => {
+              this.checkVisibleRoom();
+            }, 100); // Check every 100ms during scroll
+          });
+        }
+
+        checkVisibleRoom() {
+          const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
+          const viewportHeight = window.innerHeight;
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const tabsHeight = 100; // Approximate height of sticky tabs container
+
+          // Check which room section is most visible in the viewport
+          let mostVisibleRoom = null;
+          let maxVisibleArea = 0;
+
+          rooms.forEach(room => {
+            const roomSection = document.querySelector(`[data-room="${room}"].room-section`);
+            if (!roomSection) return;
+
+            const rect = roomSection.getBoundingClientRect();
+            const sectionTop = rect.top + scrollTop;
+            const sectionBottom = sectionTop + rect.height;
+
+            // Calculate visible area of this section
+            const visibleTop = Math.max(sectionTop, scrollTop + tabsHeight);
+            const visibleBottom = Math.min(sectionBottom, scrollTop + viewportHeight);
+            const visibleArea = Math.max(0, visibleBottom - visibleTop);
+
+            // Also consider sections that are prominently in view (top 1/3 of screen)
+            const prominentViewTop = scrollTop + tabsHeight;
+            const prominentViewBottom = scrollTop + (viewportHeight / 3) + tabsHeight;
+
+            if (sectionTop <= prominentViewBottom && sectionBottom >= prominentViewTop) {
+              const prominentArea = Math.min(sectionBottom, prominentViewBottom) - Math.max(sectionTop, prominentViewTop);
+              const prominentWeight = prominentArea * 2; // Give more weight to prominent area
+
+              if (prominentWeight > maxVisibleArea) {
+                maxVisibleArea = prominentWeight;
+                mostVisibleRoom = room;
+              }
+            } else if (visibleArea > maxVisibleArea) {
+              maxVisibleArea = visibleArea;
+              mostVisibleRoom = room;
+            }
+          });
+
+          // Update current room if it changed
+          if (mostVisibleRoom && mostVisibleRoom !== this.currentRoom) {
+            console.log('Auto-switching to room:', mostVisibleRoom, 'based on scroll position');
+            this.currentRoom = mostVisibleRoom;
+            this.updateTabsCarousel();
           }
         }
         
