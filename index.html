@@ -771,13 +771,11 @@
             if (beforePhotoIndex < beforePhotos.length) {
               const beforePhoto = beforePhotos[beforePhotoIndex];
 
-              // Check if there's a corresponding after photo
+              // Check if there's a corresponding after photo linked to this before photo
               const afterPhoto = this.photos.find(p =>
                 p.room === this.currentRoom &&
                 p.mode === 'after' &&
-                p.timestamp > beforePhoto.timestamp &&
-                // Find after photo that matches this before photo (within reasonable time)
-                Math.abs(p.timestamp - beforePhoto.timestamp) < 300000 // Within 5 minutes
+                p.beforePhotoId === beforePhoto.id
               );
 
               if (afterPhoto) {
@@ -1417,6 +1415,12 @@
 
           // Small delay to ensure cleanup completes before creating new modal
           setTimeout(() => {
+            // Update gallery to show new after photo
+            const photosContainer = document.getElementById('photos-container');
+            if (photosContainer) {
+              photosContainer.innerHTML = this.getPhotosHTML();
+            }
+
             // Go directly to split screen preview
             this.showSplitScreenPreview(beforePhoto.dataUrl, dataUrl, beforePhoto.room);
           }, 100);
@@ -1426,16 +1430,17 @@
           // Create meaningful name for the after photo
           const roomName = beforePhoto.room.charAt(0).toUpperCase() + beforePhoto.room.slice(1).replace('-', ' ');
           const afterPhotoName = `${roomName}_After_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
-          
+
           const afterPhoto = {
             id: Date.now(),
             dataUrl: afterPhotoDataUrl,
             room: beforePhoto.room,
             mode: 'after', // Save as after photo for split-screen display
             name: afterPhotoName,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            beforePhotoId: beforePhoto.id // Link to specific before photo
           };
-          
+
           this.photos.push(afterPhoto);
           this.savePhotos();
         }
@@ -1456,7 +1461,7 @@
           const modal = document.createElement('div');
           modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95); z-index: 2002; display: flex;
+            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
             flex-direction: column;
           `;
 
@@ -1771,20 +1776,15 @@
           // Get the stream from the video element
           const stream = video.srcObject;
           
-          // Get the before photo from the comparison modal
-          const beforePhotoImg = document.querySelector('[style*="object-fit: cover"]');
-          if (!beforePhotoImg) {
-            console.error('Before photo not found in comparison modal');
+          // Find the actual before photo from saved photos (most recent before photo for this room)
+          const beforePhoto = this.photos
+            .filter(p => p.room === this.currentRoom && p.mode === 'before')
+            .sort((a, b) => b.timestamp - a.timestamp)[0]; // Get most recent before photo
+
+          if (!beforePhoto) {
+            console.error('No before photo found for this room');
             return;
           }
-          
-          // Create a before photo object from the image
-          const beforePhoto = {
-            dataUrl: beforePhotoImg.src,
-            room: this.currentRoom,
-            mode: 'before',
-            timestamp: Date.now()
-          };
           
           // Capture the after photo
           this.captureComparisonPhoto(video, stream, beforePhoto);
