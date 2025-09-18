@@ -742,9 +742,27 @@
 
           console.log('Before photos (chronological):', beforePhotos);
 
-          // Create a 2-column grid layout
+          // Create dynamic grid layout
           const gridItems = [];
-          const totalSlots = Math.max(6, Math.ceil((beforePhotos.length + 1) / 2) * 2); // Always even number, minimum 6
+
+          // Start with minimum 6 slots (3 rows x 2 columns)
+          let totalSlots;
+
+          if (beforePhotos.length === 0) {
+            // No photos yet - show 6 empty squares with last one as camera
+            totalSlots = 6;
+          } else if (beforePhotos.length < 5) {
+            // Still filling initial 6 squares - keep 6 total with last one as camera
+            totalSlots = 6;
+          } else {
+            // 5 or more photos - expand grid dynamically
+            // Always keep one empty camera slot
+            const filledSlots = beforePhotos.length;
+            const minRows = Math.ceil((filledSlots + 1) / 2); // +1 for camera slot
+            totalSlots = minRows * 2; // Always even number for 2-column layout
+          }
+
+          console.log(`Grid calculation: ${beforePhotos.length} photos, ${totalSlots} total slots`);
 
           // Fill grid positions based on before photos chronologically
           for (let i = 0; i < totalSlots; i++) {
@@ -817,10 +835,23 @@
                 `);
               }
             } else {
-              // Empty placeholder - camera trigger
-              // Last slot (bottom-right or bottom-left if grid is odd)
+              // Empty slots
               const isLastSlot = i === totalSlots - 1;
-              const isCameraSlot = isLastSlot || (i === totalSlots - 2 && totalSlots % 2 === 0);
+              const currentRow = Math.floor(i / 2);
+              const currentCol = i % 2;
+
+              // Camera placeholder logic:
+              // - If we have fewer than 5 photos, camera goes in last slot of initial 6
+              // - If we have 5+ photos, camera goes in the new row
+              let isCameraSlot = false;
+
+              if (beforePhotos.length < 5) {
+                // Initial 6 slots - camera in position 5 (last slot)
+                isCameraSlot = i === 5;
+              } else {
+                // Dynamic expansion - camera in last slot
+                isCameraSlot = isLastSlot;
+              }
 
               if (isCameraSlot) {
                 gridItems.push(`
