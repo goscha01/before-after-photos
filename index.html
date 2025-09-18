@@ -1069,6 +1069,52 @@
           }
         }
         
+        attachPhotoListeners() {
+          // Only attach listeners for photo elements (called after photo grid updates)
+          setTimeout(() => {
+            document.querySelectorAll('.photo-item').forEach(item => {
+              // Photo click to view fullscreen
+              item.addEventListener('click', (e) => {
+                // Don't trigger if clicking delete button
+                if (e.target.classList.contains('delete-photo-btn')) {
+                  return;
+                }
+
+                const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
+                if (photoIndex >= 0 && photoIndex < this.photos.length) {
+                  this.showPhotoFullscreen(this.photos[photoIndex]);
+                }
+              });
+
+              // Add hover effect
+              item.addEventListener('mouseenter', (e) => {
+                e.currentTarget.style.transform = 'scale(1.02)';
+              });
+
+              item.addEventListener('mouseleave', (e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              });
+            });
+
+            // Delete button functionality for photos
+            document.querySelectorAll('.delete-photo-btn').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const photoIndex = parseInt(e.target.dataset.photoIndex);
+                this.deletePhoto(photoIndex);
+              });
+            });
+
+            // Dummy photos click handlers
+            document.querySelectorAll('.dummy-photo').forEach(dummy => {
+              dummy.addEventListener('click', (e) => {
+                const room = e.currentTarget.dataset.room;
+                this.openCameraForRoom(room);
+              });
+            });
+          }, 100);
+        }
+
         attachEventListeners() {
           // Room tabs with swipe support
           document.querySelectorAll('.room-tab').forEach(btn => {
@@ -1105,22 +1151,7 @@
               });
             });
             
-            // Dummy photos click handlers
-            document.querySelectorAll('.dummy-photo').forEach(dummy => {
-              dummy.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent room section click
-                const room = e.currentTarget.dataset.room;
-                
-                // Switch to the room if it's different
-                if (this.currentRoom !== room) {
-                  this.currentRoom = room;
-                  this.currentTab = 'photo';
-                }
-                
-                // Open camera in "before" mode
-                this.openCameraForRoom(room);
-              });
-            });
+            // Dummy photos click handlers - moved to attachPhotoListeners()
           }, 100);
           
           // Camera
@@ -1228,36 +1259,8 @@
             });
           }
           
-          // Photo click to view fullscreen and delete functionality
-          setTimeout(() => {
-            document.querySelectorAll('.photo-item').forEach(item => {
-              // Photo click to view fullscreen
-              item.addEventListener('click', (e) => {
-                // Don't trigger if clicking delete button
-                if (e.target.classList.contains('delete-photo-btn')) return;
-                
-                const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
-                this.showPhotoFullscreen(this.photos[photoIndex]);
-              });
-              
-              // Add hover effect
-              item.addEventListener('mouseenter', (e) => {
-                e.currentTarget.style.transform = 'scale(1.02)';
-              });
-              item.addEventListener('mouseleave', (e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              });
-            });
-            
-            // Delete button functionality
-            document.querySelectorAll('.delete-photo-btn').forEach(btn => {
-              btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent photo click
-                const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
-                this.deletePhoto(photoIndex);
-              });
-            });
-          }, 100);
+          // Photo event listeners moved to attachPhotoListeners() to prevent duplicates
+          this.attachPhotoListeners();
         }
         
         
@@ -1686,9 +1689,18 @@
         
         async openCamera() {
           console.log('Opening camera...');
+
+          // Prevent multiple camera modals from opening simultaneously
+          if (this.isOpeningCamera) {
+            console.log('Camera already opening, ignoring request');
+            return;
+          }
+          this.isOpeningCamera = true;
+
           try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
               alert('Camera not supported on this device');
+              this.isOpeningCamera = false;
               return;
             }
 
@@ -1743,10 +1755,12 @@
               if (modal && modal.parentNode) {
                 document.body.removeChild(modal);
               }
+              this.isOpeningCamera = false; // Reset flag
             });
             
           } catch (error) {
             alert('Camera access denied or failed: ' + error.message);
+            this.isOpeningCamera = false; // Reset flag on error
           }
         }
         
@@ -1830,11 +1844,14 @@
             document.body.removeChild(modal);
           }
 
+          // Reset camera opening flag
+          this.isOpeningCamera = false;
+
           // Update photo grid without full DOM regeneration
           const photosContainer = document.getElementById('photos-container');
           if (photosContainer) {
             photosContainer.innerHTML = this.getPhotosHTML();
-            this.attachEventListeners(); // Re-attach listeners for new photo elements
+            this.attachPhotoListeners(); // Only attach listeners for photo elements
           }
 
           console.log('Photo capture completed');
