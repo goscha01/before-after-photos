@@ -636,16 +636,16 @@
               <!-- Fixed Camera Button with Action Buttons -->
               <div style="position: fixed; bottom: 20px; left: 0; right: 0; z-index: 100; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0 20px;">
                 <!-- Combined Button -->
-                <button id="btn-combined" style="background: #B3B3B3; color: #303030; border: none; padding: 10px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; min-width: 80px;">
-                  Combined (${this.getRoomPhotosByType('combined').length})
+                <button id="btn-combined" style="background: #B3B3B3; color: #303030; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                  C (${this.getRoomPhotosByType('combined').length})
                 </button>
                 
                 <!-- Camera Button -->
                 <button id="camera-btn" style="background: #F2C31B; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3); flex-shrink: 0;"></button>
                 
                 <!-- All Button -->
-                <button id="btn-all" style="background: #B3B3B3; color: #303030; border: none; padding: 10px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; min-width: 80px;">
-                  All (${this.getRoomPhotosByType('all').length})
+                <button id="btn-all" style="background: #B3B3B3; color: #303030; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                  A (${this.getRoomPhotosByType('all').length})
                 </button>
               </div>
             </div>
@@ -763,17 +763,18 @@
               const currentIndex = rooms.indexOf(this.currentRoom);
               
               if (diffX > 0) {
-                // Swipe left - next room
+                // Swipe left - next room (following tab order)
                 const nextIndex = (currentIndex + 1) % rooms.length;
                 this.currentRoom = rooms[nextIndex];
               } else {
-                // Swipe right - previous room
+                // Swipe right - previous room (following tab order)
                 const prevIndex = (currentIndex - 1 + rooms.length) % rooms.length;
                 this.currentRoom = rooms[prevIndex];
               }
               
               this.currentTab = 'photo';
               this.init();
+              this.scrollToActiveTab();
             }
           });
           
@@ -793,8 +794,18 @@
               
               this.currentTab = 'photo';
               this.init();
+              this.scrollToActiveTab();
             }
           });
+        }
+        
+        scrollToActiveTab() {
+          setTimeout(() => {
+            const activeTab = document.querySelector('.room-tab[data-room="' + this.currentRoom + '"]');
+            if (activeTab) {
+              activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }, 100);
         }
         
         attachEventListeners() {
@@ -804,6 +815,7 @@
               this.currentRoom = e.target.dataset.room;
               this.currentTab = 'photo'; // Reset to photo tab when switching rooms
               this.init();
+              this.scrollToActiveTab();
             });
           });
           
