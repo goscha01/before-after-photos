@@ -615,8 +615,29 @@
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
           
+          // Automatically save the "after" photo to "All" tab
+          this.saveAfterPhotoToAll(dataUrl, beforePhoto);
+          
           // Show preview with retake/save options
           this.showPhotoPreview(dataUrl, beforePhoto, stream);
+        }
+        
+        saveAfterPhotoToAll(afterPhotoDataUrl, beforePhoto) {
+          // Create meaningful name for the after photo
+          const roomName = beforePhoto.room.charAt(0).toUpperCase() + beforePhoto.room.slice(1).replace('-', ' ');
+          const afterPhotoName = `${roomName}_After_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+          
+          const afterPhoto = {
+            id: Date.now(),
+            dataUrl: afterPhotoDataUrl,
+            room: beforePhoto.room,
+            mode: 'archived', // Save directly to "All" tab
+            name: afterPhotoName,
+            timestamp: Date.now()
+          };
+          
+          this.photos.push(afterPhoto);
+          this.savePhotos();
         }
         
         showPhotoPreview(afterPhotoDataUrl, beforePhoto, originalStream) {
@@ -976,10 +997,9 @@
         }
         
         saveCombinedPhoto(combinedDataUrl, room) {
-          // Find the before and after photos for this room
+          // Find the before photo for this room (after photos are already in "All" tab)
           const roomPhotos = this.photos.filter(photo => photo.room === room);
           const beforePhoto = roomPhotos.find(photo => photo.mode === 'before');
-          const afterPhoto = roomPhotos.find(photo => photo.mode === 'after');
           
           // Create meaningful name for the combined photo
           const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
@@ -998,12 +1018,9 @@
           // Add the combined photo
           this.photos.push(combinedPhoto);
           
-          // Move before and after photos to "archived" mode (All tab)
+          // Move before photo to "archived" mode (All tab)
           if (beforePhoto) {
             beforePhoto.mode = 'archived';
-          }
-          if (afterPhoto) {
-            afterPhoto.mode = 'archived';
           }
           
           this.savePhotos();
@@ -1144,20 +1161,8 @@
           
           context.drawImage(video, 0, 0);
           
-          // Determine photo mode based on existing photos for this room
-          const roomPhotos = this.photos.filter(photo => photo.room === this.currentRoom);
-          const hasBeforePhoto = roomPhotos.some(photo => photo.mode === 'before');
-          const hasAfterPhoto = roomPhotos.some(photo => photo.mode === 'after');
-          
-          let photoMode;
-          if (!hasBeforePhoto) {
-            photoMode = 'before';
-          } else if (!hasAfterPhoto) {
-            photoMode = 'after';
-          } else {
-            // Both photos exist, this will be a new "before" photo (replacing the old one)
-            photoMode = 'before';
-          }
+          // First photos are always "before" photos
+          const photoMode = 'before';
           
           // Create meaningful name for the photo
           const roomName = this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ');
