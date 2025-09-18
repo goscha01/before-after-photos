@@ -702,7 +702,7 @@
             
             return `
               <button class="room-tab" data-room="${room}" 
-                      style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; background: ${this.currentRoom === room ? '#F2C31B' : 'transparent'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; transition: all 0.3s; opacity: ${opacity}; transform: scale(${scale});">
+                      style="padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; background: ${this.currentRoom === room ? '#F2C31B' : 'transparent'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; transition: all 0.3s; opacity: ${opacity}; transform: scale(${scale}); white-space: nowrap;">
                 ${room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ')}
               </button>
             `;
