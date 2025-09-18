@@ -262,6 +262,9 @@
           // Check orientation
           this.checkOrientation();
           
+          // Reassign photo names to ensure proper sequential numbering
+          this.reassignPhotoNames();
+          
           const rootElement = document.getElementById('root');
           if (rootElement) {
             rootElement.innerHTML = this.getAppHTML();
@@ -690,8 +693,7 @@
 
               if (afterPhoto) {
                 // Show split-screen before/after
-                const photoName = beforePhoto.name || `${beforePhoto.room}_before_${beforePhoto.timestamp}`;
-                const displayName = photoName.replace(/_/g, ' ').replace(/\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/, '');
+                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
                 gridItems.push(`
                   <div class="photo-item" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
@@ -725,8 +727,7 @@
                 `);
               } else {
                 // Show only before photo
-                const photoName = beforePhoto.name || `${beforePhoto.room}_before_${beforePhoto.timestamp}`;
-                const displayName = photoName.replace(/_/g, ' ').replace(/\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/, '');
+                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
                 gridItems.push(`
                   <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
@@ -1139,16 +1140,106 @@
             const photo = this.photos[photoIndex];
             const photoType = photo.mode === 'mix' ? 'combined before/after' : photo.mode;
 
-            if (confirm(`Are you sure you want to delete this ${photoType} photo from ${photo.room}?`)) {
-              this.photos.splice(photoIndex, 1);
-              this.savePhotos();
+            this.showDeleteConfirmation(photoType, photo.room, photoIndex);
+          }
+        }
 
-              // Update photo grid without full DOM regeneration
-              const photosContainer = document.getElementById('photos-container');
-              if (photosContainer) {
-                photosContainer.innerHTML = this.getPhotosHTML();
-                this.attachPhotoListeners(); // Re-attach event listeners for updated photo elements
-              }
+        showDeleteConfirmation(photoType, room, photoIndex) {
+          // Clean up any existing confirmation modals first
+          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 3000"]');
+          existingModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7); z-index: 3000; display: flex;
+            align-items: center; justify-content: center; padding: 20px;
+          `;
+
+          modal.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+              <!-- Title -->
+              <h3 style="text-align: center; font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 24px;">
+                Are you sure?
+              </h3>
+              
+              <!-- Buttons -->
+              <div style="display: flex; gap: 12px;">
+                <button id="cancel-delete-btn" style="flex: 1; padding: 12px 20px; border: 2px solid #d1d5db; background: white; color: #374151; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                  Cancel
+                </button>
+                <button id="confirm-delete-btn" style="flex: 1; padding: 12px 20px; border: none; background: #F2C31B; color: #303030; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                  Delete
+                </button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+
+          // Add hover effects
+          const cancelBtn = document.getElementById('cancel-delete-btn');
+          const confirmBtn = document.getElementById('confirm-delete-btn');
+
+          cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.background = '#f9fafb';
+            cancelBtn.style.borderColor = '#9ca3af';
+          });
+          cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.background = 'white';
+            cancelBtn.style.borderColor = '#d1d5db';
+          });
+
+          confirmBtn.addEventListener('mouseenter', () => {
+            confirmBtn.style.background = '#e6b800';
+          });
+          confirmBtn.addEventListener('mouseleave', () => {
+            confirmBtn.style.background = '#F2C31B';
+          });
+
+          // Event listeners
+          cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+
+          confirmBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.confirmDeletePhoto(photoIndex);
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+            }
+          });
+
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              document.body.removeChild(modal);
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
+        }
+
+        confirmDeletePhoto(photoIndex) {
+          if (photoIndex >= 0 && photoIndex < this.photos.length) {
+            this.photos.splice(photoIndex, 1);
+            
+            // Reassign names to maintain proper sequential numbering
+            this.reassignPhotoNames();
+
+            // Update photo grid without full DOM regeneration
+            const photosContainer = document.getElementById('photos-container');
+            if (photosContainer) {
+              photosContainer.innerHTML = this.getPhotosHTML();
+              this.attachPhotoListeners(); // Re-attach event listeners for updated photo elements
             }
           }
         }
@@ -1170,6 +1261,9 @@
           `;
           
           if (photo.mode === 'before') {
+            // Store the specific before photo that was clicked for later reference
+            this.currentBeforePhoto = photo;
+            
             // Split screen: before photo and camera
             modal.innerHTML = this.getComparisonModalHTML(photo);
 
@@ -1201,16 +1295,104 @@
                 stream.getTracks().forEach(track => track.stop());
                 document.body.removeChild(modal);
                 this.hideCameraButton();
+                this.currentBeforePhoto = null; // Clear the reference
               });
               
             } catch (error) {
               alert('Camera access denied or failed: ' + error.message);
               document.body.removeChild(modal);
               this.hideCameraButton();
+              this.currentBeforePhoto = null; // Clear the reference
             }
             
+          } else if (photo.mode === 'after') {
+            // For after photos, find the linked before photo and open comparison camera for retaking
+            const linkedBeforePhoto = this.photos.find(p => 
+              p.id === photo.beforePhotoId && p.mode === 'before'
+            );
+            
+            if (linkedBeforePhoto) {
+              // Store the specific before photo that was clicked for later reference
+              this.currentBeforePhoto = linkedBeforePhoto;
+              
+              // Split screen: before photo and camera
+              modal.innerHTML = this.getComparisonModalHTML(linkedBeforePhoto);
+
+              document.body.appendChild(modal);
+
+              // Show camera button for photo capture
+              this.showCameraButton();
+              
+              // Initialize camera for comparison
+              try {
+                let stream;
+                try {
+                  stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } // Default to back camera
+                  });
+                } catch (backCameraError) {
+                  console.log('Back camera not available, trying any camera:', backCameraError);
+                  stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                }
+                
+                const video = document.getElementById('comparison-camera');
+                video.srcObject = stream;
+                
+                let currentFacingMode = 'environment';
+                
+                
+                // Close button
+                document.getElementById('close-comparison-btn').addEventListener('click', () => {
+                  stream.getTracks().forEach(track => track.stop());
+                  document.body.removeChild(modal);
+                  this.hideCameraButton();
+                  this.currentBeforePhoto = null; // Clear the reference
+                });
+                
+              } catch (error) {
+                alert('Camera access denied or failed: ' + error.message);
+                document.body.removeChild(modal);
+                this.hideCameraButton();
+                this.currentBeforePhoto = null; // Clear the reference
+              }
+            } else {
+              // Fallback: Regular fullscreen if no linked before photo found
+              modal.innerHTML = `
+                <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
+                  <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: cover;" />
+                  
+                  <!-- Photo info overlay -->
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
+                    <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">
+                      ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+                    </div>
+                    <div style="font-size: 16px; opacity: 0.9;">
+                      ${new Date(photo.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                  
+                  <!-- Close button -->
+                  <button id="close-photo-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
+                    ✕
+                  </button>
+                </div>
+              `;
+              
+              document.body.appendChild(modal);
+              
+              document.getElementById('close-photo-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+              });
+              
+              // Close on background click
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                  document.body.removeChild(modal);
+                }
+              });
+            }
           } else {
-            // Regular fullscreen for after photos
+            // Regular fullscreen for other photo types
             modal.innerHTML = `
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
                 <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: cover;" />
@@ -1284,7 +1466,7 @@
             }
           });
 
-          // Small delay to ensure cleanup completes before creating new modal
+          // Small delay to ensure cleanup completes before updating gallery
           setTimeout(() => {
             // Update gallery to show new after photo
             const photosContainer = document.getElementById('photos-container');
@@ -1293,15 +1475,66 @@
               this.attachPhotoListeners(); // Re-attach event listeners for new photo elements
             }
 
-            // Go directly to split screen preview
-            this.showSplitScreenPreview(beforePhoto.dataUrl, dataUrl, beforePhoto.room);
+            // Hide action buttons and return to gallery view
+            this.hideActionButtons();
+            
+            // Clear the before photo reference
+            this.currentBeforePhoto = null;
           }, 100);
         }
         
+        generatePhotoName(room, mode) {
+          // Get all photos for this room and mode, sorted by timestamp (oldest first)
+          const roomPhotos = this.photos
+            .filter(p => p.room === room && p.mode === mode)
+            .sort((a, b) => a.timestamp - b.timestamp);
+          
+          // The position should be based on the chronological order in the grid
+          // Since photos are sorted by timestamp, the position is the index + 1
+          const position = roomPhotos.length + 1;
+          
+          // Create simple name: "kitchen 1", "kitchen 2", etc.
+          const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
+          return `${roomName} ${position}`;
+        }
+
+        // Function to reassign names to all photos based on their current grid position
+        reassignPhotoNames() {
+          const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
+          
+          rooms.forEach(room => {
+            // Get all before photos for this room, sorted by timestamp (oldest first)
+            const beforePhotos = this.photos
+              .filter(p => p.room === room && p.mode === 'before')
+              .sort((a, b) => a.timestamp - b.timestamp);
+            
+            // Reassign names based on chronological position
+            beforePhotos.forEach((photo, index) => {
+              const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
+              const newName = `${roomName} ${index + 1}`;
+              photo.name = newName;
+              
+              // Also update any linked after photos
+              const afterPhoto = this.photos.find(p => 
+                p.mode === 'after' && p.beforePhotoId === photo.id
+              );
+              if (afterPhoto) {
+                afterPhoto.name = newName;
+              }
+            });
+          });
+          
+          this.savePhotos();
+        }
+
         saveAfterPhotoToAll(afterPhotoDataUrl, beforePhoto) {
-          // Create meaningful name for the after photo
-          const roomName = beforePhoto.room.charAt(0).toUpperCase() + beforePhoto.room.slice(1).replace('-', ' ');
-          const afterPhotoName = `${roomName}_After_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+          // Check if there's already an after photo linked to this before photo
+          const existingAfterPhotoIndex = this.photos.findIndex(p => 
+            p.mode === 'after' && p.beforePhotoId === beforePhoto.id
+          );
+
+          // Use the same name as the before photo
+          const afterPhotoName = beforePhoto.name;
 
           const afterPhoto = {
             id: Date.now(),
@@ -1313,7 +1546,16 @@
             beforePhotoId: beforePhoto.id // Link to specific before photo
           };
 
-          this.photos.push(afterPhoto);
+          if (existingAfterPhotoIndex !== -1) {
+            // Replace existing after photo
+            this.photos[existingAfterPhotoIndex] = afterPhoto;
+            console.log('Replaced existing after photo for before photo:', beforePhoto.id);
+          } else {
+            // Add new after photo
+            this.photos.push(afterPhoto);
+            console.log('Added new after photo for before photo:', beforePhoto.id);
+          }
+
           this.savePhotos();
         }
         
@@ -1664,13 +1906,11 @@
           // Get the stream from the video element
           const stream = video.srcObject;
           
-          // Find the actual before photo from saved photos (most recent before photo for this room)
-          const beforePhoto = this.photos
-            .filter(p => p.room === this.currentRoom && p.mode === 'before')
-            .sort((a, b) => b.timestamp - a.timestamp)[0]; // Get most recent before photo
+          // Use the specific before photo that was clicked to open the comparison modal
+          const beforePhoto = this.currentBeforePhoto;
 
           if (!beforePhoto) {
-            console.error('No before photo found for this room');
+            console.error('No before photo reference found - this should not happen');
             return;
           }
           
@@ -1691,9 +1931,8 @@
           // First photos are always "before" photos
           const photoMode = 'before';
           
-          // Create meaningful name for the photo
-          const roomName = this.currentRoom.charAt(0).toUpperCase() + this.currentRoom.slice(1).replace('-', ' ');
-          const photoName = `${roomName}_${photoMode}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+          // Create simple position-based name
+          const photoName = this.generatePhotoName(this.currentRoom, photoMode);
           
           const photo = {
             id: Date.now(),
