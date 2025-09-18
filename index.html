@@ -761,13 +761,13 @@
             const displayName = photoName.replace(/_/g, ' ').replace(/\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/, '');
 
             if (photo.mode === 'after') {
-              // For after photos, show split-screen before/after comparison
+              // For after photos, show split-screen before/after comparison taking full card space
               const beforePhoto = this.photos.find(p => p.room === photo.room && p.mode === 'before');
 
               return `
-                <div class="photo-item" data-photo-index="${this.photos.indexOf(photo)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
-                  <!-- Split screen container -->
-                  <div style="height: 120px; display: flex; flex-direction: column; position: relative;">
+                <div class="photo-item" data-photo-index="${this.photos.indexOf(photo)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
+                  <!-- Split screen container taking full card space -->
+                  <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
                     <!-- Before photo (top half) -->
                     <div style="height: 50%; overflow: hidden; position: relative;">
                       ${beforePhoto ? `<img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<div style="width: 100%; height: 100%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #999; font-size: 10px;">No Before</div>'}
@@ -781,11 +781,13 @@
                       <div style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">AFTER</div>
                     </div>
                   </div>
-                  <!-- Info section -->
-                  <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
-                    <div style="font-weight: bold; margin-bottom: 2px; color: #303030;">${displayName}</div>
-                    <div style="font-size: 10px; opacity: 0.8;">${new Date(photo.timestamp).toLocaleString()}</div>
+
+                  <!-- Transparent title overlay -->
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                    <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
+                    <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(photo.timestamp).toLocaleString()}</div>
                   </div>
+
                   <!-- Delete button -->
                   <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(photo)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
                     🗑️
