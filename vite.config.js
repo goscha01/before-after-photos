@@ -1,12 +1,9 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
-    react(),
-VitePWA({
+    VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
@@ -30,18 +27,6 @@ VitePWA({
       }
     })
   ],
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-      '@components': resolve(__dirname, 'src/components'),
-      '@screens': resolve(__dirname, 'src/screens'),
-      '@hooks': resolve(__dirname, 'src/hooks'),
-      '@services': resolve(__dirname, 'src/services'),
-      '@store': resolve(__dirname, 'src/store'),
-      '@utils': resolve(__dirname, 'src/utils'),
-      '@styles': resolve(__dirname, 'src/styles')
-    }
-  },
   server: {
     port: 3000,
     host: true
