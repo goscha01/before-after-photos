@@ -886,22 +886,31 @@
           setTimeout(() => {
             const tabsContainer = document.getElementById('room-tabs-container');
             const activeTab = document.querySelector('.room-tab[data-room="' + this.currentRoom + '"]');
-            
+
             console.log('scrollToActiveTab - Current room:', this.currentRoom);
             console.log('scrollToActiveTab - Tabs container:', tabsContainer);
             console.log('scrollToActiveTab - Active tab:', activeTab);
-            
+
             if (tabsContainer && activeTab) {
               const containerWidth = tabsContainer.clientWidth;
               const tabOffsetLeft = activeTab.offsetLeft;
               const tabWidth = activeTab.clientWidth;
-              const scrollLeft = Math.max(0, tabOffsetLeft - (containerWidth / 2) + (tabWidth / 2));
-              
+
+              // Calculate the center position of the active tab
+              const tabCenter = tabOffsetLeft + (tabWidth / 2);
+
+              // Calculate the desired scroll position to center the tab
+              // We want the tab center to align with the container center
+              const containerCenter = containerWidth / 2;
+              const scrollLeft = Math.max(0, tabCenter - containerCenter);
+
               console.log('scrollToActiveTab - Container width:', containerWidth);
               console.log('scrollToActiveTab - Tab offset left:', tabOffsetLeft);
               console.log('scrollToActiveTab - Tab width:', tabWidth);
+              console.log('scrollToActiveTab - Tab center:', tabCenter);
+              console.log('scrollToActiveTab - Container center:', containerCenter);
               console.log('scrollToActiveTab - Scroll left (adjusted):', scrollLeft);
-              
+
               tabsContainer.scrollTo({
                 left: scrollLeft,
                 behavior: 'smooth'
