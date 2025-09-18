@@ -1015,12 +1015,7 @@
           
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
-          
-          // Room sections removed - navigation now only through tabs
-            
-            // Dummy photos click handlers - moved to attachPhotoListeners()
-          }, 100);
-          
+
           // Camera
           document.getElementById('camera-btn').addEventListener('click', () => {
             // Check if we're in a camera modal (before or after mode)
@@ -1148,11 +1143,17 @@
           if (photoIndex >= 0 && photoIndex < this.photos.length) {
             const photo = this.photos[photoIndex];
             const photoType = photo.mode === 'mix' ? 'combined before/after' : photo.mode;
-            
+
             if (confirm(`Are you sure you want to delete this ${photoType} photo from ${photo.room}?`)) {
               this.photos.splice(photoIndex, 1);
               this.savePhotos();
-              this.init(); // Refresh the gallery
+
+              // Update photo grid without full DOM regeneration
+              const photosContainer = document.getElementById('photos-container');
+              if (photosContainer) {
+                photosContainer.innerHTML = this.getPhotosHTML();
+                this.attachPhotoListeners(); // Re-attach event listeners for updated photo elements
+              }
             }
           }
         }
@@ -1289,6 +1290,7 @@
             const photosContainer = document.getElementById('photos-container');
             if (photosContainer) {
               photosContainer.innerHTML = this.getPhotosHTML();
+              this.attachPhotoListeners(); // Re-attach event listeners for new photo elements
             }
 
             // Go directly to split screen preview
