@@ -581,27 +581,32 @@
           return `
             <div style="min-height: 100vh; background: #f8fafc; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;">
               <!-- Header -->
-              <div style="background: #F2C31B; color: #303030; padding: 20px; text-align: center;">
-                <h1 style="margin: 0; font-size: 24px;">🧹 Cleaning Photo App</h1>
-                <p style="margin: 8px 0 0 0; opacity: 0.8;">Professional Before & After Photos</p>
+              <div style="background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <!-- Location dropdown -->
+                <select id="location-select" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: bold;">
+                  <option value="tampa">Tampa</option>
+                  <option value="st-petersburg">St. Petersburg</option>
+                  <option value="jacksonville">Jacksonville</option>
+                  <option value="miami">Miami</option>
+                </select>
+                
+                <!-- Cleaner name -->
+                <div style="font-size: 16px; font-weight: bold;">Kate</div>
+                
+                <!-- Upload button -->
+                <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                  📤 Upload
+                </button>
               </div>
               
               <!-- Main Content -->
               <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
                 
-                <!-- Room Selector & Camera -->
+                <!-- Room Selector -->
                 <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(48,48,48,0.1); border: 1px solid #E1E1E1;">
-                  <h3 style="margin: 0 0 15px 0; color: #303030;">Select Room & Take Photo</h3>
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 15px 0; color: #303030; font-size: 16px;">Select Room</h3>
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                     ${this.getRoomButtons()}
-                  </div>
-                  <div style="text-align: center;">
-                    <button id="camera-btn" style="background: #F2C31B; color: #303030; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold;">
-                      📷 Open Camera
-                    </button>
-                    <p style="color: #B3B3B3; font-size: 14px; margin: 10px 0 0 0;">
-                      Note: Camera access requires HTTPS and user permission
-                    </p>
                   </div>
                 </div>
                 
@@ -630,15 +635,14 @@
                   </div>
                 </div>
                 
-                <!-- Upload Section -->
+                <!-- Camera Button -->
                 <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(48,48,48,0.1); border: 1px solid #E1E1E1;">
-                  <h3 style="margin: 0 0 15px 0; color: #303030;">Upload Photos</h3>
                   <div style="text-align: center;">
-                    <button id="upload-btn" style="background: #B3B3B3; color: #303030; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold;">
-                      📤 Upload Photos
+                    <button id="camera-btn" style="background: #F2C31B; color: #303030; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold;">
+                      📷 Open Camera
                     </button>
                     <p style="color: #B3B3B3; font-size: 14px; margin: 10px 0 0 0;">
-                      Upload photos from your device (Coming Soon)
+                      Note: Camera access requires HTTPS and user permission
                     </p>
                   </div>
                 </div>
@@ -652,7 +656,7 @@
           const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
           return rooms.map(room => `
             <button class="room-btn" data-room="${room}" 
-                    style="padding: 10px; border: 1px solid ${this.currentRoom === room ? '#F2C31B' : '#E1E1E1'}; background: ${this.currentRoom === room ? '#F2C31B' : 'white'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; border-radius: 6px; font-size: 14px; font-weight: ${this.currentRoom === room ? 'bold' : 'normal'};">
+                    style="padding: 8px; border: 1px solid ${this.currentRoom === room ? '#F2C31B' : '#E1E1E1'}; background: ${this.currentRoom === room ? '#F2C31B' : 'white'}; color: ${this.currentRoom === room ? '#303030' : '#B3B3B3'}; border-radius: 6px; font-size: 11px; font-weight: ${this.currentRoom === room ? 'bold' : 'normal'}; line-height: 1.2;">
               ${room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ')}
             </button>
           `).join('');
@@ -723,10 +727,22 @@
             this.openCamera();
           });
           
-          // Upload button (dummy functionality)
-          document.getElementById('upload-btn').addEventListener('click', () => {
-            alert('Upload functionality will be added soon!');
-          });
+          // Header upload button (dummy functionality)
+          const headerUploadBtn = document.getElementById('header-upload-btn');
+          if (headerUploadBtn) {
+            headerUploadBtn.addEventListener('click', () => {
+              alert('Upload functionality will be added soon!');
+            });
+          }
+          
+          // Location select
+          const locationSelect = document.getElementById('location-select');
+          if (locationSelect) {
+            locationSelect.addEventListener('change', (e) => {
+              console.log('Location changed to:', e.target.value);
+              // You can add location-specific functionality here
+            });
+          }
           
           // Photo tabs
           document.querySelectorAll('.photo-tab').forEach(tab => {
