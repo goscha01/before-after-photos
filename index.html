@@ -1178,11 +1178,15 @@
                 // Close current split screen
                 this.closeSplitScreenPreview();
 
-                // Clean up any remaining modals
+                // Clean up any remaining modals (exclude permanent UI elements)
                 const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
                 existingModals.forEach(modal => {
                   try {
-                    if (modal.parentNode && !modal.id.includes('bottom-panel')) {
+                    if (modal.parentNode &&
+                        !modal.id.includes('bottom-panel') &&
+                        !modal.id.includes('sticky-tabs-container') &&
+                        modal.id !== 'bottom-panel' &&
+                        modal.id !== 'sticky-tabs-container') {
                       if (modal.parentNode === document.body) {
                         document.body.removeChild(modal);
                       } else {
@@ -1391,14 +1395,20 @@
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
 
-          // Close ALL existing modals to prevent overlapping
+          // Close modal overlays only (exclude permanent UI elements)
           const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
           existingModals.forEach(modal => {
             try {
-              if (modal.parentNode && modal.parentNode === document.body) {
-                document.body.removeChild(modal);
-              } else if (modal.parentNode) {
-                modal.parentNode.removeChild(modal);
+              if (modal.parentNode &&
+                  !modal.id.includes('bottom-panel') &&
+                  !modal.id.includes('sticky-tabs-container') &&
+                  modal.id !== 'bottom-panel' &&
+                  modal.id !== 'sticky-tabs-container') {
+                if (modal.parentNode === document.body) {
+                  document.body.removeChild(modal);
+                } else if (modal.parentNode) {
+                  modal.parentNode.removeChild(modal);
+                }
               }
             } catch (error) {
               console.log('Modal already removed:', error);
@@ -1819,9 +1829,14 @@
           if (modal) {
             document.body.removeChild(modal);
           }
-          
-          // Refresh display
-          this.init();
+
+          // Update photo grid without full DOM regeneration
+          const photosContainer = document.getElementById('photos-container');
+          if (photosContainer) {
+            photosContainer.innerHTML = this.getPhotosHTML();
+            this.attachEventListeners(); // Re-attach listeners for new photo elements
+          }
+
           console.log('Photo capture completed');
         }
         
