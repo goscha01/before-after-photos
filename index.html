@@ -568,9 +568,6 @@
                   ${this.getPhotosHTML()}
                 </div>
                 
-                <!-- Room sections for scrolling -->
-                ${this.getRoomScrollSections()}
-                
               </div>
               
               <!-- Fixed Camera Button with Action Buttons -->
@@ -598,78 +595,7 @@
           `;
         }
         
-        getRoomScrollSections() {
-          const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
-          const roomIcons = {
-            'kitchen': '🍳',
-            'bathroom': '🛁',
-            'bedroom': '🛏️',
-            'living-room': '🛋️',
-            'dining-room': '🍽️',
-            'office': '💼'
-          };
-          
-          return rooms.map(room => {
-            const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
-            const roomPhotos = this.getRoomPhotosByType('photo');
-            const isActive = this.currentRoom === room;
-            
-            return `
-              <div class="room-section" data-room="${room}" style="margin-top: 30px; padding: 20px; border-radius: 12px; background: ${isActive ? '#F2C31B' : 'white'}; border: 2px solid ${isActive ? '#F2C31B' : '#E1E1E1'}; cursor: pointer; transition: all 0.3s;">
-                <!-- Room header -->
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                  <div style="font-size: 32px; margin-right: 15px;">${roomIcons[room]}</div>
-                  <div>
-                    <h3 style="color: ${isActive ? '#303030' : '#303030'}; margin: 0; font-size: 20px;">${roomName}</h3>
-                    <p style="color: ${isActive ? '#303030' : '#B3B3B3'}; margin: 5px 0 0 0; font-size: 14px;">${roomPhotos.length} photos</p>
-                  </div>
-                </div>
-                
-                <!-- Room photos preview -->
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
-                  ${this.getRoomPreviewPhotos(room)}
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
         
-        getRoomPreviewPhotos(room) {
-          const roomPhotos = this.photos.filter(photo => photo.room === room && (photo.mode === 'before' || photo.mode === 'after'));
-          const roomIcons = {
-            'kitchen': '🍳',
-            'bathroom': '🛁',
-            'bedroom': '🛏️',
-            'living-room': '🛋️',
-            'dining-room': '🍽️',
-            'office': '💼'
-          };
-          
-          // Show up to 6 photos, fill with dummy squares if needed
-          const maxPhotos = 6;
-          const photosToShow = roomPhotos.slice(0, maxPhotos);
-          const dummyCount = Math.max(0, maxPhotos - photosToShow.length);
-          
-          const photoElements = photosToShow.map(photo => `
-            <div style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative;">
-              <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); padding: 4px; color: white; font-size: 10px;">
-                ${photo.mode.toUpperCase()}
-              </div>
-            </div>
-          `);
-          
-          const dummyElements = [];
-          for (let i = 0; i < dummyCount; i++) {
-            dummyElements.push(`
-              <div class="dummy-photo" data-room="${room}" style="aspect-ratio: 1; border-radius: 8px; background: #E1E1E1; border: 2px dashed #B3B3B3; display: flex; align-items: center; justify-content: center; color: #B3B3B3; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#F2C31B'; this.style.color='#303030';" onmouseout="this.style.background='#E1E1E1'; this.style.color='#B3B3B3';">
-                ${roomIcons[room]}
-              </div>
-            `);
-          }
-          
-          return [...photoElements, ...dummyElements].join('');
-        }
         
         getRoomTabsCarousel() {
           const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
@@ -1021,52 +947,8 @@
         }
 
         checkVisibleRoom() {
-          const rooms = ['kitchen', 'bathroom', 'bedroom', 'living-room', 'dining-room', 'office'];
-          const viewportHeight = window.innerHeight;
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const tabsHeight = 80; // Height of fixed tabs container
-
-          // Check which room section is most visible in the viewport
-          let mostVisibleRoom = null;
-          let maxVisibleArea = 0;
-
-          rooms.forEach(room => {
-            const roomSection = document.querySelector(`[data-room="${room}"].room-section`);
-            if (!roomSection) return;
-
-            const rect = roomSection.getBoundingClientRect();
-            const sectionTop = rect.top + scrollTop;
-            const sectionBottom = sectionTop + rect.height;
-
-            // Calculate visible area of this section
-            const visibleTop = Math.max(sectionTop, scrollTop + tabsHeight);
-            const visibleBottom = Math.min(sectionBottom, scrollTop + viewportHeight);
-            const visibleArea = Math.max(0, visibleBottom - visibleTop);
-
-            // Also consider sections that are prominently in view (top 1/3 of screen)
-            const prominentViewTop = scrollTop + tabsHeight;
-            const prominentViewBottom = scrollTop + (viewportHeight / 3) + tabsHeight;
-
-            if (sectionTop <= prominentViewBottom && sectionBottom >= prominentViewTop) {
-              const prominentArea = Math.min(sectionBottom, prominentViewBottom) - Math.max(sectionTop, prominentViewTop);
-              const prominentWeight = prominentArea * 2; // Give more weight to prominent area
-
-              if (prominentWeight > maxVisibleArea) {
-                maxVisibleArea = prominentWeight;
-                mostVisibleRoom = room;
-              }
-            } else if (visibleArea > maxVisibleArea) {
-              maxVisibleArea = visibleArea;
-              mostVisibleRoom = room;
-            }
-          });
-
-          // Update current room if it changed
-          if (mostVisibleRoom && mostVisibleRoom !== this.currentRoom) {
-            console.log('Auto-switching to room:', mostVisibleRoom, 'based on scroll position');
-            this.currentRoom = mostVisibleRoom;
-            this.updateTabsCarousel();
-          }
+          // Room sections removed - scroll-based room switching disabled
+          // Users can only switch rooms through tabs
         }
         
         attachPhotoListeners() {
@@ -1134,22 +1016,7 @@
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
           
-          // Room sections click handlers
-          setTimeout(() => {
-            document.querySelectorAll('.room-section').forEach(section => {
-              section.addEventListener('click', (e) => {
-                const room = e.currentTarget.dataset.room;
-                this.currentRoom = room;
-                this.currentTab = 'photo';
-                this.init();
-                
-                // Delay tab centering to ensure DOM is ready
-                setTimeout(() => {
-                  this.scrollToActiveTab();
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 200);
-              });
-            });
+          // Room sections removed - navigation now only through tabs
             
             // Dummy photos click handlers - moved to attachPhotoListeners()
           }, 100);
