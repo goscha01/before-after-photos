@@ -777,97 +777,94 @@
         }
         
         saveComparisonPhoto(afterPhotoDataUrl, beforePhoto) {
-          // Show the combined photo preview first
-          this.showCombinedPhotoPreview(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room);
+          // Show the split-screen combined photo preview
+          this.showSplitScreenPreview(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room);
         }
         
-        showCombinedPhotoPreview(beforeDataUrl, afterDataUrl, room) {
+        showSplitScreenPreview(beforeDataUrl, afterDataUrl, room) {
           const modal = document.querySelector('[style*="position: fixed"]');
           if (modal) {
             modal.innerHTML = `
-              <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000;">
-                <!-- Combined photo preview -->
-                <div id="combined-photo-container" style="position: relative; width: 90vw; max-width: 800px; height: 60vh; max-height: 600px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-                  <!-- Before photo (left half) -->
-                  <div style="position: absolute; left: 0; top: 0; width: 50%; height: 100%; overflow: hidden;">
-                    <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 5px 15px; border-radius: 15px; font-size: 16px; font-weight: bold;">
-                      BEFORE
-                    </div>
-                  </div>
-                  
-                  <!-- Divider line -->
-                  <div style="position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: #000; transform: translateX(-50%);"></div>
-                  
-                  <!-- After photo (right half) -->
-                  <div style="position: absolute; right: 0; top: 0; width: 50%; height: 100%; overflow: hidden;">
-                    <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                    <div style="position: absolute; top: 10px; right: 50%; transform: translateX(50%); background: rgba(0,0,0,0.7); color: white; padding: 5px 15px; border-radius: 15px; font-size: 16px; font-weight: bold;">
-                      AFTER
-                    </div>
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; background: white;">
+                <!-- Before photo (top half) -->
+                <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
+                  <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
+                    BEFORE
                   </div>
                 </div>
                 
-                <!-- Action buttons -->
-                <div style="margin-top: 30px; display: flex; gap: 20px;">
+                <!-- Divider line -->
+                <div style="width: 100%; height: 4px; background: #000;"></div>
+                
+                <!-- After photo (bottom half) -->
+                <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
+                  <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
+                    AFTER
+                  </div>
+                </div>
+                
+                <!-- Action buttons overlay -->
+                <div style="position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 20px;">
                   <!-- Retake button -->
-                  <button id="retake-combined-btn" style="background: rgba(239,68,68,0.8); color: white; border: none; padding: 15px 25px; border-radius: 25px; font-size: 16px; cursor: pointer; backdrop-filter: blur(10px);">
+                  <button id="retake-split-btn" style="background: rgba(239,68,68,0.9); color: white; border: none; padding: 15px 25px; border-radius: 25px; font-size: 16px; cursor: pointer; backdrop-filter: blur(10px);">
                     🔄 Retake After
                   </button>
                   
                   <!-- Save combined button -->
-                  <button id="save-combined-btn" style="background: rgba(16,185,129,0.8); color: white; border: none; padding: 15px 25px; border-radius: 25px; font-size: 16px; cursor: pointer; backdrop-filter: blur(10px);">
+                  <button id="save-split-btn" style="background: rgba(16,185,129,0.9); color: white; border: none; padding: 15px 25px; border-radius: 25px; font-size: 16px; cursor: pointer; backdrop-filter: blur(10px);">
                     💾 Save Combined Photo
                   </button>
                 </div>
                 
                 <!-- Close button -->
-                <button id="close-combined-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 24px; cursor: pointer; backdrop-filter: blur(10px);">
+                <button id="close-split-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 24px; cursor: pointer; backdrop-filter: blur(10px);">
                   ❌
                 </button>
               </div>
             `;
             
             // Add event listeners
-            document.getElementById('retake-combined-btn').addEventListener('click', () => {
+            document.getElementById('retake-split-btn').addEventListener('click', () => {
               this.retakeComparisonPhoto({dataUrl: beforeDataUrl, room: room}, null);
             });
             
-            document.getElementById('save-combined-btn').addEventListener('click', () => {
-              this.captureCombinedPhoto(beforeDataUrl, afterDataUrl, room);
+            document.getElementById('save-split-btn').addEventListener('click', () => {
+              this.captureSplitScreenPhoto(beforeDataUrl, afterDataUrl, room);
             });
             
-            document.getElementById('close-combined-btn').addEventListener('click', () => {
+            document.getElementById('close-split-btn').addEventListener('click', () => {
               document.body.removeChild(modal);
             });
           }
         }
         
-        captureCombinedPhoto(beforeDataUrl, afterDataUrl, room) {
-          // Create a temporary container to render the combined photo
+        captureSplitScreenPhoto(beforeDataUrl, afterDataUrl, room) {
+          // Create a temporary fullscreen container for the split-screen photo
           const tempContainer = document.createElement('div');
           tempContainer.style.cssText = `
-            position: fixed; top: -9999px; left: -9999px; 
-            width: 800px; height: 600px; background: white;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: white; z-index: 9999;
           `;
           
           tempContainer.innerHTML = `
-            <div style="position: relative; width: 100%; height: 100%;">
-              <!-- Before photo (left half) -->
-              <div style="position: absolute; left: 0; top: 0; width: 50%; height: 100%; overflow: hidden;">
+            <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;">
+              <!-- Before photo (top half) -->
+              <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
                 <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 5px 15px; border-radius: 15px; font-size: 16px; font-weight: bold;">
+                <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                   BEFORE
                 </div>
               </div>
               
               <!-- Divider line -->
-              <div style="position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: #000; transform: translateX(-50%);"></div>
+              <div style="width: 100%; height: 4px; background: #000;"></div>
               
-              <!-- After photo (right half) -->
-              <div style="position: absolute; right: 0; top: 0; width: 50%; height: 100%; overflow: hidden;">
+              <!-- After photo (bottom half) -->
+              <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
                 <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                <div style="position: absolute; top: 10px; right: 50%; transform: translateX(50%); background: rgba(0,0,0,0.7); color: white; padding: 5px 15px; border-radius: 15px; font-size: 16px; font-weight: bold;">
+                <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                   AFTER
                 </div>
               </div>
@@ -876,95 +873,111 @@
           
           document.body.appendChild(tempContainer);
           
-          // Use html2canvas library approach - create a simple canvas solution
+          // Use html2canvas to capture the entire screen
           setTimeout(() => {
-            this.createCombinedPhotoCanvas(beforeDataUrl, afterDataUrl, room);
-            document.body.removeChild(tempContainer);
-          }, 100);
+            this.captureScreenAsImage(tempContainer, room);
+          }, 500); // Give time for images to load
         }
         
-        createCombinedPhotoCanvas(beforeDataUrl, afterDataUrl, room) {
+        captureScreenAsImage(container, room) {
+          // Create a canvas to capture the screen
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Set canvas size
-          canvas.width = 800;
-          canvas.height = 600;
+          // Set canvas size to match the container
+          canvas.width = container.offsetWidth;
+          canvas.height = container.offsetHeight;
           
           // Fill white background
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           
-          // Create image objects
-          const beforeImg = new Image();
-          const afterImg = new Image();
-          
+          // Get all images from the container
+          const images = container.querySelectorAll('img');
           let imagesLoaded = 0;
+          const totalImages = images.length;
+          
+          if (totalImages === 0) {
+            // No images, just save the container
+            this.saveCombinedPhoto(canvas.toDataURL('image/jpeg', 0.9), room);
+            document.body.removeChild(container);
+            return;
+          }
           
           const onImageLoad = () => {
             imagesLoaded++;
-            if (imagesLoaded === 2) {
-              // Both images loaded, now draw them
-              const halfWidth = canvas.width / 2;
-              const halfHeight = canvas.height;
+            if (imagesLoaded === totalImages) {
+              // All images loaded, now draw them
+              const halfHeight = canvas.height / 2;
               
-              // Draw before photo (left half)
-              ctx.drawImage(beforeImg, 0, 0, halfWidth, halfHeight);
+              // Draw before photo (top half)
+              const beforeImg = images[0];
+              ctx.drawImage(beforeImg, 0, 0, canvas.width, halfHeight);
               
               // Draw divider line
               ctx.strokeStyle = '#000000';
-              ctx.lineWidth = 2;
+              ctx.lineWidth = 4;
               ctx.beginPath();
-              ctx.moveTo(halfWidth, 0);
-              ctx.lineTo(halfWidth, halfHeight);
+              ctx.moveTo(0, halfHeight);
+              ctx.lineTo(canvas.width, halfHeight);
               ctx.stroke();
               
-              // Draw after photo (right half)
-              ctx.drawImage(afterImg, halfWidth, 0, halfWidth, halfHeight);
+              // Draw after photo (bottom half)
+              const afterImg = images[1];
+              ctx.drawImage(afterImg, 0, halfHeight, canvas.width, halfHeight);
               
               // Add labels
-              ctx.fillStyle = 'rgba(0,0,0,0.7)';
-              ctx.font = 'bold 16px Arial';
+              ctx.fillStyle = 'rgba(0,0,0,0.8)';
+              ctx.font = 'bold 18px Arial';
               ctx.textAlign = 'center';
               
               // Before label
-              ctx.fillRect(halfWidth/2 - 40, 10, 80, 25);
+              ctx.fillRect(canvas.width/2 - 50, 20, 100, 30);
               ctx.fillStyle = '#ffffff';
-              ctx.fillText('BEFORE', halfWidth/2, 28);
+              ctx.fillText('BEFORE', canvas.width/2, 40);
               
               // After label
-              ctx.fillStyle = 'rgba(0,0,0,0.7)';
-              ctx.fillRect(halfWidth + halfWidth/2 - 40, 10, 80, 25);
+              ctx.fillStyle = 'rgba(0,0,0,0.8)';
+              ctx.fillRect(canvas.width/2 - 50, halfHeight + 20, 100, 30);
               ctx.fillStyle = '#ffffff';
-              ctx.fillText('AFTER', halfWidth + halfWidth/2, 28);
+              ctx.fillText('AFTER', canvas.width/2, halfHeight + 40);
               
               // Convert to data URL and save
               const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              this.saveCombinedPhoto(combinedDataUrl, room);
               
-              const combinedPhoto = {
-                id: Date.now(),
-                dataUrl: combinedDataUrl,
-                room: room,
-                mode: 'mix',
-                timestamp: Date.now()
-              };
-              
-              this.photos.push(combinedPhoto);
-              this.savePhotos();
-              
-              // Close the modal and refresh
-              document.body.removeChild(document.querySelector('[style*="position: fixed"]'));
-              this.init();
-              
-              alert(`Combined before/after photo saved for ${room}! Check the Mix tab.`);
+              // Clean up
+              document.body.removeChild(container);
             }
           };
           
-          beforeImg.onload = onImageLoad;
-          afterImg.onload = onImageLoad;
+          // Set up image load handlers
+          images.forEach(img => {
+            if (img.complete) {
+              onImageLoad();
+            } else {
+              img.onload = onImageLoad;
+            }
+          });
+        }
+        
+        saveCombinedPhoto(combinedDataUrl, room) {
+          const combinedPhoto = {
+            id: Date.now(),
+            dataUrl: combinedDataUrl,
+            room: room,
+            mode: 'mix',
+            timestamp: Date.now()
+          };
           
-          beforeImg.src = beforeDataUrl;
-          afterImg.src = afterDataUrl;
+          this.photos.push(combinedPhoto);
+          this.savePhotos();
+          
+          // Close the modal and refresh
+          document.body.removeChild(document.querySelector('[style*="position: fixed"]'));
+          this.init();
+          
+          alert(`Combined before/after photo saved for ${room}! Check the Mix tab.`);
         }
         
         async openCamera() {
