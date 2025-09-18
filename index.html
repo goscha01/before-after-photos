@@ -270,6 +270,15 @@
             rootElement.innerHTML = this.getAppHTML();
             this.attachEventListeners();
             this.updateTabsCarousel(); // Update carousel layout
+            
+            // Auto-scroll to bottom after app initialization
+            setTimeout(() => {
+              const mainScrollableContent = document.getElementById('main-scrollable-content');
+              if (mainScrollableContent) {
+                console.log('Init: Scrolling to bottom of gallery');
+                mainScrollableContent.scrollTop = mainScrollableContent.scrollHeight;
+              }
+            }, 300);
           }
           
           // Listen for orientation changes
@@ -378,7 +387,7 @@
         
         getBeforePhotoModalHTML() {
           return `
-            <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
+            <div style="position: relative; width: 100vw; height: calc(100vh - 80px); display: flex; flex-direction: column;">
               <!-- Top half - Camera -->
               <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
                 <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
@@ -404,7 +413,7 @@
               </div>
               
               <!-- Bottom half - Photo Grid -->
-              <div id="before-photo-grid" style="width: 100%; height: calc(50% - 80px); background: #f8f9fa; overflow-y: auto; padding: 10px;">
+              <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 20px; min-height: 200px;">
                 ${this.getBeforePhotosGridHTML()}
               </div>
               
@@ -432,41 +441,37 @@
             .filter(photo => photo.room === this.currentRoom && photo.mode === 'before')
             .sort((a, b) => a.timestamp - b.timestamp);
 
-          // Create grid layout with dummy squares
+          // Create grid layout with all photos and dummy squares
           const gridItems = [];
-          const totalSlots = 6; // 2 rows x 3 columns for camera modal
-
-          // Fill grid positions with photos or dummy squares
-          for (let i = 0; i < totalSlots; i++) {
-            if (i < beforePhotos.length) {
-              const photo = beforePhotos[i];
-              gridItems.push(`
-                <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
-                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                  
-                  <!-- Delete button -->
-                  <button class="delete-before-photo-btn" data-photo-id="${photo.id}" style="position: absolute; top: 5px; right: 5px; background: #F2C31B; color: #303030; border: none; padding: 6px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e6b800'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='scale(1)'">
-                    ×
-                  </button>
-                  
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 8px; color: white;">
-                    <div style="font-size: 12px; font-weight: bold;">${photo.name}</div>
-                    <div style="font-size: 10px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleTimeString()}</div>
-                  </div>
+          
+          // Add all existing photos
+          beforePhotos.forEach(photo => {
+            gridItems.push(`
+              <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
+                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                
+                <!-- Delete button -->
+                <button class="delete-before-photo-btn" data-photo-id="${photo.id}" style="position: absolute; top: 5px; right: 5px; background: #F2C31B; color: #303030; border: none; padding: 6px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e6b800'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='scale(1)'">
+                  ×
+                </button>
+                
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 8px; color: white;">
+                  <div style="font-size: 12px; font-weight: bold;">${photo.name}</div>
+                  <div style="font-size: 10px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleTimeString()}</div>
                 </div>
-              `);
-            } else {
-              // Empty dummy squares
-              gridItems.push(`
-                <div class="dummy-before-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
-                  ${roomIcons[this.currentRoom] || '📷'}
-                </div>
-              `);
-            }
-          }
+              </div>
+            `);
+          });
+          
+          // Add one dummy square for taking more photos
+          gridItems.push(`
+            <div class="dummy-before-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
+              ${roomIcons[this.currentRoom] || '📷'}
+            </div>
+          `);
 
           return `
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 100%; overflow-y: auto;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; grid-auto-rows: minmax(120px, 1fr); align-content: start; min-height: 100%;">
               ${gridItems.join('')}
             </div>
           `;
@@ -660,7 +665,7 @@
               </div>
               
               <!-- Scrollable Content -->
-              <div style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 80px 10px 100px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
+              <div id="main-scrollable-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 80px 10px 100px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
                 
                 <!-- Photos grid with swipe -->
                 <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 0 10px; max-width: 100%; box-sizing: border-box;">
@@ -669,8 +674,8 @@
                 
               </div>
               
-              <!-- Fixed Action Buttons Panel -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: transparent;">
+              <!-- Fixed Action Buttons Panel (only for camera modals) -->
+              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: white; box-shadow: 0 -2px 8px rgba(0,0,0,0.1);">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
@@ -690,6 +695,7 @@
                   </button>
                 </div>
               </div>
+              
             </div>
           `;
         }
@@ -767,87 +773,80 @@
 
           console.log('Before photos (chronological):', beforePhotos);
 
-          // Create grid layout with 8 uniform dummy squares
+          // Create grid layout with all photos and dummy squares
           const gridItems = [];
-          const totalSlots = 8; // Always show 8 squares (4 rows x 2 columns)
+          
+          console.log(`Grid calculation: ${beforePhotos.length} photos`);
 
-          console.log(`Grid calculation: ${beforePhotos.length} photos, ${totalSlots} total slots`);
+          // Add all existing photos
+          beforePhotos.forEach((beforePhoto, i) => {
+            // Check if there's a corresponding after photo linked to this before photo
+            const afterPhoto = this.photos.find(p =>
+              p.room === this.currentRoom &&
+              p.mode === 'after' &&
+              p.beforePhotoId === beforePhoto.id
+            );
 
-          // Fill grid positions based on before photos chronologically
-          for (let i = 0; i < totalSlots; i++) {
-            const beforePhotoIndex = i;
+            if (afterPhoto) {
+              // Show split-screen before/after
+              const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
-            if (beforePhotoIndex < beforePhotos.length) {
-              const beforePhoto = beforePhotos[beforePhotoIndex];
-
-              // Check if there's a corresponding after photo linked to this before photo
-              const afterPhoto = this.photos.find(p =>
-                p.room === this.currentRoom &&
-                p.mode === 'after' &&
-                p.beforePhotoId === beforePhoto.id
-              );
-
-              if (afterPhoto) {
-                // Show split-screen before/after
-                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
-
-                gridItems.push(`
-                  <div class="photo-item" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
-                    <!-- Split screen container taking full card space -->
-                    <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
-                      <!-- Before photo (top half) -->
-                      <div style="height: 50%; overflow: hidden; position: relative;">
-                        <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                        <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">BEFORE</div>
-                      </div>
-                      <!-- Divider line -->
-                      <div style="height: 2px; background: #000;"></div>
-                      <!-- After photo (bottom half) -->
-                      <div style="height: 50%; overflow: hidden; position: relative;">
-                        <img src="${afterPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                        <div style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">AFTER</div>
-                      </div>
-                    </div>
-
-                    <!-- Transparent title overlay -->
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                      <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
-                      <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
-                    </div>
-
-                    <!-- Delete button -->
-                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
-                      🗑️
-                    </button>
-                  </div>
-                `);
-              } else {
-                // Show only before photo
-                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
-
-                gridItems.push(`
-                  <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
-                    <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
-                    <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
-                      <div style="font-weight: bold; margin-bottom: 2px; color: #303030;">${displayName}</div>
-                      <div style="font-size: 10px; opacity: 0.8;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
-                    </div>
-                    <!-- Delete button -->
-                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
-                      🗑️
-                    </button>
-                  </div>
-                `);
-              }
-            } else {
-              // Empty dummy squares - all look the same
               gridItems.push(`
-                <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
-                  ${roomIcons[this.currentRoom] || '📷'}
+                <div class="photo-item" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
+                  <!-- Split screen container taking full card space -->
+                  <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
+                    <!-- Before photo (top half) -->
+                    <div style="height: 50%; overflow: hidden; position: relative;">
+                      <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                      <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">BEFORE</div>
+                    </div>
+                    <!-- Divider line -->
+                    <div style="height: 2px; background: #000;"></div>
+                    <!-- After photo (bottom half) -->
+                    <div style="height: 50%; overflow: hidden; position: relative;">
+                      <img src="${afterPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                      <div style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">AFTER</div>
+                    </div>
+                  </div>
+
+                  <!-- Transparent title overlay -->
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                    <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
+                    <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
+                  </div>
+
+                  <!-- Delete button -->
+                  <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                    🗑️
+                  </button>
+                </div>
+              `);
+            } else {
+              // Show only before photo
+              const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
+
+              gridItems.push(`
+                <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
+                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
+                  <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
+                    <div style="font-weight: bold; margin-bottom: 2px; color: #303030;">${displayName}</div>
+                    <div style="font-size: 10px; opacity: 0.8;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
+                  </div>
+                  <!-- Delete button -->
+                  <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                    🗑️
+                  </button>
                 </div>
               `);
             }
-          }
+          });
+          
+          // Add one dummy square for taking more photos
+          gridItems.push(`
+            <div class="dummy-photo" data-room="${this.currentRoom}" style="aspect-ratio: 1; border-radius: 8px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8e8e8'; this.style.color='#666';" onmouseout="this.style.background='#f0f0f0'; this.style.color='#999';">
+              ${roomIcons[this.currentRoom] || '📷'}
+            </div>
+          `);
 
           console.log('Grid items count:', gridItems.length);
           return gridItems.join('');
@@ -919,15 +918,26 @@
               }
               
               this.currentTab = 'photo';
-              this.init();
               
-              // Delay carousel update to ensure DOM is ready
-              setTimeout(() => {
-                this.updateTabsCarousel();
-                this.updateModalRoomTabs();
-                this.updateModalPhotoGrid();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }, 200);
+              // Check if we're in a camera modal - if so, don't call init() to avoid regenerating the entire app
+              const isInCameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') !== null ||
+                                      document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') !== null ||
+                                      document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]') !== null;
+              
+              if (isInCameraModal) {
+                // Just update modal elements without regenerating the entire app
+                setTimeout(() => {
+                  this.updateModalRoomTabs();
+                  this.updateModalPhotoGrid();
+                }, 100);
+              } else {
+                // Normal app update
+                this.init();
+                setTimeout(() => {
+                  this.updateTabsCarousel();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 200);
+              }
             }
           });
           
@@ -946,15 +956,26 @@
               }
               
               this.currentTab = 'photo';
-              this.init();
               
-              // Delay carousel update to ensure DOM is ready
-              setTimeout(() => {
-                this.updateTabsCarousel();
-                this.updateModalRoomTabs();
-                this.updateModalPhotoGrid();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }, 200);
+              // Check if we're in a camera modal - if so, don't call init() to avoid regenerating the entire app
+              const isInCameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') !== null ||
+                                      document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') !== null ||
+                                      document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]') !== null;
+              
+              if (isInCameraModal) {
+                // Just update modal elements without regenerating the entire app
+                setTimeout(() => {
+                  this.updateModalRoomTabs();
+                  this.updateModalPhotoGrid();
+                }, 100);
+              } else {
+                // Normal app update
+                this.init();
+                setTimeout(() => {
+                  this.updateTabsCarousel();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 200);
+              }
             }
           });
         }
@@ -983,6 +1004,11 @@
           if (beforePhotoGrid) {
             beforePhotoGrid.innerHTML = this.getBeforePhotosGridHTML();
             this.attachBeforePhotoListeners();
+            
+            // Auto-scroll to bottom to show latest photos
+            setTimeout(() => {
+              beforePhotoGrid.scrollTop = beforePhotoGrid.scrollHeight;
+            }, 100);
           }
         }
 
@@ -1007,7 +1033,9 @@
           if (saveBtn) saveBtn.style.display = 'none';
           
           // Check if we're in a camera modal - if so, keep camera button visible
-          const isInCameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') !== null;
+          const isInCameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') !== null ||
+                                  document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') !== null ||
+                                  document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]') !== null;
           if (cameraBtn) {
             if (isInCameraModal) {
               cameraBtn.style.display = 'block'; // Keep visible during camera modal
@@ -1051,6 +1079,7 @@
         
         attachPhotoListeners() {
           // Only attach listeners for photo elements (called after photo grid updates)
+          console.log('attachPhotoListeners called');
           setTimeout(() => {
             document.querySelectorAll('.photo-item').forEach(item => {
               // Photo click to view fullscreen
@@ -1092,6 +1121,27 @@
                 this.openCameraForRoom(room);
               });
             });
+            
+            // Auto-scroll to bottom to show latest photos (main gallery only)
+            setTimeout(() => {
+              const mainScrollableContent = document.getElementById('main-scrollable-content');
+              if (mainScrollableContent) {
+                console.log('Found main scrollable content:', mainScrollableContent);
+                console.log('Scroll height:', mainScrollableContent.scrollHeight);
+                console.log('Client height:', mainScrollableContent.clientHeight);
+                console.log('Current scroll top:', mainScrollableContent.scrollTop);
+                
+                if (mainScrollableContent.scrollHeight > mainScrollableContent.clientHeight) {
+                  console.log('Content is scrollable, scrolling to bottom');
+                  mainScrollableContent.scrollTop = mainScrollableContent.scrollHeight;
+                  console.log('New scroll top:', mainScrollableContent.scrollTop);
+                } else {
+                  console.log('Content is not scrollable - no need to scroll');
+                }
+              } else {
+                console.log('Main scrollable content not found');
+              }
+            }, 200);
           }, 100);
         }
 
@@ -1967,7 +2017,7 @@
             // Create fullscreen camera modal
             const modal = document.createElement('div');
             modal.style.cssText = `
-              position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+              position: fixed; top: 0; left: 0; width: 100vw; height: calc(100vh - 80px); 
               background: black; z-index: 1000; display: flex; 
               flex-direction: column; align-items: center; justify-content: center;
             `;
@@ -2005,6 +2055,14 @@
 
             // Attach listeners to before photo items
             this.attachBeforePhotoListeners();
+            
+            // Auto-scroll to bottom to show latest photos
+            setTimeout(() => {
+              const beforePhotoGrid = document.getElementById('before-photo-grid');
+              if (beforePhotoGrid) {
+                beforePhotoGrid.scrollTop = beforePhotoGrid.scrollHeight;
+              }
+            }, 200);
             
           } catch (error) {
             alert('Camera access denied or failed: ' + error.message);
