@@ -1543,6 +1543,7 @@
         }
         
         async openCamera() {
+          console.log('Opening camera...');
           try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
               alert('Camera not supported on this device');
@@ -1571,14 +1572,24 @@
             modal.innerHTML = this.getCameraModalHTML();
             
             document.body.appendChild(modal);
+            console.log('Camera modal created and added to DOM');
             
             const video = document.getElementById('camera-video');
-            video.srcObject = stream;
+            console.log('Video element found:', video);
+            if (video) {
+              video.srcObject = stream;
+              console.log('Stream assigned to video');
+            } else {
+              console.error('Video element not found!');
+            }
             
             // Store current facing mode
             let currentFacingMode = 'environment'; // Start with back camera
             
             document.getElementById('capture-btn').addEventListener('click', () => {
+              console.log('Capture button clicked');
+              console.log('Video element:', video);
+              console.log('Stream:', stream);
               this.capturePhoto(video, stream);
             });
             
