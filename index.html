@@ -947,20 +947,40 @@
         }
 
         attachEventListeners() {
-          // Room tabs with swipe support
-          document.querySelectorAll('.room-tab').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-              this.currentRoom = e.target.dataset.room;
-              this.currentTab = 'photo'; // Reset to photo tab when switching rooms
-              this.init();
-              
-              // Delay carousel update to ensure DOM is ready
-              setTimeout(() => {
-                this.updateTabsCarousel();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }, 200);
+          // Room tabs with swipe support - attach with delay to ensure DOM is ready
+          setTimeout(() => {
+            const roomTabs = document.querySelectorAll('.room-tab');
+            console.log('Attaching click listeners to', roomTabs.length, 'room tabs');
+
+            roomTabs.forEach((btn, index) => {
+              console.log(`Room tab ${index}:`, btn.dataset.room);
+
+              btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Get room from current target (the button) instead of target (might be inner element)
+                const room = e.currentTarget.dataset.room;
+                console.log('Room tab clicked:', room);
+
+                if (room && room !== this.currentRoom) {
+                  this.currentRoom = room;
+                  this.currentTab = 'photo'; // Reset to photo tab when switching rooms
+                  this.init();
+
+                  // Delay carousel update to ensure DOM is ready
+                  setTimeout(() => {
+                    this.updateTabsCarousel();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }, 200);
+                }
+              });
+
+              // Also add pointer events for better touch handling
+              btn.style.pointerEvents = 'auto';
+              btn.style.cursor = 'pointer';
             });
-          });
+          }, 100);
           
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
