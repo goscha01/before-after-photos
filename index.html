@@ -259,15 +259,25 @@
         }
         
         init() {
+          console.log('🔄 APP INIT CALLED - Recreating entire DOM');
+
           // Check orientation
           this.checkOrientation();
-          
+
           // Reassign photo names to ensure proper sequential numbering
           this.reassignPhotoNames();
-          
+
           const rootElement = document.getElementById('root');
           if (rootElement) {
+            console.log('📄 Setting app HTML - header should be included');
             rootElement.innerHTML = this.getAppHTML();
+
+            // Verify header was created
+            setTimeout(() => {
+              const headerUploadBtn = document.getElementById('header-upload-btn');
+              console.log('🔍 Header verification - Upload button found:', !!headerUploadBtn);
+            }, 10);
+
             this.attachEventListeners();
             this.updateTabsCarousel(); // Update carousel layout
 
@@ -1345,6 +1355,30 @@
           if (stickyTabsContainer) {
             stickyTabsContainer.style.display = 'flex';
           }
+
+          // Also ensure header is visible
+          this.showHeader();
+        }
+
+        showHeader() {
+          // Ensure header is visible - find the header element
+          const headerUploadBtn = document.getElementById('header-upload-btn');
+          if (headerUploadBtn) {
+            // Header exists, make sure its parent is visible
+            const header = headerUploadBtn.closest('div');
+            if (header) {
+              header.style.display = 'flex';
+              header.style.visibility = 'visible';
+              header.style.opacity = '1';
+              console.log('✅ Header restored');
+            }
+          } else {
+            console.log('❌ Header not found - may need to recreate app');
+            // If header is missing, something went wrong - reinitialize
+            setTimeout(() => {
+              this.init();
+            }, 100);
+          }
         }
 
         // Helper function to restore scrolling if no camera modals are open
@@ -1863,15 +1897,26 @@
               `;
               
               document.body.appendChild(modal);
-              
+
+              // Prevent background scrolling when modal is open
+              document.body.style.overflow = 'hidden';
+
               document.getElementById('close-photo-btn').addEventListener('click', () => {
                 document.body.removeChild(modal);
+
+                // Restore UI elements when closing regular photo fullscreen
+                this.showMainRoomTabs();
+                document.body.style.overflow = '';
               });
-              
+
               // Close on background click
               modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                   document.body.removeChild(modal);
+
+                  // Restore UI elements when closing regular photo fullscreen
+                  this.showMainRoomTabs();
+                  document.body.style.overflow = '';
                 }
               });
             }
@@ -1899,15 +1944,26 @@
             `;
             
             document.body.appendChild(modal);
-            
+
+            // Prevent background scrolling when modal is open
+            document.body.style.overflow = 'hidden';
+
             document.getElementById('close-photo-btn').addEventListener('click', () => {
               document.body.removeChild(modal);
+
+              // Restore UI elements when closing regular photo fullscreen
+              this.showMainRoomTabs();
+              document.body.style.overflow = '';
             });
-            
+
             // Close on background click
             modal.addEventListener('click', (e) => {
               if (e.target === modal) {
                 document.body.removeChild(modal);
+
+                // Restore UI elements when closing regular photo fullscreen
+                this.showMainRoomTabs();
+                document.body.style.overflow = '';
               }
             });
           }
@@ -1968,8 +2024,16 @@
             // Clear the before photo reference
             this.currentBeforePhoto = null;
             
-            // Auto-cycle to next unpaired before photo
-            this.autoCycleToNextBeforePhoto(beforePhoto.room);
+            // Auto-cycle to next unpaired before photo in current room
+            // Only auto-cycle if we're still in the same room where the photo was taken
+            if (this.currentRoom === beforePhoto.room) {
+              this.autoCycleToNextBeforePhoto(this.currentRoom);
+            } else {
+              // User switched rooms - just restore the UI and return to gallery
+              this.showMainRoomTabs();
+              this.hideActionButtons();
+              document.body.style.overflow = '';
+            }
           }, 100);
         }
         
@@ -1994,7 +2058,18 @@
             this.openComparisonModal(nextBeforePhoto);
           } else {
             console.log('All before photos in room', room, 'have been paired with after photos');
-            // Could show a message or return to gallery
+
+            // Restore UI when all photos are paired - return to gallery
+            this.showMainRoomTabs();
+            this.hideActionButtons();
+            document.body.style.overflow = '';
+
+            // Update the photo grid to show current room
+            const photosContainer = document.getElementById('photos-container');
+            if (photosContainer) {
+              photosContainer.innerHTML = this.getPhotosHTML();
+              this.attachPhotoListeners();
+            }
           }
         }
         
