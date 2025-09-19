@@ -652,9 +652,9 @@
                   <button id="all-photos-btn" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
                     📷 All Photos
                   </button>
-                  <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
-                    📤 Upload
-                  </button>
+                <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                  📤 Upload
+                </button>
                 </div>
               </div>
 
@@ -766,6 +766,8 @@
             'office': '💼'
           };
 
+          // Debug: Check all photos first
+
           // Get all stored photos (before, after, and combined/mix photos)
           const allPhotos = this.photos
             .filter(photo => {
@@ -782,11 +784,118 @@
               if (photo.mode === 'mix') return true;
               
               return false;
-            })
-            .sort((a, b) => b.timestamp - a.timestamp); // Most recent first
+            });
 
 
-          if (allPhotos.length === 0) {
+          // Group photos by room and organize them: before, after, combined
+          // Handle multiple photos of the same type by grouping them by name/sequence
+          const photosByRoomAndName = {};
+          allPhotos.forEach(photo => {
+            if (!photosByRoomAndName[photo.room]) {
+              photosByRoomAndName[photo.room] = {};
+            }
+            
+            // For combined photos with long names, try to match them to the correct before/after set
+            let photoKey = photo.name;
+            
+            if (photo.mode === 'mix' && photo.name.includes('_Combined_')) {
+              // Try to find matching before/after photos by timestamp proximity
+              const beforePhotos = allPhotos.filter(p => p.mode === 'before' && p.room === photo.room);
+              const afterPhotos = allPhotos.filter(p => p.mode === 'after' && p.room === photo.room);
+              
+              // Find the closest timestamp match
+              let closestMatch = null;
+              let minTimeDiff = Infinity;
+              
+              [...beforePhotos, ...afterPhotos].forEach(matchPhoto => {
+                const timeDiff = Math.abs(photo.timestamp - matchPhoto.timestamp);
+                if (timeDiff < minTimeDiff && timeDiff < 60000) { // Within 1 minute
+                  minTimeDiff = timeDiff;
+                  closestMatch = matchPhoto;
+                }
+              });
+              
+              if (closestMatch) {
+                photoKey = closestMatch.name; // Use the matched photo's name
+              }
+            }
+            
+            if (!photosByRoomAndName[photo.room][photoKey]) {
+              photosByRoomAndName[photo.room][photoKey] = {
+                before: null,
+                after: null,
+                combined: null
+              };
+            }
+            
+            if (photo.mode === 'before' || photo.mode === 'archived') {
+              photosByRoomAndName[photo.room][photoKey].before = photo;
+            } else if (photo.mode === 'after') {
+              photosByRoomAndName[photo.room][photoKey].after = photo;
+            } else if (photo.mode === 'mix') {
+              photosByRoomAndName[photo.room][photoKey].combined = photo;
+            }
+          });
+
+          // Create ordered array: before, after, combined for each room and photo set
+          // Sort photo sets by name to ensure consistent ordering (Kitchen 1, Kitchen 2, Kitchen 3)
+          const orderedPhotos = [];
+          Object.keys(photosByRoomAndName).forEach(room => {
+            const roomPhotoSets = photosByRoomAndName[room];
+            const sortedPhotoSetNames = Object.keys(roomPhotoSets).sort((a, b) => {
+              // Extract numbers from names for proper sorting
+              const aNum = parseInt(a.replace(/\D/g, '')) || 0;
+              const bNum = parseInt(b.replace(/\D/g, '')) || 0;
+              return aNum - bNum;
+            });
+            
+            sortedPhotoSetNames.forEach(photoSetName => {
+              const photoSet = roomPhotoSets[photoSetName];
+              
+              // Add before photo (or dummy if missing)
+              if (photoSet.before) {
+                orderedPhotos.push(photoSet.before);
+              } else {
+                orderedPhotos.push({ 
+                  id: `dummy-before-${photoSetName}`, 
+                  mode: 'dummy-before', 
+                  room: room, 
+                  name: photoSetName,
+                  isDummy: true 
+                });
+              }
+              
+              // Add after photo (or dummy if missing)
+              if (photoSet.after) {
+                orderedPhotos.push(photoSet.after);
+              } else {
+                orderedPhotos.push({ 
+                  id: `dummy-after-${photoSetName}`, 
+                  mode: 'dummy-after', 
+                  room: room, 
+                  name: photoSetName,
+                  isDummy: true 
+                });
+              }
+              
+              // Add combined photo (or dummy if missing)
+              if (photoSet.combined) {
+                orderedPhotos.push(photoSet.combined);
+              } else {
+                orderedPhotos.push({ 
+                  id: `dummy-combined-${photoSetName}`, 
+                  mode: 'dummy-combined', 
+                  room: room, 
+                  name: photoSetName,
+                  isDummy: true 
+                });
+              }
+            });
+          });
+
+
+
+          if (orderedPhotos.length === 0) {
             return `
               <div style="text-align: center; padding: 40px 20px; color: #666;">
                 <div style="font-size: 48px; margin-bottom: 20px;">📷</div>
@@ -798,12 +907,13 @@
 
           // Group photos by room for better organization
           const photosByRoom = {};
-          allPhotos.forEach(photo => {
+          orderedPhotos.forEach(photo => {
             if (!photosByRoom[photo.room]) {
               photosByRoom[photo.room] = [];
             }
             photosByRoom[photo.room].push(photo);
           });
+
 
           let html = '';
           
@@ -813,22 +923,67 @@
             const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
             const roomIcon = roomIcons[room] || '🏠';
             
+            
             html += `
               <div style="margin-bottom: 30px;">
-                <h3 style="margin: 0 0 15px 0; padding: 0 10px; color: #303030; font-size: 18px; display: flex; align-items: center; gap: 8px;">
-                  ${roomIcon} ${roomName} (${roomPhotos.length})
+                <h3 style="margin: 0 0 15px 0; padding: 0 10px; color: #303030; font-size: 18px; display: flex; align-items: center; justify-content: space-between;">
+                  <span style="display: flex; align-items: center; gap: 8px;">${roomIcon} ${roomName} (${roomPhotos.length})</span>
+                  <span style="font-size: 12px; color: #666; font-weight: normal;">
+                    ${roomPhotos.length > 0 ? new Date(roomPhotos[0].timestamp).toLocaleDateString() : ''}
+                  </span>
                 </h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 10px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 10px;">
+                  <div style="text-align: center; font-size: 12px; font-weight: bold; color: #F2C31B; padding: 5px;">BEFORE</div>
+                  <div style="text-align: center; font-size: 12px; font-weight: bold; color: #3B82F6; padding: 5px;">AFTER</div>
+                  <div style="text-align: center; font-size: 12px; font-weight: bold; color: #10B981; padding: 5px;">COMBINED</div>
             `;
             
             roomPhotos.forEach((photo, index) => {
-              const displayName = photo.name || `${room} ${index + 1}`;
-              const photoIndex = this.photos.indexOf(photo);
+              // For combined photos with long names, use the photo set name instead
+              let displayName = photo.name || `${room} ${index + 1}`;
+              
+              if (photo.mode === 'mix' && photo.name.includes('_Combined_')) {
+                // Extract the base name from the current photo set
+                const currentPhotoSetName = roomPhotos.find(p => p.mode === 'before')?.name || 
+                                          roomPhotos.find(p => p.mode === 'after')?.name;
+                if (currentPhotoSetName) {
+                  displayName = currentPhotoSetName;
+                }
+              }
+              
+              const photoIndex = photo.isDummy ? -1 : this.photos.indexOf(photo);
+              
+              // Handle dummy photos
+              if (photo.isDummy) {
+                let borderColor = '#E1E1E1';
+                let photoLabel = '';
+                let icon = '📷';
+                
+                if (photo.mode === 'dummy-before') {
+                  borderColor = '#F2C31B';
+                  icon = '📸';
+                } else if (photo.mode === 'dummy-after') {
+                  borderColor = '#3B82F6';
+                  icon = '📷';
+                } else if (photo.mode === 'dummy-combined') {
+                  borderColor = '#10B981';
+                  icon = '🔄';
+                }
+                
+                html += `
+                  <div style="border: 2px dashed ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 1; background: #f8f9fa; display: flex; align-items: center; justify-content: center; opacity: 0.6;">
+                    <div style="text-align: center; color: #666;">
+                      <div style="font-size: 24px; margin-bottom: 8px;">${icon}</div>
+                      <div style="font-size: 8px; color: #999;">Missing</div>
+                    </div>
+                  </div>
+                `;
+                return;
+              }
               
               if (photo.mode === 'after') {
-                // After photo - show with blue border and AFTER label
+                // After photo - show with blue border
                 const borderColor = '#3B82F6';
-                const photoLabel = '<div style="font-size: 9px; color: #3B82F6; font-weight: bold;">AFTER</div>';
                 
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
@@ -836,9 +991,7 @@
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
-                      <div style="font-weight: bold; margin-bottom: 2px;">${displayName}</div>
-                      <div style="font-size: 9px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleString()}</div>
-                      ${photoLabel}
+                      <div style="font-weight: bold;">${displayName}</div>
                     </div>
                   </div>
                 `;
@@ -849,13 +1002,10 @@
                 
                 if (photo.mode === 'before') {
                   borderColor = '#F2C31B';
-                  photoLabel = '<div style="font-size: 9px; color: #F2C31B; font-weight: bold;">BEFORE</div>';
                 } else if (photo.mode === 'mix') {
                   borderColor = '#10B981';
-                  photoLabel = '<div style="font-size: 9px; color: #10B981; font-weight: bold;">COMBINED</div>';
                 } else if (photo.mode === 'archived') {
                   borderColor = '#6B7280';
-                  photoLabel = '<div style="font-size: 9px; color: #6B7280; font-weight: bold;">ARCHIVED</div>';
                 }
                 
                 html += `
@@ -864,9 +1014,7 @@
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
-                      <div style="font-weight: bold; margin-bottom: 2px;">${displayName}</div>
-                      <div style="font-size: 9px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleString()}</div>
-                      ${photoLabel}
+                      <div style="font-weight: bold;">${displayName}</div>
                     </div>
                   </div>
                 `;
@@ -2605,10 +2753,82 @@
             console.log('Added new after photo for before photo:', beforePhoto.id);
           }
 
+          // Automatically create combined photo
+          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room, beforePhoto.name);
+
           this.savePhotos();
         }
         
-        
+        createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName) {
+          console.log('Creating combined photo automatically for room:', room, 'with name:', photoName);
+          
+          // Create a canvas to combine the photos
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set canvas size
+          canvas.width = 800;
+          canvas.height = 600;
+          
+          // Fill white background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Create image objects
+          const beforeImg = new Image();
+          const afterImg = new Image();
+          
+          let imagesLoaded = 0;
+          const totalImages = 2;
+          
+          const onImageLoad = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+              // All images loaded, now draw them
+              const halfHeight = canvas.height / 2;
+              
+              // Draw before photo (top half)
+              ctx.drawImage(beforeImg, 0, 0, canvas.width, halfHeight);
+              
+              // Draw divider line
+              ctx.strokeStyle = '#000000';
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(0, halfHeight);
+              ctx.lineTo(canvas.width, halfHeight);
+              ctx.stroke();
+              
+              // Draw after photo (bottom half)
+              ctx.drawImage(afterImg, 0, halfHeight, canvas.width, halfHeight);
+              
+              // Add labels
+              ctx.fillStyle = 'rgba(0,0,0,0.8)';
+              ctx.font = 'bold 18px Arial';
+              ctx.textAlign = 'center';
+              
+              // Before label
+              ctx.fillRect(canvas.width/2 - 50, 20, 100, 30);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText('BEFORE', canvas.width/2, 40);
+              
+              // After label
+              ctx.fillStyle = 'rgba(0,0,0,0.8)';
+              ctx.fillRect(canvas.width/2 - 50, halfHeight + 20, 100, 30);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText('AFTER', canvas.width/2, halfHeight + 40);
+              
+              // Convert to data URL and save
+              const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              this.saveCombinedPhoto(combinedDataUrl, room, photoName);
+            }
+          };
+          
+          // Load images
+          beforeImg.onload = onImageLoad;
+          afterImg.onload = onImageLoad;
+          beforeImg.src = beforeDataUrl;
+          afterImg.src = afterDataUrl;
+        }
         
         
         showSplitScreenPreview(beforeDataUrl, afterDataUrl, room) {
@@ -2807,32 +3027,26 @@
           });
         }
         
-        saveCombinedPhoto(combinedDataUrl, room) {
-          // Find the before photo for this room (after photos are already in "All" tab)
-          const roomPhotos = this.photos.filter(photo => photo.room === room);
-          const beforePhoto = roomPhotos.find(photo => photo.mode === 'before');
+        saveCombinedPhoto(combinedDataUrl, room, photoName) {
+          console.log('saveCombinedPhoto called with name:', photoName);
           
-          // Create meaningful name for the combined photo
-          const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
-          const combinedPhotoName = `${roomName}_Combined_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
-          
-          // Create the combined photo
+          // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
             id: Date.now(),
             dataUrl: combinedDataUrl,
             room: room,
             mode: 'mix',
-            name: combinedPhotoName,
+            name: photoName, // Use the same name as before/after photos
             timestamp: Date.now()
           };
+          
+          console.log('Created combined photo:', combinedPhoto);
           
           // Add the combined photo
           this.photos.push(combinedPhoto);
           
-          // Move before photo to "archived" mode (All tab)
-          if (beforePhoto) {
-            beforePhoto.mode = 'archived';
-          }
+          // Keep before photo in main gallery (don't move to archived)
+          // The combined photo will appear in All Photos gallery separately
           
           this.savePhotos();
 
