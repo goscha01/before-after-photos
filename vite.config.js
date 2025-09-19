@@ -27,6 +27,17 @@ export default defineConfig({
       }
     })
   ],
+  define: {
+    // Replace environment variables in HTML file for vanilla JS
+    __VITE_LOCATION_A_SCRIPT_URL__: JSON.stringify(process.env.VITE_LOCATION_A_SCRIPT_URL || ''),
+    __VITE_LOCATION_A_FOLDER_ID__: JSON.stringify(process.env.VITE_LOCATION_A_FOLDER_ID || ''),
+    __VITE_LOCATION_B_SCRIPT_URL__: JSON.stringify(process.env.VITE_LOCATION_B_SCRIPT_URL || ''),
+    __VITE_LOCATION_B_FOLDER_ID__: JSON.stringify(process.env.VITE_LOCATION_B_FOLDER_ID || ''),
+    __VITE_LOCATION_C_SCRIPT_URL__: JSON.stringify(process.env.VITE_LOCATION_C_SCRIPT_URL || ''),
+    __VITE_LOCATION_C_FOLDER_ID__: JSON.stringify(process.env.VITE_LOCATION_C_FOLDER_ID || ''),
+    __VITE_LOCATION_D_SCRIPT_URL__: JSON.stringify(process.env.VITE_LOCATION_D_SCRIPT_URL || ''),
+    __VITE_LOCATION_D_FOLDER_ID__: JSON.stringify(process.env.VITE_LOCATION_D_FOLDER_ID || '')
+  },
   server: {
     port: 3000,
     host: true

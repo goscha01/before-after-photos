@@ -116,7 +116,6 @@
     
     <!-- Debug info (hidden by default) -->
     <div class="debug-info" id="debug-info" style="display: none;">
-      <div>🚀 HTML Loaded</div>
       <div>📱 User Agent: <span id="user-agent">Loading...</span></div>
       <div>🌐 Location: <span id="location">Loading...</span></div>
       <div>⏰ Time: <span id="time">Loading...</span></div>
@@ -124,9 +123,6 @@
     
     <script>
       // Basic debug info
-      console.log('🚀 Debug: HTML loaded');
-      console.log('🚀 Debug: User Agent:', navigator.userAgent);
-      console.log('🚀 Debug: Location:', window.location.href);
       
       // Update debug info
       document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
@@ -135,7 +131,6 @@
       
       // Check if we're on iOS
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      console.log('🚀 Debug: Is iOS:', isIOS);
       
       if (isIOS) {
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">🍎 iOS Detected</div>';
@@ -143,25 +138,21 @@
       
       // Check if React loads
       let reactLoadTimer = setTimeout(() => {
-        console.log('❌ Debug: React failed to load within 10 seconds');
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ React Failed to Load</div>';
       }, 10000);
       
       // Clear timer when React loads
       window.addEventListener('load', () => {
         clearTimeout(reactLoadTimer);
-        console.log('✅ Debug: Page fully loaded');
       });
       
       // Check for React errors
       window.addEventListener('error', (e) => {
-        console.log('❌ Debug: JavaScript error:', e.error);
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ JS Error: ' + e.error.message + '</div>';
       });
       
       // Check for unhandled promise rejections
       window.addEventListener('unhandledrejection', (e) => {
-        console.log('❌ Debug: Unhandled promise rejection:', e.reason);
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ Promise Error: ' + e.reason + '</div>';
       });
       
@@ -169,83 +160,55 @@
       const scripts = document.querySelectorAll('script[type="module"]');
       scripts.forEach((script, index) => {
         script.addEventListener('load', () => {
-          console.log('✅ Debug: Script ' + index + ' loaded successfully');
           document.getElementById('debug-info').innerHTML += '<div style="color: green;">✅ Script ' + index + ' loaded</div>';
         });
         script.addEventListener('error', (e) => {
-          console.log('❌ Debug: Script ' + index + ' failed to load:', e);
           document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ Script ' + index + ' failed: ' + e.message + '</div>';
         });
       });
       
       // Check if main.jsx loads
-      console.log('🚀 Debug: About to load main.jsx');
     </script>
     
     <!-- Simple JavaScript test -->
     <script>
-      console.log('🧪 Debug: Testing basic JavaScript...');
       
       // Test if we can create DOM elements
       try {
         const testDiv = document.createElement('div');
         testDiv.innerHTML = '<div style="color: green;">✅ Basic JavaScript Works!</div>';
         document.getElementById('debug-info').appendChild(testDiv);
-        console.log('✅ Debug: Basic JavaScript works');
       } catch (e) {
-        console.log('❌ Debug: Basic JavaScript failed:', e);
       }
       
-      // Test if we can fetch (for checking if the app files exist)
-      fetch('/src/main.jsx')
-        .then(response => {
-          console.log('✅ Debug: main.jsx file exists, status:', response.status);
-          if (response.status === 200) {
-            document.getElementById('debug-info').innerHTML += '<div style="color: green;">✅ main.jsx file exists</div>';
-          } else {
-            document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ main.jsx file not found (status: ' + response.status + ')</div>';
-          }
-        })
-        .catch(error => {
-          console.log('❌ Debug: Cannot fetch main.jsx:', error);
-          document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ Cannot fetch main.jsx: ' + error.message + '</div>';
-        });
     </script>
     
     <!-- Try a very simple inline test first -->
     <script>
-      console.log('🧪 Debug: Inline script starting...');
       try {
         const root = document.getElementById('root');
         if (root) {
           root.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Inline Script Works!</h1><p>JavaScript is executing on iPhone!</p></div>';
-          console.log('✅ Debug: Inline script successful');
         } else {
-          console.log('❌ Debug: Root element not found in inline script');
         }
       } catch (e) {
-        console.log('❌ Debug: Inline script error:', e);
       }
     </script>
     
     <!-- Try regular script (not module) -->
     <script>
-      console.log('🧪 Debug: Testing regular script execution...');
       
       try {
         const rootElement = document.getElementById('root');
         if (rootElement) {
           rootElement.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Regular Script Works!</h1><p>This proves regular JavaScript works on iOS Safari.</p><p>Now loading bundled React app...</p></div>';
-          console.log('✅ Debug: Regular script execution successful');
         }
       } catch (error) {
-        console.log('❌ Debug: Regular script failed:', error);
       }
     </script>
     
     <!-- iOS Safari Compatible Cleaning Photo App -->
     <script>
-      console.log('🚀 Debug: Loading iOS Safari compatible version...');
       
       // Simple photo documentation app
       class CleaningPhotoApp {
@@ -259,7 +222,6 @@
         }
         
         init() {
-          console.log('🔄 APP INIT CALLED - Recreating entire DOM');
 
           // Check orientation
           this.checkOrientation();
@@ -269,13 +231,11 @@
 
           const rootElement = document.getElementById('root');
           if (rootElement) {
-            console.log('📄 Setting app HTML - header should be included');
             rootElement.innerHTML = this.getAppHTML();
 
             // Verify header was created
             setTimeout(() => {
               const headerUploadBtn = document.getElementById('header-upload-btn');
-              console.log('🔍 Header verification - Upload button found:', !!headerUploadBtn);
             }, 10);
 
             this.attachEventListeners();
@@ -291,11 +251,8 @@
 
             // BACKUP: Also try a more direct approach after a longer delay
             setTimeout(() => {
-              console.log('🔧 BACKUP: Trying direct room tab setup...');
               document.querySelectorAll('#tabs-carousel .room-tab').forEach((btn, i) => {
-                console.log(`🔧 Direct setup for tab ${i}:`, btn.dataset.room);
                 btn.onclick = (e) => {
-                  console.log('🔧 DIRECT CLICK HANDLER!', btn.dataset.room);
                   const room = btn.dataset.room;
                   if (room && room !== this.currentRoom) {
                     this.currentRoom = room;
@@ -317,7 +274,6 @@
             setTimeout(() => {
               const mainScrollableContent = document.getElementById('main-scrollable-content');
               if (mainScrollableContent) {
-                console.log('Init: Scrolling to bottom of gallery');
                 mainScrollableContent.scrollTop = mainScrollableContent.scrollHeight;
               }
             }, 300);
@@ -691,10 +647,15 @@
                 <!-- Cleaner name -->
                 <div style="font-size: 16px; font-weight: bold;">Kate</div>
 
-                <!-- Upload button -->
-                <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
-                  📤 Upload
-                </button>
+                <!-- Action buttons -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button id="all-photos-btn" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                    📷 All Photos
+                  </button>
+                  <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                    📤 Upload
+                  </button>
+                </div>
               </div>
 
               <!-- Fixed Room Tabs (at bottom) -->
@@ -793,10 +754,323 @@
           }).filter(tab => tab !== '').join('');
         }
         
+        getAllPhotosHTML() {
+          
+          // Room icons for display
+          const roomIcons = {
+            'kitchen': '🍳',
+            'bathroom': '🛁',
+            'bedroom': '🛏️',
+            'living-room': '🛋️',
+            'dining-room': '🍽️',
+            'office': '💼'
+          };
+
+          // Get all stored photos (before, after, and combined/mix photos)
+          const allPhotos = this.photos
+            .filter(photo => {
+              // Include before photos
+              if (photo.mode === 'before') return true;
+              
+              // Include after photos
+              if (photo.mode === 'after') return true;
+              
+              // Include archived photos
+              if (photo.mode === 'archived') return true;
+              
+              // Include mix/combined photos
+              if (photo.mode === 'mix') return true;
+              
+              return false;
+            })
+            .sort((a, b) => b.timestamp - a.timestamp); // Most recent first
+
+
+          if (allPhotos.length === 0) {
+            return `
+              <div style="text-align: center; padding: 40px 20px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 20px;">📷</div>
+                <h3 style="margin: 0 0 10px 0; color: #303030;">No Photos Yet</h3>
+                <p style="margin: 0; font-size: 14px;">Take some photos to see them here!</p>
+              </div>
+            `;
+          }
+
+          // Group photos by room for better organization
+          const photosByRoom = {};
+          allPhotos.forEach(photo => {
+            if (!photosByRoom[photo.room]) {
+              photosByRoom[photo.room] = [];
+            }
+            photosByRoom[photo.room].push(photo);
+          });
+
+          let html = '';
+          
+          // Display photos grouped by room
+          Object.keys(photosByRoom).forEach(room => {
+            const roomPhotos = photosByRoom[room];
+            const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
+            const roomIcon = roomIcons[room] || '🏠';
+            
+            html += `
+              <div style="margin-bottom: 30px;">
+                <h3 style="margin: 0 0 15px 0; padding: 0 10px; color: #303030; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                  ${roomIcon} ${roomName} (${roomPhotos.length})
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 10px;">
+            `;
+            
+            roomPhotos.forEach((photo, index) => {
+              const displayName = photo.name || `${room} ${index + 1}`;
+              const photoIndex = this.photos.indexOf(photo);
+              
+              if (photo.mode === 'after') {
+                // After photo - show with blue border and AFTER label
+                const borderColor = '#3B82F6';
+                const photoLabel = '<div style="font-size: 9px; color: #3B82F6; font-weight: bold;">AFTER</div>';
+                
+                html += `
+                  <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
+                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    
+                    <!-- Photo info -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
+                      <div style="font-weight: bold; margin-bottom: 2px;">${displayName}</div>
+                      <div style="font-size: 9px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleString()}</div>
+                      ${photoLabel}
+                    </div>
+                  </div>
+                `;
+              } else {
+                // Single photo (before, archived, or mix/combined)
+                let borderColor = '#E1E1E1';
+                let photoLabel = '';
+                
+                if (photo.mode === 'before') {
+                  borderColor = '#F2C31B';
+                  photoLabel = '<div style="font-size: 9px; color: #F2C31B; font-weight: bold;">BEFORE</div>';
+                } else if (photo.mode === 'mix') {
+                  borderColor = '#10B981';
+                  photoLabel = '<div style="font-size: 9px; color: #10B981; font-weight: bold;">COMBINED</div>';
+                } else if (photo.mode === 'archived') {
+                  borderColor = '#6B7280';
+                  photoLabel = '<div style="font-size: 9px; color: #6B7280; font-weight: bold;">ARCHIVED</div>';
+                }
+                
+                html += `
+                  <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
+                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    
+                    <!-- Photo info -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
+                      <div style="font-weight: bold; margin-bottom: 2px;">${displayName}</div>
+                      <div style="font-size: 9px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleString()}</div>
+                      ${photoLabel}
+                    </div>
+                  </div>
+                `;
+              }
+            });
+            
+            html += `
+                </div>
+              </div>
+            `;
+          });
+
+          return html;
+        }
+        
+        showAllPhotosModal() {
+          // Clean up any existing modals first
+          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2500"]');
+          existingModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+          `;
+
+          modal.innerHTML = `
+            <div style="
+              width: 100%;
+              max-width: 500px;
+              height: 90vh;
+              background: white;
+              border-radius: 12px;
+              display: flex;
+              flex-direction: column;
+              overflow: hidden;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            ">
+              <!-- Header -->
+              <div style="
+                padding: 20px;
+                background: #F2C31B;
+                color: #303030;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-shrink: 0;
+              ">
+                <h2 style="margin: 0; font-size: 20px; font-weight: bold;">📷 All Photos</h2>
+                <button id="close-all-photos-modal" style="
+                  background: transparent;
+                  border: none;
+                  color: #303030;
+                  font-size: 24px;
+                  cursor: pointer;
+                  padding: 5px;
+                  border-radius: 50%;
+                  width: 35px;
+                  height: 35px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">×</button>
+              </div>
+              
+              <!-- Scrollable content -->
+              <div id="all-photos-content" style="
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+                background: #f8f9fa;
+              ">
+                ${this.getAllPhotosHTML()}
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+
+          // Prevent background scrolling
+          document.body.style.overflow = 'hidden';
+
+          // Add event listeners
+          document.getElementById('close-all-photos-modal').addEventListener('click', () => {
+            this.closeAllPhotosModal(modal);
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              this.closeAllPhotosModal(modal);
+            }
+          });
+
+          // Add photo click listeners for fullscreen view
+          setTimeout(() => {
+            const photoItems = modal.querySelectorAll('.photo-item');
+            
+            photoItems.forEach((item, index) => {
+              
+              item.addEventListener('click', (e) => {
+                
+                const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
+                if (photoIndex >= 0 && photoIndex < this.photos.length) {
+                  const photo = this.photos[photoIndex];
+                  
+                  // Close the all photos modal first
+                  this.closeAllPhotosModal(modal);
+                  
+                  // Then show the photo with its specific functionality
+                  setTimeout(() => {
+                    this.showPhotoFullscreenFromModal(photo);
+                  }, 100);
+                } else {
+                  console.error('getAllPhotosModal - Invalid photo index:', photoIndex);
+                }
+              });
+            });
+          }, 100);
+        }
+
+        closeAllPhotosModal(modal) {
+          if (modal && modal.parentNode) {
+            document.body.removeChild(modal);
+          }
+          // Restore background scrolling
+          document.body.style.overflow = '';
+        }
+
+        async showPhotoFullscreenFromModal(photo) {
+          
+          // For now, just show a simple fullscreen view for ALL photo types to test
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); z-index: 2500; display: flex;
+            align-items: center; justify-content: center;
+          `;
+          
+          modal.innerHTML = `
+            <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
+              <img src="${photo.dataUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain;" />
+              
+              <!-- Photo info overlay -->
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
+                <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">
+                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.toUpperCase()}
+                </div>
+                <div style="font-size: 16px; opacity: 0.9;">
+                  ${new Date(photo.timestamp).toLocaleString()}
+                </div>
+              </div>
+              
+              <!-- Close button -->
+              <button id="close-photo-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 18px; cursor: pointer;">
+                ✕
+              </button>
+            </div>
+          `;
+          
+          document.body.appendChild(modal);
+          document.body.style.overflow = 'hidden';
+          
+          
+          // Add close functionality
+          document.getElementById('close-photo-btn').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+            
+            // Reopen the All Photos modal
+            setTimeout(() => {
+              this.showAllPhotosModal();
+            }, 100);
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+              
+              // Reopen the All Photos modal
+              setTimeout(() => {
+                this.showAllPhotosModal();
+              }, 100);
+            }
+          });
+        }
+        
         getPhotosHTML() {
-          console.log('getPhotosHTML - Current room:', this.currentRoom);
-          console.log('getPhotosHTML - Current tab:', this.currentTab);
-          console.log('getPhotosHTML - All photos:', this.photos);
 
           // Room icon for placeholders
           const roomIcons = {
@@ -813,12 +1087,10 @@
             .filter(photo => photo.room === this.currentRoom && photo.mode === 'before')
             .sort((a, b) => a.timestamp - b.timestamp); // Oldest first
 
-          console.log('Before photos (chronological):', beforePhotos);
 
           // Create grid layout with all photos and dummy squares
           const gridItems = [];
           
-          console.log(`Grid calculation: ${beforePhotos.length} photos`);
 
           // Add all existing photos
           beforePhotos.forEach((beforePhoto, i) => {
@@ -895,7 +1167,6 @@
             </div>
           `);
 
-          console.log('Grid items count:', gridItems.length);
           return gridItems.join('');
         }
         
@@ -1032,7 +1303,6 @@
           const tabsCarousel = document.getElementById('tabs-carousel');
           if (tabsCarousel) {
             tabsCarousel.innerHTML = this.getRoomTabsCarousel();
-            console.log('Carousel updated for room:', this.currentRoom);
 
             // Reattach event listeners after updating the DOM
             this.attachRoomTabListeners();
@@ -1040,25 +1310,18 @@
         }
 
         attachRoomTabListeners() {
-          console.log('=== DEBUGGING ROOM TAB LISTENERS ===');
 
           // Room tabs click listeners - specifically for main gallery (not modal)
           const mainCarousel = document.getElementById('tabs-carousel');
-          console.log('Main carousel element:', mainCarousel);
 
           if (!mainCarousel) {
-            console.log('❌ Main tabs carousel not found - checking all elements...');
             const allElements = document.querySelectorAll('*[id*="tab"]');
-            console.log('All tab-related elements:', allElements);
             return;
           }
 
           const roomTabs = mainCarousel.querySelectorAll('.room-tab');
-          console.log('✅ Found', roomTabs.length, 'main gallery room tabs');
-          console.log('Main carousel innerHTML:', mainCarousel.innerHTML);
 
           roomTabs.forEach((btn, index) => {
-            console.log(`🎯 Setting up room tab ${index}:`, btn.dataset.room, btn);
 
             // Remove any existing listeners first
             btn.removeEventListener('click', this.roomTabClickHandler);
@@ -1124,15 +1387,12 @@
               console.log('👆 Pointer DOWN on room tab:', btn.dataset.room);
             });
 
-            console.log(`✅ Listeners attached to room tab: ${btn.dataset.room}`);
           });
 
-          console.log('=== END DEBUGGING ===');
         }
 
         // Test function to manually check room tab functionality
         testRoomTabs() {
-          console.log('🧪 TESTING ROOM TABS');
           const carousel = document.getElementById('tabs-carousel');
           console.log('Carousel found:', !!carousel);
 
@@ -1396,10 +1656,8 @@
               header.style.display = 'flex';
               header.style.visibility = 'visible';
               header.style.opacity = '1';
-              console.log('✅ Header restored');
             }
           } else {
-            console.log('❌ Header not found - may need to recreate app');
             // If header is missing, something went wrong - reinitialize
             setTimeout(() => {
               this.init();
@@ -1439,7 +1697,6 @@
         
         attachPhotoListeners() {
           // Only attach listeners for photo elements (called after photo grid updates)
-          console.log('attachPhotoListeners called');
           setTimeout(() => {
             document.querySelectorAll('.photo-item').forEach(item => {
               // Photo click to view fullscreen
@@ -1499,20 +1756,12 @@
             setTimeout(() => {
               const mainScrollableContent = document.getElementById('main-scrollable-content');
               if (mainScrollableContent) {
-                console.log('Found main scrollable content:', mainScrollableContent);
-                console.log('Scroll height:', mainScrollableContent.scrollHeight);
-                console.log('Client height:', mainScrollableContent.clientHeight);
-                console.log('Current scroll top:', mainScrollableContent.scrollTop);
                 
                 if (mainScrollableContent.scrollHeight > mainScrollableContent.clientHeight) {
-                  console.log('Content is scrollable, scrolling to bottom');
                   mainScrollableContent.scrollTop = mainScrollableContent.scrollHeight;
-                  console.log('New scroll top:', mainScrollableContent.scrollTop);
                 } else {
-                  console.log('Content is not scrollable - no need to scroll');
                 }
               } else {
-                console.log('Main scrollable content not found');
               }
             }, 200);
           }, 100);
@@ -1556,6 +1805,14 @@
           if (headerUploadBtn) {
             headerUploadBtn.addEventListener('click', () => {
               this.showDeleteAllConfirmation();
+            });
+          }
+          
+          // All Photos button - show all photos modal
+          const allPhotosBtn = document.getElementById('all-photos-btn');
+          if (allPhotosBtn) {
+            allPhotosBtn.addEventListener('click', () => {
+              this.showAllPhotosModal();
             });
           }
           
@@ -1749,6 +2006,9 @@
           if (photoIndex >= 0 && photoIndex < this.photos.length) {
             this.photos.splice(photoIndex, 1);
             
+            // Save changes to localStorage
+            this.savePhotos();
+            
             // Reassign names to maintain proper sequential numbering
             this.reassignPhotoNames();
 
@@ -1849,7 +2109,6 @@
           // Update before photo grid in modal if it exists
           this.updateModalPhotoGrid();
 
-          console.log('✅ All photos deleted successfully');
 
           // Show confirmation message
           setTimeout(() => {
@@ -2965,12 +3224,10 @@
             // Check storage size before saving
             const photosData = JSON.stringify(this.photos);
             const sizeInMB = (photosData.length * 2) / (1024 * 1024); // Rough estimate of size in MB
-            console.log(`Attempting to save ${this.photos.length} photos (${sizeInMB.toFixed(2)}MB)`);
 
             localStorage.setItem('cleaning-photos', photosData);
           } catch (e) {
             if (e.name === 'QuotaExceededError') {
-              console.log('❌ Storage quota exceeded. Managing storage...');
               this.manageStorage();
             } else {
               console.error('Error saving photos:', e);
@@ -2993,7 +3250,6 @@
             // Try saving again
             try {
               localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
-              console.log(`✅ Successfully saved ${this.photos.length} photos after cleanup`);
 
               // Update the UI to reflect the changes
               const photosContainer = document.getElementById('photos-container');
@@ -3002,7 +3258,6 @@
                 this.attachPhotoListeners();
               }
             } catch (e) {
-              console.error('❌ Still unable to save after cleanup:', e);
               alert('Storage is full. Please delete some photos manually.');
             }
           } else {
@@ -3054,9 +3309,7 @@
             this.photos = compressed;
             try {
               localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
-              console.log('✅ Successfully saved compressed photos');
             } catch (e) {
-              console.error('❌ Still unable to save after compression:', e);
               // Fall back to removing old photos
               this.manageStorage();
             }
@@ -3078,12 +3331,10 @@
       window.app = app;
       window.testRoomTabs = () => app.testRoomTabs();
 
-      console.log('✅ Debug: iOS Safari compatible app loaded successfully');
     </script>
     
     <!-- Fallback for browsers that don't support ES6 modules -->
     <script nomodule>
-      console.log('❌ Debug: ES6 modules not supported, using fallback');
       document.getElementById('debug-info').innerHTML += '<div style="color: orange;">⚠️ ES6 modules not supported</div>';
       
       // Show a simple message instead of React app
@@ -3099,9 +3350,5 @@
       }, 2000);
     </script>
     
-    <script>
-      // This will run after main.jsx loads (if it loads)
-      console.log('✅ Debug: main.jsx script tag processed');
-    </script>
   </body>
 </html>
