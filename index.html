@@ -455,7 +455,7 @@
               </div>
               
               <!-- Bottom half - Photo Grid -->
-              <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 20px; min-height: 200px;">
+              <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px; min-height: 200px;">
                 ${this.getBeforePhotosGridHTML()}
               </div>
               
@@ -707,7 +707,7 @@
               </div>
               
               <!-- Scrollable Content -->
-              <div id="main-scrollable-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 60px 10px 180px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
+              <div id="main-scrollable-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 60px 10px 95px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
                 
                 <!-- Photos grid with swipe -->
                 <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 0 10px; max-width: 100%; box-sizing: border-box;">
@@ -717,7 +717,7 @@
               </div>
               
               <!-- Fixed Action Buttons Panel (only for camera modals) -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;">
+              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: white;">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
@@ -1197,12 +1197,31 @@
           // Update photo grid in the modal
           const beforePhotoGrid = document.getElementById('before-photo-grid');
           if (beforePhotoGrid) {
+            // Store current scroll position and content height
+            const previousScrollTop = beforePhotoGrid.scrollTop;
+            const previousScrollHeight = beforePhotoGrid.scrollHeight;
+
             beforePhotoGrid.innerHTML = this.getBeforePhotosGridHTML();
             this.attachBeforePhotoListeners();
-            
-            // Auto-scroll to bottom to show latest photos
+
+            // Smart scrolling to keep content visible above bottom panel
             setTimeout(() => {
-              beforePhotoGrid.scrollTop = beforePhotoGrid.scrollHeight;
+              const currentScrollHeight = beforePhotoGrid.scrollHeight;
+              const containerHeight = beforePhotoGrid.clientHeight;
+              const bottomPanelHeight = 80; // Height of bottom panel
+
+              // If content grew (new photos added), scroll up to accommodate
+              if (currentScrollHeight > previousScrollHeight) {
+                const heightDifference = currentScrollHeight - previousScrollHeight;
+
+                // Calculate optimal scroll position to keep latest content visible
+                // but not hidden behind bottom panel
+                const maxVisibleScroll = currentScrollHeight - containerHeight + bottomPanelHeight;
+                const newScrollTop = Math.min(previousScrollTop + heightDifference, maxVisibleScroll);
+
+                beforePhotoGrid.scrollTop = Math.max(0, newScrollTop);
+                console.log('📸 Auto-scrolled up to accommodate new photos');
+              }
             }, 100);
           }
         }
@@ -1228,12 +1247,12 @@
                                document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
             
             if (cameraModal && cameraModal.innerHTML.includes('comparison-camera')) {
-              // After mode - make bottom panel transparent
+              // After mode (comparison camera) - transparent panel
               bottomPanel.style.background = 'transparent';
               bottomPanel.style.boxShadow = 'none';
             } else {
-              // Before mode - keep panel transparent (room tabs are at bottom)
-              bottomPanel.style.background = 'transparent';
+              // Before mode - white panel to cover gallery
+              bottomPanel.style.background = 'white';
               bottomPanel.style.boxShadow = 'none';
             }
           }
@@ -1288,11 +1307,18 @@
                                document.querySelector('[style*="position: fixed"][style*="z-index: 2002"]');
             
             if (cameraModal) {
-              // Both before and after modes - transparent panel, yellow button with white border
-              bottomPanel.style.background = 'transparent';
-              bottomPanel.style.boxShadow = 'none';
-              
-              // Make individual sections transparent as well
+              // Conditional styling based on camera mode
+              if (cameraModal.innerHTML.includes('comparison-camera')) {
+                // After mode (comparison camera) - transparent panel
+                bottomPanel.style.background = 'transparent';
+                bottomPanel.style.boxShadow = 'none';
+              } else {
+                // Before mode - white panel to cover gallery
+                bottomPanel.style.background = 'white';
+                bottomPanel.style.boxShadow = 'none';
+              }
+
+              // Make individual sections transparent
               const sections = bottomPanel.querySelectorAll('div');
               sections.forEach(section => {
                 section.style.background = 'transparent';
@@ -1328,12 +1354,12 @@
             cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
           }
           
-          // Keep bottom panel transparent when hidden (since room tabs are now at bottom)
+          // Keep bottom panel white when hidden (to cover any gallery content)
           if (bottomPanel) {
-            bottomPanel.style.background = 'transparent';
+            bottomPanel.style.background = 'white';
             bottomPanel.style.boxShadow = 'none';
-            
-            // Reset individual sections to transparent
+
+            // Reset individual sections to transparent (they sit on white background)
             const sections = bottomPanel.querySelectorAll('div');
             sections.forEach(section => {
               section.style.background = 'transparent';
@@ -1525,11 +1551,11 @@
             });
           }
           
-          // Header upload button (dummy functionality)
+          // Header upload button - delete all photos functionality
           const headerUploadBtn = document.getElementById('header-upload-btn');
           if (headerUploadBtn) {
             headerUploadBtn.addEventListener('click', () => {
-              alert('Upload functionality will be added soon!');
+              this.showDeleteAllConfirmation();
             });
           }
           
@@ -1737,7 +1763,100 @@
             this.updateModalPhotoGrid();
           }
         }
-        
+
+        showDeleteAllConfirmation() {
+          // Clean up any existing confirmation modals first
+          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 3000"]');
+          existingModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7); z-index: 3000; display: flex;
+            align-items: center; justify-content: center; padding: 20px;
+          `;
+
+          modal.innerHTML = `
+            <div style="background: white; border-radius: 12px; padding: 30px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+              <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+              <h2 style="margin: 0 0 15px 0; color: #303030; font-size: 20px;">Delete All Photos?</h2>
+              <p style="margin: 0 0 25px 0; color: #666; line-height: 1.4;">
+                This will permanently delete all ${this.photos.length} photos from all rooms. This action cannot be undone.
+              </p>
+              <div style="display: flex; gap: 15px;">
+                <button id="cancel-delete-all" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 500;">
+                  Cancel
+                </button>
+                <button id="confirm-delete-all" style="flex: 1; background: #dc2626; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 500;">
+                  Delete All
+                </button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+
+          const cancelBtn = document.getElementById('cancel-delete-all');
+          const confirmBtn = document.getElementById('confirm-delete-all');
+
+          // Event listeners
+          cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+
+          confirmBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.deleteAllPhotos();
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+            }
+          });
+
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              document.body.removeChild(modal);
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
+        }
+
+        deleteAllPhotos() {
+          console.log(`🗑️ Deleting all ${this.photos.length} photos...`);
+
+          // Clear the photos array
+          this.photos = [];
+
+          // Clear localStorage
+          localStorage.removeItem('cleaning-photos');
+
+          // Update the UI to show empty state
+          const photosContainer = document.getElementById('photos-container');
+          if (photosContainer) {
+            photosContainer.innerHTML = this.getPhotosHTML();
+            this.attachPhotoListeners();
+          }
+
+          // Update before photo grid in modal if it exists
+          this.updateModalPhotoGrid();
+
+          console.log('✅ All photos deleted successfully');
+
+          // Show confirmation message
+          setTimeout(() => {
+            alert('All photos have been deleted successfully!');
+          }, 100);
+        }
+
         async showPhotoFullscreen(photo) {
           // Clean up any existing photo fullscreen modals first
           const existingPhotoModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
@@ -1973,12 +2092,24 @@
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          // Limit image size to reduce storage usage
+          const maxWidth = 800;
+          const maxHeight = 600;
+          let width = video.videoWidth;
+          let height = video.videoHeight;
 
-          ctx.drawImage(video, 0, 0);
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+          }
 
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          canvas.width = width;
+          canvas.height = height;
+
+          ctx.drawImage(video, 0, 0, width, height);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
           // Automatically save the "after" photo
           this.saveAfterPhotoToAll(dataUrl, beforePhoto);
@@ -2604,11 +2735,23 @@
           console.log('Capturing photo...');
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
-          
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          
-          context.drawImage(video, 0, 0);
+
+          // Limit image size to reduce storage usage
+          const maxWidth = 800;
+          const maxHeight = 600;
+          let width = video.videoWidth;
+          let height = video.videoHeight;
+
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          context.drawImage(video, 0, 0, width, height);
           
           // First photos are always "before" photos
           const photoMode = 'before';
@@ -2618,7 +2761,7 @@
           
           const photo = {
             id: Date.now(),
-            dataUrl: canvas.toDataURL('image/jpeg', 0.8),
+            dataUrl: canvas.toDataURL('image/jpeg', 0.6),
             room: this.currentRoom,
             mode: photoMode,
             name: photoName,
@@ -2633,8 +2776,32 @@
           // Update the before photo grid in the modal
           const beforePhotoGrid = document.getElementById('before-photo-grid');
           if (beforePhotoGrid) {
+            // Store current scroll position and content height
+            const previousScrollTop = beforePhotoGrid.scrollTop;
+            const previousScrollHeight = beforePhotoGrid.scrollHeight;
+
             beforePhotoGrid.innerHTML = this.getBeforePhotosGridHTML();
             this.attachBeforePhotoListeners();
+
+            // Smart scrolling to keep content visible above bottom panel
+            setTimeout(() => {
+              const currentScrollHeight = beforePhotoGrid.scrollHeight;
+              const containerHeight = beforePhotoGrid.clientHeight;
+              const bottomPanelHeight = 80; // Height of bottom panel
+
+              // If content grew (new photos added), scroll up to accommodate
+              if (currentScrollHeight > previousScrollHeight) {
+                const heightDifference = currentScrollHeight - previousScrollHeight;
+
+                // Calculate optimal scroll position to keep latest content visible
+                // but not hidden behind bottom panel
+                const maxVisibleScroll = currentScrollHeight - containerHeight + bottomPanelHeight;
+                const newScrollTop = Math.min(previousScrollTop + heightDifference, maxVisibleScroll);
+
+                beforePhotoGrid.scrollTop = Math.max(0, newScrollTop);
+                console.log('📸 Auto-scrolled up after capturing new photo');
+              }
+            }, 100);
           }
 
           // Update main gallery as well
@@ -2794,7 +2961,106 @@
         }
 
         savePhotos() {
-          localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+          try {
+            // Check storage size before saving
+            const photosData = JSON.stringify(this.photos);
+            const sizeInMB = (photosData.length * 2) / (1024 * 1024); // Rough estimate of size in MB
+            console.log(`Attempting to save ${this.photos.length} photos (${sizeInMB.toFixed(2)}MB)`);
+
+            localStorage.setItem('cleaning-photos', photosData);
+          } catch (e) {
+            if (e.name === 'QuotaExceededError') {
+              console.log('❌ Storage quota exceeded. Managing storage...');
+              this.manageStorage();
+            } else {
+              console.error('Error saving photos:', e);
+            }
+          }
+        }
+
+        manageStorage() {
+          // Remove oldest photos if storage is full
+          const maxPhotos = 50; // Limit to 50 photos total
+
+          if (this.photos.length > maxPhotos) {
+            // Sort by timestamp and keep only the newest photos
+            this.photos.sort((a, b) => b.timestamp - a.timestamp);
+            const removedCount = this.photos.length - maxPhotos;
+            this.photos = this.photos.slice(0, maxPhotos);
+
+            console.log(`🧹 Removed ${removedCount} oldest photos to free up storage`);
+
+            // Try saving again
+            try {
+              localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+              console.log(`✅ Successfully saved ${this.photos.length} photos after cleanup`);
+
+              // Update the UI to reflect the changes
+              const photosContainer = document.getElementById('photos-container');
+              if (photosContainer) {
+                photosContainer.innerHTML = this.getPhotosHTML();
+                this.attachPhotoListeners();
+              }
+            } catch (e) {
+              console.error('❌ Still unable to save after cleanup:', e);
+              alert('Storage is full. Please delete some photos manually.');
+            }
+          } else {
+            // If we don't have too many photos, try compressing them
+            this.compressPhotosAndSave();
+          }
+        }
+
+        compressPhotosAndSave() {
+          console.log('🗜️ Attempting to compress photos...');
+
+          // Compress images by reducing quality
+          const compressedPhotos = this.photos.map(photo => {
+            if (photo.dataUrl && photo.dataUrl.startsWith('data:image/')) {
+              // Create a canvas to re-compress the image
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              const img = new Image();
+
+              return new Promise(resolve => {
+                img.onload = () => {
+                  // Reduce size if image is too large
+                  const maxWidth = 800;
+                  const maxHeight = 600;
+                  let { width, height } = img;
+
+                  if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width *= ratio;
+                    height *= ratio;
+                  }
+
+                  canvas.width = width;
+                  canvas.height = height;
+
+                  ctx.drawImage(img, 0, 0, width, height);
+
+                  // Compress with lower quality
+                  const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                  resolve({ ...photo, dataUrl: compressedDataUrl });
+                };
+                img.src = photo.dataUrl;
+              });
+            }
+            return Promise.resolve(photo);
+          });
+
+          Promise.all(compressedPhotos).then(compressed => {
+            this.photos = compressed;
+            try {
+              localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+              console.log('✅ Successfully saved compressed photos');
+            } catch (e) {
+              console.error('❌ Still unable to save after compression:', e);
+              // Fall back to removing old photos
+              this.manageStorage();
+            }
+          });
         }
         
         loadPhotos() {
