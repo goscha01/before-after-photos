@@ -636,8 +636,8 @@
         getAppHTML() {
           return `
             <div style="min-height: 100vh; background: #f8fafc; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif; display: flex; flex-direction: column; overflow-x: hidden;">
-              <!-- Header -->
-              <div style="background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; position: relative; z-index: 200;">
+              <!-- Fixed Header -->
+              <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <!-- Location dropdown -->
                 <select id="location-select" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; max-width: 120px;">
                   <option value="tampa">Tampa</option>
@@ -645,18 +645,18 @@
                   <option value="jacksonville">Jacksonville</option>
                   <option value="miami">Miami</option>
                 </select>
-                
+
                 <!-- Cleaner name -->
                 <div style="font-size: 16px; font-weight: bold;">Kate</div>
-                
+
                 <!-- Upload button -->
                 <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
                   📤 Upload
                 </button>
               </div>
-              
-              <!-- Fixed Room Tabs -->
-              <div id="sticky-tabs-container" style="position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: #f8fafc; padding: 10px; width: 100vw; box-sizing: border-box; display: flex; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+              <!-- Fixed Room Tabs (at bottom) -->
+              <div id="sticky-tabs-container" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: #f8fafc; padding: 10px; width: 100vw; box-sizing: border-box; display: flex; justify-content: center; box-shadow: 0 -2px 8px rgba(0,0,0,0.1);">
                 <div id="room-tabs-container" style="position: relative; width: 100vw; height: 60px; overflow: hidden;">
                   <div id="tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
                     ${this.getRoomTabsCarousel()}
@@ -665,7 +665,7 @@
               </div>
               
               <!-- Scrollable Content -->
-              <div id="main-scrollable-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 80px 10px 100px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
+              <div id="main-scrollable-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 60px 10px 180px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
                 
                 <!-- Photos grid with swipe -->
                 <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 0 10px; max-width: 100%; box-sizing: border-box;">
@@ -1034,9 +1034,9 @@
               bottomPanel.style.background = 'transparent';
               bottomPanel.style.boxShadow = 'none';
             } else {
-              // Before mode - use original styling
-              bottomPanel.style.background = 'white';
-              bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+              // Before mode - keep panel transparent (room tabs are at bottom)
+              bottomPanel.style.background = 'transparent';
+              bottomPanel.style.boxShadow = 'none';
             }
           }
         }
@@ -1098,9 +1098,9 @@
               cameraBtn.style.border = '2px solid rgba(255,255,255,0.8)';
               cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
             } else {
-              // Not in camera modal - use original styling
-              bottomPanel.style.background = 'white';
-              bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+              // Not in camera modal - keep panel transparent (room tabs are at bottom)
+              bottomPanel.style.background = 'transparent';
+              bottomPanel.style.boxShadow = 'none';
               cameraBtn.style.background = '#F2C31B';
               cameraBtn.style.border = 'none';
               cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
@@ -1121,16 +1121,42 @@
             cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
           }
           
-          // Reset bottom panel styling to original
+          // Keep bottom panel transparent when hidden (since room tabs are now at bottom)
           if (bottomPanel) {
-            bottomPanel.style.background = 'white';
-            bottomPanel.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.1)';
+            bottomPanel.style.background = 'transparent';
+            bottomPanel.style.boxShadow = 'none';
             
-            // Reset individual sections to default
+            // Reset individual sections to transparent
             const sections = bottomPanel.querySelectorAll('div');
             sections.forEach(section => {
-              section.style.background = '';
+              section.style.background = 'transparent';
             });
+          }
+        }
+        
+        hideMainRoomTabs() {
+          // Hide main room tabs when in camera mode
+          const stickyTabsContainer = document.getElementById('sticky-tabs-container');
+          if (stickyTabsContainer) {
+            stickyTabsContainer.style.display = 'none';
+          }
+        }
+        
+        showMainRoomTabs() {
+          // Show main room tabs when returning to gallery
+          const stickyTabsContainer = document.getElementById('sticky-tabs-container');
+          if (stickyTabsContainer) {
+            stickyTabsContainer.style.display = 'flex';
+          }
+        }
+
+        // Helper function to restore scrolling if no camera modals are open
+        restoreScrollingIfNoCameraModals() {
+          // Check if there are any camera-related modals still open
+          const cameraModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 1000"], [style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
+          if (cameraModals.length === 0) {
+            // No camera modals are open, restore scrolling
+            document.body.style.overflow = '';
           }
         }
 
@@ -1339,6 +1365,9 @@
                   }
                 });
 
+                // Restore scrolling if no camera modals remain
+                this.restoreScrollingIfNoCameraModals();
+
                 // Small delay to ensure cleanup completes
                 setTimeout(() => {
                   // Find the before photo and reopen comparison camera
@@ -1526,7 +1555,11 @@
 
             document.body.appendChild(modal);
 
-            // Show camera button for photo capture
+            // Prevent background scrolling when modal is open
+            document.body.style.overflow = 'hidden';
+
+            // Hide main room tabs and show camera button for photo capture
+            this.hideMainRoomTabs();
             this.showCameraButton();
             
             // Initialize camera for comparison
@@ -1552,14 +1585,22 @@
                 stream.getTracks().forEach(track => track.stop());
                 document.body.removeChild(modal);
                 this.hideCameraButton();
+                this.showMainRoomTabs(); // Show room tabs when returning to gallery
                 this.currentBeforePhoto = null; // Clear the reference
+
+                // Restore background scrolling when modal is closed
+                document.body.style.overflow = '';
               });
               
             } catch (error) {
               alert('Camera access denied or failed: ' + error.message);
               document.body.removeChild(modal);
               this.hideCameraButton();
+              this.showMainRoomTabs(); // Show room tabs when returning to gallery
               this.currentBeforePhoto = null; // Clear the reference
+
+              // Restore background scrolling when modal is closed
+              document.body.style.overflow = '';
             }
             
           } else if (photo.mode === 'after') {
@@ -1577,7 +1618,11 @@
 
               document.body.appendChild(modal);
 
-              // Show camera button for photo capture
+              // Prevent background scrolling when modal is open
+              document.body.style.overflow = 'hidden';
+
+              // Hide main room tabs and show camera button for photo capture
+              this.hideMainRoomTabs();
               this.showCameraButton();
               
               // Initialize camera for comparison
@@ -1603,14 +1648,22 @@
                   stream.getTracks().forEach(track => track.stop());
                   document.body.removeChild(modal);
                   this.hideCameraButton();
+                  this.showMainRoomTabs(); // Show room tabs when returning to gallery
                   this.currentBeforePhoto = null; // Clear the reference
+
+                  // Restore background scrolling when modal is closed
+                  document.body.style.overflow = '';
                 });
                 
               } catch (error) {
                 alert('Camera access denied or failed: ' + error.message);
                 document.body.removeChild(modal);
                 this.hideCameraButton();
+                this.showMainRoomTabs(); // Show room tabs when returning to gallery
                 this.currentBeforePhoto = null; // Clear the reference
+
+                // Restore background scrolling when modal is closed
+                document.body.style.overflow = '';
               }
             } else {
               // Fallback: Regular fullscreen if no linked before photo found
@@ -1723,6 +1776,9 @@
             }
           });
 
+          // Restore scrolling if no camera modals remain
+          this.restoreScrollingIfNoCameraModals();
+
           // Small delay to ensure cleanup completes before updating gallery
           setTimeout(() => {
             // Update gallery to show new after photo
@@ -1783,8 +1839,12 @@
           modal.innerHTML = this.getComparisonModalHTML(beforePhoto);
           
           document.body.appendChild(modal);
-          
-          // Show camera button for photo capture
+
+          // Prevent background scrolling when modal is open
+          document.body.style.overflow = 'hidden';
+
+          // Hide main room tabs and show camera button for photo capture
+          this.hideMainRoomTabs();
           this.showCameraButton();
           
           // Initialize camera for comparison
@@ -1814,14 +1874,22 @@
               stream.getTracks().forEach(track => track.stop());
               document.body.removeChild(modal);
               this.hideCameraButton();
+              this.showMainRoomTabs(); // Show room tabs when returning to gallery
               this.currentBeforePhoto = null; // Clear the reference
+
+              // Restore background scrolling when modal is closed
+              document.body.style.overflow = '';
             });
             
           } catch (error) {
             alert('Camera access denied or failed: ' + error.message);
             document.body.removeChild(modal);
             this.hideCameraButton();
+            this.showMainRoomTabs(); // Show room tabs when returning to gallery
             this.currentBeforePhoto = null; // Clear the reference
+
+            // Restore background scrolling when modal is closed
+            document.body.style.overflow = '';
           }
         }
         
@@ -2165,6 +2233,9 @@
               }
             });
 
+            // Restore scrolling if no camera modals remain
+            this.restoreScrollingIfNoCameraModals();
+
             // Try to use back camera first, fallback to any camera
             let stream;
             try {
@@ -2189,7 +2260,11 @@
             document.body.appendChild(modal);
             console.log('Before photo modal created and added to DOM');
 
-            // Show camera button for photo capture
+            // Prevent background scrolling when modal is open
+            document.body.style.overflow = 'hidden';
+
+            // Hide main room tabs and show camera button for photo capture
+            this.hideMainRoomTabs();
             this.showCameraButton();
             
             const video = document.getElementById('camera-video');
@@ -2213,6 +2288,10 @@
               }
               this.isOpeningCamera = false; // Reset flag
               this.hideCameraButton(); // Hide camera button when closing modal
+              this.showMainRoomTabs(); // Show room tabs when returning to gallery
+
+              // Restore background scrolling when modal is closed
+              document.body.style.overflow = '';
             });
 
             // Attach listeners to before photo items
@@ -2230,6 +2309,7 @@
             alert('Camera access denied or failed: ' + error.message);
             this.isOpeningCamera = false; // Reset flag on error
             this.hideCameraButton();
+            this.showMainRoomTabs(); // Show room tabs when returning to gallery
           }
         }
         
