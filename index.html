@@ -288,7 +288,17 @@
           });
           
           window.addEventListener('resize', () => {
+            // Update orientation detection
+            const wasLandscape = this.isLandscape;
             this.checkOrientation();
+            
+            // If orientation changed, update grids
+            if (wasLandscape !== this.isLandscape) {
+              setTimeout(() => {
+                this.updateGridsOnOrientationChange();
+              }, 100); // Small delay to ensure layout is stable
+            }
+            
             this.init();
           });
 
@@ -384,43 +394,91 @@
         }
         
         getBeforePhotoModalHTML() {
-          return `
-            <div style="position: relative; width: 100vw; height: calc(100vh - 80px); display: flex; flex-direction: column;">
-              <!-- Top half - Camera -->
-              <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
-                <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
-                
-                <!-- Photo frame overlay for camera -->
-                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
-                  <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+          if (this.isLandscape) {
+            // Landscape mode - left (camera) and right (existing photos)
+            return `
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
+                <!-- Top section - Camera and Photos -->
+                <div style="position: relative; width: 100%; height: calc(100% - 80px); display: flex; flex-direction: row;">
+                  <!-- Left half - Camera -->
+                  <div id="camera-container" style="position: relative; width: 50%; height: 100%; background: black;">
+                    <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    
+                    <!-- Photo frame overlay for camera -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+                      <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                    </div>
+                    
+                    <!-- Before label -->
+                    <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
+                      BEFORE
+                    </div>
+                    
+                    <!-- Close button - positioned within camera view -->
+                    <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 10; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;">
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <!-- Divider line -->
+                  <div style="width: 4px; height: 100%; background: #000;"></div>
+                  
+                  <!-- Right half - Photo Grid Only -->
+                  <div style="position: relative; width: calc(50% - 80px); height: 100%; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px;">
+                    ${this.getBeforePhotosGridHTML()}
+                  </div>
                 </div>
                 
-                <!-- Before label -->
-                <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
-                  BEFORE
-                </div>
-              </div>
-              
-              <!-- Room Tabs Section -->
-              <div style="width: 100%; background: #f8fafc; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <div id="modal-room-tabs-container" style="position: relative; width: 100%; height: 60px; overflow: hidden;">
-                  <div id="modal-tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
-                    ${this.getRoomTabsCarousel()}
+                <!-- Bottom section - Room Tabs (spanning full width) -->
+                <div style="position: relative; width: 100%; height: 80px; background: #f8fafc; padding: 10px; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center;">
+                  <div id="modal-room-tabs-container" style="position: relative; width: 100%; height: 60px; overflow: hidden;">
+                    <div id="modal-tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
+                      ${this.getRoomTabsCarousel()}
+                    </div>
                   </div>
                 </div>
               </div>
-              
-              <!-- Bottom half - Photo Grid -->
-              <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px; min-height: 200px;">
-                ${this.getBeforePhotosGridHTML()}
+            `;
+          } else {
+            // Portrait mode - top (camera) and bottom (existing photos)
+            return `
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
+                <!-- Top half - Camera -->
+                <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  
+                  <!-- Photo frame overlay for camera -->
+                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  </div>
+                  
+                  <!-- Before label -->
+                  <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
+                    BEFORE
+                  </div>
+                </div>
+                
+                <!-- Room Tabs Section -->
+                <div style="width: 100%; background: #f8fafc; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <div id="modal-room-tabs-container" style="position: relative; width: 100%; height: 60px; overflow: hidden;">
+                    <div id="modal-tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
+                      ${this.getRoomTabsCarousel()}
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Bottom half - Photo Grid -->
+                <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px; min-height: 200px;">
+                  ${this.getBeforePhotosGridHTML()}
+                </div>
+                
+                <!-- Close button -->
+                <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
+                  ✕
+                </button>
               </div>
-              
-              <!-- Close button -->
-              <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
-                ✕
-              </button>
-            </div>
-          `;
+            `;
+          }
         }
 
         getBeforePhotosGridHTML() {
@@ -469,7 +527,7 @@
           `);
 
           return `
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; grid-auto-rows: minmax(120px, 1fr); align-content: start; min-height: 100%;">
+            <div style="display: grid; grid-template-columns: ${this.isLandscape ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)'}; gap: 10px; grid-auto-rows: minmax(${this.calculateSquareSize(3)}px, 1fr); align-content: start; min-height: 100%;">
               ${gridItems.join('')}
             </div>
           `;
@@ -477,7 +535,7 @@
 
         getComparisonModalHTML(photo) {
           if (this.isLandscape) {
-            // Landscape mode - left (before) and right (camera)
+            // Landscape mode - left (before photo) and right (camera)
             return `
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: row;">
                 <!-- Left half - Before photo -->
@@ -512,17 +570,16 @@
                     <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
                   </div>
                   
-                  
                   <!-- After label -->
                   <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
                     AFTER
                   </div>
+                  
+                  <!-- Close button -->
+                  <button id="close-comparison-btn" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 99999; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
+                    ✕
+                  </button>
                 </div>
-                
-                <!-- Close button -->
-                <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
-                  ✕
-                </button>
               </div>
             `;
           } else {
@@ -559,7 +616,7 @@
                 </div>
                 
                 <!-- Close button -->
-                <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
+                <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 9999; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
                   ✕
                 </button>
               </div>
@@ -659,8 +716,8 @@
               </div>
 
               <!-- Fixed Room Tabs (at bottom) -->
-              <div id="sticky-tabs-container" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: #f8fafc; padding: 10px; width: 100vw; box-sizing: border-box; display: flex; justify-content: center; box-shadow: 0 -2px 8px rgba(0,0,0,0.1);">
-                <div id="room-tabs-container" style="position: relative; width: 100vw; height: 60px; overflow: hidden;">
+              <div id="sticky-tabs-container" style="position: fixed; ${this.isLandscape ? 'bottom: 0; left: 0; right: 0; z-index: 100; background: #f8fafc; padding: 10px; width: 100vw; box-sizing: border-box; display: flex; justify-content: center; box-shadow: 0 -2px 8px rgba(0,0,0,0.1);' : 'bottom: 0; left: 0; right: 0; z-index: 100; background: #f8fafc; padding: 10px; width: 100vw; box-sizing: border-box; display: flex; justify-content: center; box-shadow: 0 -2px 8px rgba(0,0,0,0.1);'}">
+                <div id="room-tabs-container" style="position: relative; ${this.isLandscape ? 'width: 100vw; height: 60px;' : 'width: 100vw; height: 60px;'} overflow: hidden;">
                   <div id="tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
                     ${this.getRoomTabsCarousel()}
                   </div>
@@ -671,14 +728,14 @@
               <div id="main-scrollable-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 60px 10px 95px 10px; width: 100%; max-width: 100vw; box-sizing: border-box;">
                 
                 <!-- Photos grid with swipe -->
-                <div id="photos-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 0 10px; max-width: 100%; box-sizing: border-box;">
+                <div id="photos-container" style="display: grid; grid-template-columns: ${this.isLandscape ? 'repeat(5, 1fr)' : 'repeat(2, 1fr)'}; gap: 5px; padding: 0 10px; max-width: 100%; box-sizing: border-box;">
                   ${this.getPhotosHTML()}
                 </div>
                 
               </div>
               
               <!-- Fixed Action Buttons Panel (only for camera modals) -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center; background: white;">
+              <div id="bottom-panel" style="position: fixed; ${this.isLandscape ? 'right: 0; top: 0; bottom: 0; width: 80px; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 20px;' : 'bottom: 0; left: 0; right: 0; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;'} z-index: 2001; background: white; box-shadow: ${this.isLandscape ? '0 0 8px rgba(0,0,0,0.1)' : '0 -2px 8px rgba(0,0,0,0.1)'};">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
@@ -1641,12 +1698,19 @@
           const cameraBtn = document.getElementById('camera-btn');
           const bottomPanel = document.getElementById('bottom-panel');
 
-          // Show the bottom panel
-          if (bottomPanel) bottomPanel.style.display = 'grid';
+          // Show the bottom panel with appropriate layout
+          if (bottomPanel) {
+            bottomPanel.style.display = this.isLandscape ? 'flex' : 'grid';
+          }
 
           if (retakeBtn) retakeBtn.style.display = 'flex';
           if (saveBtn) saveBtn.style.display = 'flex';
           if (cameraBtn) cameraBtn.style.display = 'none';
+          
+          // Adjust main content padding in landscape mode
+          if (this.isLandscape) {
+            this.adjustMainContentForRightPanel(true);
+          }
           
           // Check if we're in after mode (comparison camera modal) and make bottom panel transparent
           if (bottomPanel) {
@@ -1703,10 +1767,17 @@
           const cameraBtn = document.getElementById('camera-btn');
           const bottomPanel = document.getElementById('bottom-panel');
 
-          // Show the bottom panel
-          if (bottomPanel) bottomPanel.style.display = 'grid';
+          // Show the bottom panel with appropriate layout
+          if (bottomPanel) {
+            bottomPanel.style.display = this.isLandscape ? 'flex' : 'grid';
+          }
           
           if (cameraBtn) cameraBtn.style.display = 'block';
+          
+          // Adjust main content padding in landscape mode
+          if (this.isLandscape) {
+            this.adjustMainContentForRightPanel(true);
+          }
           
           // Check if we're in a camera modal and apply appropriate styling
           if (bottomPanel && cameraBtn) {
@@ -1754,6 +1825,11 @@
           // Hide the entire bottom panel
           if (bottomPanel) bottomPanel.style.display = 'none';
           
+          // Restore main content padding in landscape mode
+          if (this.isLandscape) {
+            this.adjustMainContentForRightPanel(false);
+          }
+          
           if (cameraBtn) {
             cameraBtn.style.display = 'none';
             // Reset camera button styling to original
@@ -1772,6 +1848,42 @@
             sections.forEach(section => {
               section.style.background = 'transparent';
             });
+          }
+        }
+
+        adjustMainContentForRightPanel(show) {
+          // Adjust main content padding when right panel is shown/hidden in landscape mode
+          const mainContent = document.getElementById('main-scrollable-content');
+          if (mainContent && this.isLandscape) {
+            if (show) {
+              mainContent.style.paddingRight = '90px'; // Account for 80px panel + 10px margin
+            } else {
+              mainContent.style.paddingRight = '10px'; // Restore original padding
+            }
+          }
+        }
+
+        updateGridsOnOrientationChange() {
+          // Update main gallery grid
+          const photosContainer = document.getElementById('photos-container');
+          if (photosContainer) {
+            if (this.isLandscape) {
+              photosContainer.style.gridTemplateColumns = 'repeat(5, 1fr)';
+            } else {
+              photosContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            }
+          }
+
+          // Update before photo grid if it exists
+          const beforePhotoGrid = document.getElementById('before-photo-grid');
+          if (beforePhotoGrid) {
+            const gridContainer = beforePhotoGrid.querySelector('div');
+            if (gridContainer) {
+              const squareSize = this.calculateSquareSize(3);
+              // Always use 3 columns in both orientations
+              gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+              gridContainer.style.gridAutoRows = `minmax(${squareSize}px, 1fr)`;
+            }
           }
         }
         
@@ -2300,12 +2412,23 @@
             try {
               let stream;
               try {
+                const aspectRatio = this.getAspectRatio();
+                const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+                
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                  video: { facingMode: 'environment' } // Default to back camera
+                  video: { 
+                    facingMode: 'environment', // Default to back camera
+                    aspectRatio: targetAspectRatio
+                  }
                 });
               } catch (backCameraError) {
                 console.log('Back camera not available, trying any camera:', backCameraError);
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const aspectRatio = this.getAspectRatio();
+                const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+                
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                  video: { aspectRatio: targetAspectRatio }
+                });
               }
               
               const video = document.getElementById('comparison-camera');
@@ -2363,12 +2486,23 @@
               try {
                 let stream;
                 try {
+                  const aspectRatio = this.getAspectRatio();
+                  const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+                  
                   stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } // Default to back camera
+                    video: { 
+                      facingMode: 'environment', // Default to back camera
+                      aspectRatio: targetAspectRatio
+                    }
                   });
                 } catch (backCameraError) {
                   console.log('Back camera not available, trying any camera:', backCameraError);
-                  stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                  const aspectRatio = this.getAspectRatio();
+                  const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+                  
+                  stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { aspectRatio: targetAspectRatio }
+                  });
                 }
                 
                 const video = document.getElementById('comparison-camera');
@@ -2499,22 +2633,29 @@
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          // Limit image size to reduce storage usage
-          const maxWidth = 800;
-          const maxHeight = 600;
-          let width = video.videoWidth;
-          let height = video.videoHeight;
-
-          if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
-            width = Math.floor(width * ratio);
-            height = Math.floor(height * ratio);
-          }
+          // Calculate dimensions with correct aspect ratio
+          const { width, height } = this.calculateCanvasDimensions(video.videoWidth, video.videoHeight, 800);
 
           canvas.width = width;
           canvas.height = height;
 
-          ctx.drawImage(video, 0, 0, width, height);
+          // Calculate source rectangle to maintain aspect ratio
+          const videoAspectRatio = video.videoWidth / video.videoHeight;
+          const targetAspectRatio = width / height;
+          
+          let sourceX = 0, sourceY = 0, sourceWidth = video.videoWidth, sourceHeight = video.videoHeight;
+
+          if (videoAspectRatio > targetAspectRatio) {
+            // Video is wider, crop from sides
+            sourceWidth = video.videoHeight * targetAspectRatio;
+            sourceX = (video.videoWidth - sourceWidth) / 2;
+          } else if (videoAspectRatio < targetAspectRatio) {
+            // Video is taller, crop from top/bottom
+            sourceHeight = video.videoWidth / targetAspectRatio;
+            sourceY = (video.videoHeight - sourceHeight) / 2;
+          }
+
+          ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
 
           const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
@@ -2643,12 +2784,23 @@
             let stream;
             try {
               // Try to get back camera first
+              const aspectRatio = this.getAspectRatio();
+              const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+              
               stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
+                video: { 
+                  facingMode: 'environment',
+                  aspectRatio: targetAspectRatio
+                } 
               });
             } catch (backCameraError) {
               console.log('Back camera not available, trying any camera:', backCameraError);
-              stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              const aspectRatio = this.getAspectRatio();
+              const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+              
+              stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { aspectRatio: targetAspectRatio }
+              });
             }
             
             const video = document.getElementById('comparison-camera');
@@ -3092,18 +3244,29 @@
             // Try to use back camera first, fallback to any camera
             let stream;
             try {
+              const aspectRatio = this.getAspectRatio();
+              const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+              
               stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' } // Back camera
+                video: { 
+                  facingMode: 'environment', // Back camera
+                  aspectRatio: targetAspectRatio
+                }
               });
             } catch (backCameraError) {
               console.log('Back camera not available, trying any camera:', backCameraError);
-              stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              const aspectRatio = this.getAspectRatio();
+              const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+              
+              stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { aspectRatio: targetAspectRatio }
+              });
             }
 
             // Create fullscreen camera modal
             const modal = document.createElement('div');
             modal.style.cssText = `
-              position: fixed; top: 0; left: 0; width: 100vw; height: calc(100vh - 80px); 
+              position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
               background: black; z-index: 1000; display: flex; 
               flex-direction: column; align-items: center; justify-content: center;
             `;
@@ -3204,27 +3367,81 @@
           this.captureComparisonPhoto(video, stream, beforePhoto);
         }
         
+        // Helper function to get aspect ratio based on device orientation
+        getAspectRatio() {
+          const isLandscape = window.innerWidth > window.innerHeight;
+          if (isLandscape) {
+            return { width: 8, height: 9 }; // 8:9 for horizontal
+          } else {
+            return { width: 1, height: 1.15 }; // 1:1.15 for vertical
+          }
+        }
+
+        // Helper function to calculate canvas dimensions with correct aspect ratio
+        calculateCanvasDimensions(videoWidth, videoHeight, maxSize = 800) {
+          const aspectRatio = this.getAspectRatio();
+          const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+          const videoAspectRatio = videoWidth / videoHeight;
+
+          let width, height;
+
+          if (videoAspectRatio > targetAspectRatio) {
+            // Video is wider than target aspect ratio
+            height = Math.min(maxSize, videoHeight);
+            width = height * targetAspectRatio;
+          } else {
+            // Video is taller than target aspect ratio
+            width = Math.min(maxSize, videoWidth);
+            height = width / targetAspectRatio;
+          }
+
+          return { width: Math.floor(width), height: Math.floor(height) };
+        }
+
+        // Helper function to calculate square size for grids
+        calculateSquareSize(columns) {
+          if (this.isLandscape) {
+            // In landscape mode, use the height (which equals portrait width) to calculate square size
+            const landscapeHeight = window.innerHeight; // This is equivalent to portrait width
+            const availableHeight = landscapeHeight - 200; // Account for headers, tabs, padding
+            const squareSize = Math.floor(availableHeight / columns);
+            
+            return squareSize;
+          } else {
+            // In portrait mode, calculate actual size based on screen width
+            const availableWidth = window.innerWidth - 20; // Account for padding
+            return Math.floor(availableWidth / columns);
+          }
+        }
+
         capturePhoto(video, stream) {
           console.log('Capturing photo...');
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
 
-          // Limit image size to reduce storage usage
-          const maxWidth = 800;
-          const maxHeight = 600;
-          let width = video.videoWidth;
-          let height = video.videoHeight;
-
-          if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
-            width = Math.floor(width * ratio);
-            height = Math.floor(height * ratio);
-          }
+          // Calculate dimensions with correct aspect ratio
+          const { width, height } = this.calculateCanvasDimensions(video.videoWidth, video.videoHeight, 800);
 
           canvas.width = width;
           canvas.height = height;
 
-          context.drawImage(video, 0, 0, width, height);
+          // Calculate source rectangle to maintain aspect ratio
+          const videoAspectRatio = video.videoWidth / video.videoHeight;
+          const targetAspectRatio = width / height;
+          
+          let sourceX = 0, sourceY = 0, sourceWidth = video.videoWidth, sourceHeight = video.videoHeight;
+
+          if (videoAspectRatio > targetAspectRatio) {
+            // Video is wider, crop from sides
+            sourceWidth = video.videoHeight * targetAspectRatio;
+            sourceX = (video.videoWidth - sourceWidth) / 2;
+          } else if (videoAspectRatio < targetAspectRatio) {
+            // Video is taller, crop from top/bottom
+            sourceHeight = video.videoWidth / targetAspectRatio;
+            sourceY = (video.videoHeight - sourceHeight) / 2;
+          }
+
+          context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
           
           // First photos are always "before" photos
           const photoMode = 'before';
