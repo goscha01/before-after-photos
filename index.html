@@ -270,7 +270,39 @@
             rootElement.innerHTML = this.getAppHTML();
             this.attachEventListeners();
             this.updateTabsCarousel(); // Update carousel layout
-            
+
+            // Ensure bottom panel is hidden in gallery mode
+            this.hideActionButtons();
+
+            // Ensure room tab listeners are attached with a small delay
+            setTimeout(() => {
+              this.attachRoomTabListeners();
+            }, 50);
+
+            // BACKUP: Also try a more direct approach after a longer delay
+            setTimeout(() => {
+              console.log('🔧 BACKUP: Trying direct room tab setup...');
+              document.querySelectorAll('#tabs-carousel .room-tab').forEach((btn, i) => {
+                console.log(`🔧 Direct setup for tab ${i}:`, btn.dataset.room);
+                btn.onclick = (e) => {
+                  console.log('🔧 DIRECT CLICK HANDLER!', btn.dataset.room);
+                  const room = btn.dataset.room;
+                  if (room && room !== this.currentRoom) {
+                    this.currentRoom = room;
+                    this.currentTab = 'photo';
+                    const photosContainer = document.getElementById('photos-container');
+                    if (photosContainer) {
+                      photosContainer.innerHTML = this.getPhotosHTML();
+                      this.attachPhotoListeners();
+                    }
+                    setTimeout(() => {
+                      this.updateTabsCarousel();
+                    }, 100);
+                  }
+                };
+              });
+            }, 200);
+
             // Auto-scroll to bottom after app initialization
             setTimeout(() => {
               const mainScrollableContent = document.getElementById('main-scrollable-content');
@@ -675,7 +707,7 @@
               </div>
               
               <!-- Fixed Action Buttons Panel (only for camera modals) -->
-              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: grid; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;">
+              <div id="bottom-panel" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;">
                 <!-- Left Section - Retake Button (hidden by default) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
@@ -991,6 +1023,134 @@
           if (tabsCarousel) {
             tabsCarousel.innerHTML = this.getRoomTabsCarousel();
             console.log('Carousel updated for room:', this.currentRoom);
+
+            // Reattach event listeners after updating the DOM
+            this.attachRoomTabListeners();
+          }
+        }
+
+        attachRoomTabListeners() {
+          console.log('=== DEBUGGING ROOM TAB LISTENERS ===');
+
+          // Room tabs click listeners - specifically for main gallery (not modal)
+          const mainCarousel = document.getElementById('tabs-carousel');
+          console.log('Main carousel element:', mainCarousel);
+
+          if (!mainCarousel) {
+            console.log('❌ Main tabs carousel not found - checking all elements...');
+            const allElements = document.querySelectorAll('*[id*="tab"]');
+            console.log('All tab-related elements:', allElements);
+            return;
+          }
+
+          const roomTabs = mainCarousel.querySelectorAll('.room-tab');
+          console.log('✅ Found', roomTabs.length, 'main gallery room tabs');
+          console.log('Main carousel innerHTML:', mainCarousel.innerHTML);
+
+          roomTabs.forEach((btn, index) => {
+            console.log(`🎯 Setting up room tab ${index}:`, btn.dataset.room, btn);
+
+            // Remove any existing listeners first
+            btn.removeEventListener('click', this.roomTabClickHandler);
+
+            // Add new listener
+            btn.addEventListener('click', (e) => {
+              console.log('🔥 ROOM TAB CLICKED!', e.currentTarget.dataset.room);
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Get room from current target (the button) instead of target (might be inner element)
+              const room = e.currentTarget.dataset.room;
+              console.log('Room clicked:', room, 'Current room:', this.currentRoom);
+
+              if (room && room !== this.currentRoom) {
+                console.log('Switching from', this.currentRoom, 'to', room);
+                this.currentRoom = room;
+                this.currentTab = 'photo'; // Reset to photo tab when switching rooms
+
+                // Update only the content area instead of full re-init
+                const photosContainer = document.getElementById('photos-container');
+                if (photosContainer) {
+                  photosContainer.innerHTML = this.getPhotosHTML();
+                  this.attachPhotoListeners();
+                }
+
+                // Update carousel and scroll
+                setTimeout(() => {
+                  this.updateTabsCarousel();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 100);
+              } else {
+                console.log('Same room clicked or invalid room');
+              }
+            });
+
+            // Make sure buttons are interactive
+            btn.style.pointerEvents = 'auto';
+            btn.style.cursor = 'pointer';
+            btn.style.backgroundColor = btn.style.backgroundColor || '#f0f0f0';
+
+            // Add hover effect for testing
+            btn.addEventListener('mouseenter', () => {
+              console.log('🖱️ Mouse entered room tab:', btn.dataset.room);
+              btn.style.opacity = '0.8';
+            });
+
+            btn.addEventListener('mouseleave', () => {
+              btn.style.opacity = '1';
+            });
+
+            // Add mousedown and mouseup for more testing
+            btn.addEventListener('mousedown', () => {
+              console.log('🖱️ Mouse DOWN on room tab:', btn.dataset.room);
+            });
+
+            btn.addEventListener('mouseup', () => {
+              console.log('🖱️ Mouse UP on room tab:', btn.dataset.room);
+            });
+
+            // Check if element is being blocked
+            btn.addEventListener('pointerdown', () => {
+              console.log('👆 Pointer DOWN on room tab:', btn.dataset.room);
+            });
+
+            console.log(`✅ Listeners attached to room tab: ${btn.dataset.room}`);
+          });
+
+          console.log('=== END DEBUGGING ===');
+        }
+
+        // Test function to manually check room tab functionality
+        testRoomTabs() {
+          console.log('🧪 TESTING ROOM TABS');
+          const carousel = document.getElementById('tabs-carousel');
+          console.log('Carousel found:', !!carousel);
+
+          if (carousel) {
+            const tabs = carousel.querySelectorAll('.room-tab');
+            console.log('Tabs found:', tabs.length);
+
+            tabs.forEach((tab, i) => {
+              const rect = tab.getBoundingClientRect();
+              const style = window.getComputedStyle(tab);
+              console.log(`Tab ${i}:`, tab.dataset.room);
+              console.log(`  Position:`, rect.x, rect.y, rect.width, rect.height);
+              console.log(`  Z-index:`, style.zIndex);
+              console.log(`  Pointer events:`, style.pointerEvents);
+
+              // Check what element is actually at the center of the button
+              const centerX = rect.x + rect.width / 2;
+              const centerY = rect.y + rect.height / 2;
+              const elementAtPoint = document.elementFromPoint(centerX, centerY);
+              console.log(`  Element at center:`, elementAtPoint);
+              console.log(`  Is the tab itself?`, elementAtPoint === tab);
+            });
+
+            // Try to click the first tab
+            if (tabs.length > 0) {
+              console.log('Simulating click on first tab...');
+              tabs[0].click();
+            }
           }
         }
 
@@ -1000,7 +1160,27 @@
           if (modalTabsCarousel) {
             modalTabsCarousel.innerHTML = this.getRoomTabsCarousel();
             console.log('Modal carousel updated for room:', this.currentRoom);
+
+            // Reattach modal room tab listeners
+            this.attachModalRoomTabListeners();
           }
+        }
+
+        attachModalRoomTabListeners() {
+          // Room tab listeners specifically for the modal
+          const modalCarousel = document.getElementById('modal-tabs-carousel');
+          if (!modalCarousel) return;
+
+          modalCarousel.querySelectorAll('.room-tab').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const room = e.currentTarget.dataset.room;
+              if (room && room !== this.currentRoom) {
+                this.currentRoom = room;
+                this.updateModalRoomTabs();
+                this.updateModalPhotoGrid();
+              }
+            });
+          });
         }
 
         updateModalPhotoGrid() {
@@ -1023,6 +1203,9 @@
           const saveBtn = document.getElementById('btn-save');
           const cameraBtn = document.getElementById('camera-btn');
           const bottomPanel = document.getElementById('bottom-panel');
+
+          // Show the bottom panel
+          if (bottomPanel) bottomPanel.style.display = 'grid';
 
           if (retakeBtn) retakeBtn.style.display = 'flex';
           if (saveBtn) saveBtn.style.display = 'flex';
@@ -1053,6 +1236,9 @@
           const cameraBtn = document.getElementById('camera-btn');
           const bottomPanel = document.getElementById('bottom-panel');
 
+          // Hide the entire bottom panel in gallery mode
+          if (bottomPanel) bottomPanel.style.display = 'none';
+
           if (retakeBtn) retakeBtn.style.display = 'none';
           if (saveBtn) saveBtn.style.display = 'none';
           
@@ -1079,6 +1265,9 @@
           // Show camera button during photo capture screens
           const cameraBtn = document.getElementById('camera-btn');
           const bottomPanel = document.getElementById('bottom-panel');
+
+          // Show the bottom panel
+          if (bottomPanel) bottomPanel.style.display = 'grid';
           
           if (cameraBtn) cameraBtn.style.display = 'block';
           
@@ -1117,6 +1306,9 @@
           // Hide camera button and reset styling
           const cameraBtn = document.getElementById('camera-btn');
           const bottomPanel = document.getElementById('bottom-panel');
+
+          // Hide the entire bottom panel
+          if (bottomPanel) bottomPanel.style.display = 'none';
           
           if (cameraBtn) {
             cameraBtn.style.display = 'none';
@@ -1269,43 +1461,7 @@
         attachEventListeners() {
           // Room tabs with swipe support - attach with delay to ensure DOM is ready
           setTimeout(() => {
-            const roomTabs = document.querySelectorAll('.room-tab');
-            console.log('Attaching click listeners to', roomTabs.length, 'room tabs');
-
-            roomTabs.forEach((btn, index) => {
-              console.log(`Room tab ${index}:`, btn.dataset.room);
-
-              btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Get room from current target (the button) instead of target (might be inner element)
-                const room = e.currentTarget.dataset.room;
-                console.log('Room tab clicked:', room);
-
-                if (room && room !== this.currentRoom) {
-                  this.currentRoom = room;
-                  this.currentTab = 'photo'; // Reset to photo tab when switching rooms
-
-                  // Update only the content area instead of full re-init
-                  const photosContainer = document.getElementById('photos-container');
-                  if (photosContainer) {
-                    photosContainer.innerHTML = this.getPhotosHTML();
-                    this.attachPhotoListeners();
-                  }
-
-                  // Update carousel and scroll
-                  setTimeout(() => {
-                    this.updateTabsCarousel();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }, 100);
-                }
-              });
-
-              // Also add pointer events for better touch handling
-              btn.style.pointerEvents = 'auto';
-              btn.style.cursor = 'pointer';
-            });
+            this.attachRoomTabListeners();
           }, 100);
           
           // Add swipe functionality to room tabs
@@ -2575,7 +2731,12 @@
       }
       
       // Initialize app
-      new CleaningPhotoApp();
+      const app = new CleaningPhotoApp();
+
+      // Make app available globally for debugging
+      window.app = app;
+      window.testRoomTabs = () => app.testRoomTabs();
+
       console.log('✅ Debug: iOS Safari compatible app loaded successfully');
     </script>
     
