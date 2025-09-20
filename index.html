@@ -556,6 +556,13 @@
                       BEFORE
                     </div>
                     
+                    <!-- Zoom controls -->
+                    <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                      <button class="zoom-btn" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
+                      <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
+                      <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
+                    </div>
+                    
                     <!-- Close button - positioned within camera view -->
                     <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 10; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;">
                       ✕
@@ -597,6 +604,13 @@
                   <!-- Before label -->
                   <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold;">
                     BEFORE
+                  </div>
+                  
+                  <!-- Zoom controls for portrait mode -->
+                  <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                    <button class="zoom-btn" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
+                    <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
+                    <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                   </div>
                 </div>
                 
@@ -717,6 +731,13 @@
                     AFTER
                   </div>
                   
+                  <!-- Zoom controls -->
+                  <div id="zoom-controls-comparison" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                    <button class="zoom-btn-comparison" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
+                    <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
+                    <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
+                  </div>
+                  
                   <!-- Close button -->
                   <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 99999; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
                     ✕
@@ -753,6 +774,13 @@
                   <!-- Photo frame overlay for camera -->
                   <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
                     <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  </div>
+                  
+                  <!-- Zoom controls for portrait mode comparison -->
+                  <div id="zoom-controls-comparison" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                    <button class="zoom-btn-comparison" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
+                    <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
+                    <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                   </div>
                   
                 </div>
@@ -4326,6 +4354,10 @@
               video.srcObject = stream;
               
               let currentFacingMode = 'environment';
+              let currentZoom = 1; // Start with 1x zoom
+              
+              // Initialize zoom controls for comparison camera
+              this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
               
               
               // Close button
@@ -4400,6 +4432,10 @@
                 video.srcObject = stream;
                 
                 let currentFacingMode = 'environment';
+                let currentZoom = 1; // Start with 1x zoom
+                
+                // Initialize zoom controls for comparison camera
+                this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
                 
                 
                 // Close button
@@ -4827,6 +4863,10 @@
             video.srcObject = stream;
             
             let currentFacingMode = 'environment';
+            let currentZoom = 1; // Start with 1x zoom
+            
+            // Initialize zoom controls for comparison camera
+            this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
             
             // Close button
             document.getElementById('close-comparison-btn').addEventListener('click', () => {
@@ -6012,8 +6052,12 @@
               console.error('Video element not found!');
             }
             
-            // Store current facing mode
+            // Store current facing mode and zoom level
             let currentFacingMode = 'environment'; // Start with back camera
+            let currentZoom = 1; // Start with 1x zoom
+            
+            // Initialize zoom controls
+            this.initializeZoomControls(stream, 'camera-video', currentZoom);
             
             // Capture will be handled by the bottom panel camera button
             
@@ -6094,6 +6138,83 @@
             return { width: 8, height: 9 }; // 8:9 for horizontal
           } else {
             return { width: 1, height: 1.15 }; // 1:1.15 for vertical
+          }
+        }
+
+        // Initialize zoom controls for camera
+        initializeZoomControls(stream, videoElementId, currentZoom = 1, mode = 'before') {
+          const zoomControlsId = mode === 'comparison' ? 'zoom-controls-comparison' : 'zoom-controls';
+          const zoomButtonClass = mode === 'comparison' ? 'zoom-btn-comparison' : 'zoom-btn';
+          
+          const zoomControls = document.getElementById(zoomControlsId);
+          if (!zoomControls) {
+            console.log('Zoom controls not found for mode:', mode);
+            return;
+          }
+
+          const zoomButtons = zoomControls.querySelectorAll(`.${zoomButtonClass}`);
+          
+          // Set up zoom button event listeners
+          zoomButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+              const newZoom = parseFloat(button.dataset.zoom);
+              
+              // Update active button styling
+              zoomButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'rgba(255,255,255,0.2)';
+                btn.style.color = 'white';
+              });
+              
+              button.classList.add('active');
+              button.style.background = '#F2C31B';
+              button.style.color = '#303030';
+              
+              // Apply zoom to video stream
+              await this.applyZoom(stream, videoElementId, newZoom);
+            });
+          });
+        }
+
+        // Apply zoom to video stream using constraints
+        async applyZoom(stream, videoElementId, zoomLevel) {
+          try {
+            const videoTracks = stream.getVideoTracks();
+            if (videoTracks.length === 0) {
+              console.log('No video tracks found');
+              return;
+            }
+
+            const track = videoTracks[0];
+            const capabilities = track.getCapabilities();
+            
+            // Check if zoom is supported
+            if (capabilities.zoom) {
+              const constraints = {
+                advanced: [{
+                  zoom: Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, zoomLevel))
+                }]
+              };
+              
+              await track.applyConstraints(constraints);
+              console.log(`Applied zoom: ${zoomLevel}x`);
+            } else {
+              // Fallback: use CSS transform for devices that don't support zoom constraints
+              const video = document.getElementById(videoElementId);
+              if (video) {
+                video.style.transform = `scale(${zoomLevel})`;
+                console.log(`Applied CSS zoom fallback: ${zoomLevel}x`);
+              }
+            }
+          } catch (error) {
+            console.error('Error applying zoom:', error);
+            
+            // Fallback to CSS transform if constraints fail
+            const video = document.getElementById(videoElementId);
+            if (video) {
+              video.style.transform = `scale(${zoomLevel})`;
+              console.log(`Applied CSS zoom fallback after error: ${zoomLevel}x`);
+            }
           }
         }
 
