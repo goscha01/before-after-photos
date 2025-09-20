@@ -223,7 +223,21 @@
         }
         
         init() {
+          // Check if user is signed in (has URL parameters)
+          const urlParams = new URLSearchParams(window.location.search);
+          const cleaner = urlParams.get('cleaner');
+          const location = urlParams.get('location');
+          
+          if (!cleaner || !location) {
+            // Show sign-in screen
+            this.showSignInScreen();
+          } else {
+            // User is signed in, show main app
+            this.showMainApp();
+          }
+        }
 
+        showMainApp() {
           // Check orientation
           this.checkOrientation();
 
@@ -305,6 +319,132 @@
 
           // Add scroll listener for auto tab switching
           this.addScrollListener();
+        }
+
+        showSignInScreen() {
+          console.log('Showing sign-in screen...');
+          
+          const rootElement = document.getElementById('root');
+          if (rootElement) {
+            rootElement.innerHTML = this.getSignInHTML();
+            this.attachSignInListeners();
+          }
+        }
+
+        getSignInHTML() {
+          return `
+            <div style="min-height: 100vh; background: linear-gradient(135deg, #F2C31B 0%, #E6B800 100%); display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;">
+              <div style="background: white; border-radius: 20px; padding: 40px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center;">
+                <!-- App Logo/Title -->
+                <div style="margin-bottom: 32px;">
+                  <div style="font-size: 48px; margin-bottom: 8px;">📸</div>
+                  <h1 style="margin: 0; color: #303030; font-size: 28px; font-weight: bold; margin-bottom: 8px;">Before & After</h1>
+                  <p style="margin: 0; color: #666; font-size: 16px;">Photo Documentation App</p>
+                </div>
+
+                <!-- Welcome Message -->
+                <div style="margin-bottom: 32px;">
+                  <h2 style="margin: 0 0 8px 0; color: #303030; font-size: 22px; font-weight: bold;">Welcome!</h2>
+                  <p style="margin: 0; color: #666; font-size: 16px; line-height: 1.4;">Please enter your name and select your default city to get started.</p>
+                </div>
+
+                <!-- Sign In Form -->
+                <form id="signin-form" style="text-align: left;">
+                  <!-- Name Input -->
+                  <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
+                      👤 Your Name
+                    </label>
+                    <input type="text" id="signin-name" required style="width: 100%; padding: 14px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: border-color 0.2s;" placeholder="Enter your name" onfocus="this.style.borderColor='#F2C31B'" onblur="this.style.borderColor='#e1e5e9'">
+                  </div>
+
+                  <!-- City Selection -->
+                  <div style="margin-bottom: 32px;">
+                    <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
+                      📍 Default City
+                    </label>
+                    <select id="signin-city" required style="width: 100%; padding: 14px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; background: white; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#F2C31B'" onblur="this.style.borderColor='#e1e5e9'">
+                      <option value="">Select your city...</option>
+                      <option value="tampa">Tampa</option>
+                      <option value="st-petersburg">St. Petersburg</option>
+                      <option value="jacksonville">Jacksonville</option>
+                      <option value="miami">Miami</option>
+                    </select>
+                  </div>
+
+                  <!-- Sign In Button -->
+                  <button type="submit" id="signin-btn" style="width: 100%; background: #F2C31B; color: #303030; border: none; padding: 16px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(242, 195, 27, 0.3);" onmouseover="this.style.background='#E6B800'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(242, 195, 27, 0.4)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(242, 195, 27, 0.3)'">
+                    🚀 Start Taking Photos
+                  </button>
+                </form>
+
+                <!-- Footer -->
+                <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+                  <p style="margin: 0; color: #999; font-size: 14px;">Your information is stored locally and used to personalize your experience.</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        attachSignInListeners() {
+          const form = document.getElementById('signin-form');
+          const nameInput = document.getElementById('signin-name');
+          const citySelect = document.getElementById('signin-city');
+          const signInBtn = document.getElementById('signin-btn');
+
+          // Form submission
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSignIn();
+          });
+
+          // Real-time validation
+          const validateForm = () => {
+            const name = nameInput.value.trim();
+            const city = citySelect.value;
+            
+            if (name && city) {
+              signInBtn.disabled = false;
+              signInBtn.style.opacity = '1';
+              signInBtn.style.cursor = 'pointer';
+            } else {
+              signInBtn.disabled = true;
+              signInBtn.style.opacity = '0.6';
+              signInBtn.style.cursor = 'not-allowed';
+            }
+          };
+
+          nameInput.addEventListener('input', validateForm);
+          citySelect.addEventListener('change', validateForm);
+
+          // Initial validation
+          validateForm();
+
+          // Focus on name input
+          setTimeout(() => {
+            nameInput.focus();
+          }, 100);
+        }
+
+        handleSignIn() {
+          const name = document.getElementById('signin-name').value.trim();
+          const city = document.getElementById('signin-city').value;
+
+          if (!name || !city) {
+            alert('Please enter your name and select a city');
+            return;
+          }
+
+          // Validate name (basic validation)
+          if (name.length < 2) {
+            alert('Please enter a valid name (at least 2 characters)');
+            return;
+          }
+
+          // Update URL with parameters and reload
+          const newUrl = `${window.location.origin}${window.location.pathname}?cleaner=${encodeURIComponent(name)}&location=${encodeURIComponent(city)}`;
+          window.location.href = newUrl;
         }
         
         checkOrientation() {
@@ -690,30 +830,26 @@
         }
         
         getAppHTML() {
+          // Get cleaner name from URL parameter
+          const urlParams = new URLSearchParams(window.location.search);
+          const currentCleaner = urlParams.get('cleaner') || 'Kate';
+          
           return `
             <div style="min-height: 100vh; background: #f8fafc; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif; display: flex; flex-direction: column; overflow-x: hidden;">
               <!-- Fixed Header -->
               <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <!-- Location dropdown -->
-                <select id="location-select" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; max-width: 120px;">
-                  <option value="tampa">Tampa</option>
-                  <option value="st-petersburg">St. Petersburg</option>
-                  <option value="jacksonville">Jacksonville</option>
-                  <option value="miami">Miami</option>
-                </select>
+                <!-- Left side - All Photos button -->
+                <button id="all-photos-btn" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                  📷 All Photos
+                </button>
 
-                <!-- Cleaner name -->
-                <div style="font-size: 16px; font-weight: bold;">Kate</div>
+                <!-- Center - Cleaner name -->
+                <div style="font-size: 16px; font-weight: bold;">${currentCleaner}</div>
 
-                <!-- Action buttons -->
-                <div style="display: flex; gap: 8px; align-items: center;">
-                  <button id="all-photos-btn" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
-                    📷 All Photos
-                  </button>
+                <!-- Right side - Upload button -->
                 <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
                   📤 Upload
                 </button>
-                </div>
               </div>
 
               <!-- Fixed Room Tabs (at bottom) -->
@@ -1291,6 +1427,392 @@
           }
           // Restore background scrolling
           document.body.style.overflow = '';
+        }
+
+        showUploadOptionsPopup() {
+          // Close any existing modals
+          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 3000"]');
+          existingModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
+          // Get current location from URL or default
+          const urlParams = new URLSearchParams(window.location.search);
+          const currentLocation = urlParams.get('location') || 'tampa';
+          const currentCleaner = urlParams.get('cleaner') || 'Kate';
+
+          // Generate default album name based on current date and location
+          const today = new Date();
+          const dateStr = today.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+          const defaultAlbumName = `${currentCleaner} - ${this.formatLocationName(currentLocation)} - ${dateStr}`;
+
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+          `;
+
+          modal.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+              <!-- Header -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0;">
+                <h2 style="margin: 0; color: #303030; font-size: 24px; font-weight: bold;">📤 Upload Photos</h2>
+                <button id="close-upload-popup" style="background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='#333'" onmouseout="this.style.color='#666'">✕</button>
+              </div>
+
+              <!-- Album Name -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
+                  📁 Album Name
+                </label>
+                <input type="text" id="album-name-input" value="${defaultAlbumName}" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; box-sizing: border-box;" placeholder="Enter album name">
+              </div>
+
+              <!-- City Selection -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
+                  📍 City
+                </label>
+                <select id="upload-city-select" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; box-sizing: border-box;">
+                  <option value="tampa" ${currentLocation === 'tampa' ? 'selected' : ''}>Tampa</option>
+                  <option value="st-petersburg" ${currentLocation === 'st-petersburg' ? 'selected' : ''}>St. Petersburg</option>
+                  <option value="jacksonville" ${currentLocation === 'jacksonville' ? 'selected' : ''}>Jacksonville</option>
+                  <option value="miami" ${currentLocation === 'miami' ? 'selected' : ''}>Miami</option>
+                </select>
+              </div>
+
+              <!-- Photo Types -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 12px; font-size: 16px;">
+                  📸 Photo Types to Upload
+                </label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-before" checked style="margin-right: 8px; transform: scale(1.2);">
+                    <span style="font-size: 14px; color: #F2C31B; font-weight: bold;">📸 Before</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#3B82F6'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-after" checked style="margin-right: 8px; transform: scale(1.2);">
+                    <span style="font-size: 14px; color: #3B82F6; font-weight: bold;">📷 After</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#10B981'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-combined" checked style="margin-right: 8px; transform: scale(1.2);">
+                    <span style="font-size: 14px; color: #10B981; font-weight: bold;">🔄 Combined</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Photo Formats -->
+              <div style="margin-bottom: 24px;">
+                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 12px; font-size: 16px;">
+                  📐 Photo Formats to Upload
+                </label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px;">
+                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-default" checked style="margin-right: 8px; transform: scale(1.2);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <div style="width: 16px; height: 12px; background: #F2C31B; border-radius: 1px;"></div>
+                      <span style="font-size: 13px; font-weight: bold;">Default (4:3)</span>
+                    </div>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-landscape" style="margin-right: 8px; transform: scale(1.2);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <div style="width: 20px; height: 11px; background: #F2C31B; border-radius: 1px;"></div>
+                      <span style="font-size: 13px; font-weight: bold;">Landscape (16:9)</span>
+                    </div>
+                  </label>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                  <label style="display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-square" style="margin-bottom: 4px; transform: scale(1.2);">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                      <div style="width: 12px; height: 12px; background: #F2C31B; border-radius: 1px;"></div>
+                      <span style="font-size: 11px; font-weight: bold; text-align: center;">Square</span>
+                      <span style="font-size: 9px; opacity: 0.7;">Instagram</span>
+                    </div>
+                  </label>
+                  <label style="display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-portrait" style="margin-bottom: 4px; transform: scale(1.2);">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                      <div style="width: 10px; height: 12px; background: #F2C31B; border-radius: 1px;"></div>
+                      <span style="font-size: 11px; font-weight: bold; text-align: center;">Portrait</span>
+                      <span style="font-size: 9px; opacity: 0.7;">LinkedIn</span>
+                    </div>
+                  </label>
+                  <label style="display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
+                    <input type="checkbox" id="upload-blog" style="margin-bottom: 4px; transform: scale(1.2);">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                      <div style="width: 14px; height: 10px; background: #F2C31B; border-radius: 1px;"></div>
+                      <span style="font-size: 11px; font-weight: bold; text-align: center;">Blog</span>
+                      <span style="font-size: 9px; opacity: 0.7;">Articles</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="cancel-upload" style="background: #f5f5f5; color: #666; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f5f5f5'">
+                  Cancel
+                </button>
+                <button id="start-upload" style="background: #F2C31B; color: #303030; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#E6B800'" onmouseout="this.style.background='#F2C31B'">
+                  📤 Start Upload
+                </button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+          document.body.style.overflow = 'hidden';
+
+          // Add event listeners
+          this.setupUploadPopupListeners(modal);
+        }
+
+        formatLocationName(location) {
+          const locationNames = {
+            'tampa': 'Tampa',
+            'st-petersburg': 'St. Petersburg',
+            'jacksonville': 'Jacksonville',
+            'miami': 'Miami'
+          };
+          return locationNames[location] || location;
+        }
+
+        setupUploadPopupListeners(modal) {
+          // Close button
+          document.getElementById('close-upload-popup').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+          });
+
+          // Cancel button
+          document.getElementById('cancel-upload').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+            }
+          });
+
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
+
+          // Start upload button
+          document.getElementById('start-upload').addEventListener('click', () => {
+            this.handleUploadStart(modal);
+          });
+
+          // Update album name when city changes
+          document.getElementById('upload-city-select').addEventListener('change', (e) => {
+            const albumNameInput = document.getElementById('album-name-input');
+            const currentCleaner = new URLSearchParams(window.location.search).get('cleaner') || 'Kate';
+            const selectedLocation = e.target.value;
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric' 
+            });
+            const newAlbumName = `${currentCleaner} - ${this.formatLocationName(selectedLocation)} - ${dateStr}`;
+            albumNameInput.value = newAlbumName;
+          });
+        }
+
+        handleUploadStart(modal) {
+          // Get selected options
+          const albumName = document.getElementById('album-name-input').value.trim();
+          const selectedCity = document.getElementById('upload-city-select').value;
+          
+          const photoTypes = {
+            before: document.getElementById('upload-before').checked,
+            after: document.getElementById('upload-after').checked,
+            combined: document.getElementById('upload-combined').checked
+          };
+
+          const photoFormats = {
+            default: document.getElementById('upload-default').checked,
+            square: document.getElementById('upload-square').checked,
+            portrait: document.getElementById('upload-portrait').checked,
+            landscape: document.getElementById('upload-landscape').checked,
+            blog: document.getElementById('upload-blog').checked
+          };
+
+          // Validation
+          if (!albumName) {
+            alert('Please enter an album name');
+            return;
+          }
+
+          const hasSelectedTypes = Object.values(photoTypes).some(selected => selected);
+          if (!hasSelectedTypes) {
+            alert('Please select at least one photo type to upload');
+            return;
+          }
+
+          const hasSelectedFormats = Object.values(photoFormats).some(selected => selected);
+          if (!hasSelectedFormats) {
+            alert('Please select at least one photo format to upload');
+            return;
+          }
+
+          // Close the popup
+          document.body.removeChild(modal);
+          document.body.style.overflow = '';
+
+          // Start the upload process
+          this.processUpload({
+            albumName,
+            city: selectedCity,
+            photoTypes,
+            photoFormats
+          });
+        }
+
+        processUpload(options) {
+          console.log('Starting upload with options:', options);
+          
+          // Filter photos based on selected types
+          let photosToUpload = this.photos.filter(photo => {
+            if (photo.mode === 'before' && options.photoTypes.before) return true;
+            if (photo.mode === 'after' && options.photoTypes.after) return true;
+            if (photo.mode === 'mix' && options.photoTypes.combined) return true;
+            return false;
+          });
+
+          if (photosToUpload.length === 0) {
+            alert('No photos found matching the selected criteria');
+            return;
+          }
+
+          // Show upload progress
+          this.showUploadProgress(photosToUpload, options);
+        }
+
+        showUploadProgress(photos, options) {
+          // Create progress modal
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+          `;
+
+          modal.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+              <h2 style="margin: 0 0 20px 0; color: #303030; font-size: 24px; font-weight: bold;">📤 Uploading Photos</h2>
+              
+              <div style="margin-bottom: 16px;">
+                <div style="font-size: 16px; color: #666; margin-bottom: 8px;">Album: <strong>${options.albumName}</strong></div>
+                <div style="font-size: 16px; color: #666; margin-bottom: 8px;">City: <strong>${this.formatLocationName(options.city)}</strong></div>
+              </div>
+
+              <div style="margin-bottom: 20px;">
+                <div style="font-size: 18px; font-weight: bold; color: #303030; margin-bottom: 8px;">
+                  <span id="upload-current">0</span> / <span id="upload-total">${photos.length}</span> photos
+                </div>
+                <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                  <div id="upload-progress-bar" style="height: 100%; background: #F2C31B; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+              </div>
+
+              <div id="upload-status" style="font-size: 14px; color: #666; margin-bottom: 16px;">
+                Preparing upload...
+              </div>
+
+              <button id="cancel-upload-process" style="background: #f5f5f5; color: #666; border: none; padding: 10px 16px; border-radius: 6px; font-size: 14px; cursor: pointer;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f5f5f5'">
+                Cancel Upload
+              </button>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+
+          // Simulate upload process (replace with real upload logic)
+          this.simulateUpload(photos, options, modal);
+        }
+
+        simulateUpload(photos, options, modal) {
+          const progressBar = document.getElementById('upload-progress-bar');
+          const currentSpan = document.getElementById('upload-current');
+          const statusDiv = document.getElementById('upload-status');
+          
+          let currentIndex = 0;
+          let cancelled = false;
+
+          // Cancel button
+          document.getElementById('cancel-upload-process').addEventListener('click', () => {
+            cancelled = true;
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+          });
+
+          const uploadNext = () => {
+            if (cancelled || currentIndex >= photos.length) {
+              if (!cancelled) {
+                // Upload complete
+                statusDiv.textContent = 'Upload completed successfully!';
+                setTimeout(() => {
+                  document.body.removeChild(modal);
+                  document.body.style.overflow = '';
+                  alert(`Successfully uploaded ${photos.length} photos to "${options.albumName}"`);
+                }, 2000);
+              }
+              return;
+            }
+
+            const photo = photos[currentIndex];
+            statusDiv.textContent = `Uploading ${photo.mode} photo: ${photo.name}`;
+            
+            // Simulate upload delay
+            setTimeout(() => {
+              currentIndex++;
+              currentSpan.textContent = currentIndex;
+              progressBar.style.width = `${(currentIndex / photos.length) * 100}%`;
+              
+              uploadNext();
+            }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+          };
+
+          uploadNext();
         }
 
         openCameraFromGallery(room, name, mode) {
@@ -2739,11 +3261,11 @@
             });
           }
           
-          // Header upload button - delete all photos functionality
+          // Header upload button - show upload options popup
           const headerUploadBtn = document.getElementById('header-upload-btn');
           if (headerUploadBtn) {
             headerUploadBtn.addEventListener('click', () => {
-              this.showDeleteAllConfirmation();
+              this.showUploadOptionsPopup();
             });
           }
           
