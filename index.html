@@ -1030,10 +1030,10 @@
                 }
                 
                 html += `
-                  <div style="border: 2px dashed ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 1; background: #f8f9fa; display: flex; align-items: center; justify-content: center; opacity: 0.6;">
+                  <div class="dummy-card" data-room="${photo.room}" data-name="${photo.name}" data-mode="${photo.mode}" style="border: 2px dashed ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 1; background: #f8f9fa; display: flex; align-items: center; justify-content: center; opacity: 0.6; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'; this.style.background='#e9ecef';" onmouseout="this.style.opacity='0.6'; this.style.background='#f8f9fa';">
                     <div style="text-align: center; color: #666;">
                       <div style="font-size: 24px; margin-bottom: 8px;">${icon}</div>
-                      <div style="font-size: 8px; color: #999;">Missing</div>
+                      <div style="font-size: 8px; color: #999;">Click to add</div>
                     </div>
                   </div>
                 `;
@@ -1252,6 +1252,36 @@
                 }
               });
             });
+            
+            // Add dummy card click handlers for camera functionality
+            const dummyCards = modal.querySelectorAll('.dummy-card');
+            dummyCards.forEach((card) => {
+              // Remove any existing listeners by cloning the element
+              const newCard = card.cloneNode(true);
+              card.parentNode.replaceChild(newCard, card);
+              
+              newCard.addEventListener('click', (e) => {
+                const room = e.currentTarget.dataset.room;
+                const name = e.currentTarget.dataset.name;
+                const mode = e.currentTarget.dataset.mode;
+                
+                console.log('Dummy card clicked:', { room, name, mode });
+                
+                // Close the all photos modal first
+                this.closeAllPhotosModal(modal);
+                
+                // Open camera based on the dummy type
+                setTimeout(() => {
+                  if (mode === 'dummy-before') {
+                    this.openCameraFromGallery(room, name, 'before');
+                  } else if (mode === 'dummy-after') {
+                    this.openCameraFromGallery(room, name, 'after');
+                  }
+                  // Note: dummy-combined cards don't need camera functionality
+                  // as combined photos are auto-generated when both before/after exist
+                }, 100);
+              });
+            });
           }, 100);
         }
 
@@ -1261,6 +1291,49 @@
           }
           // Restore background scrolling
           document.body.style.overflow = '';
+        }
+
+        openCameraFromGallery(room, name, mode) {
+          console.log('Opening camera from gallery:', { room, name, mode });
+          
+          // Set up context for gallery return
+          this.galleryReturnContext = {
+            returnToGallery: true,
+            room: room,
+            name: name,
+            mode: mode
+          };
+          
+          // Set the current room and mode
+          this.currentRoom = room;
+          
+          if (mode === 'before') {
+            // Set specific photo name for before photo
+            this.pendingPhotoName = name;
+            this.openCamera('before');
+          } else if (mode === 'after') {
+            // Find the corresponding before photo to open comparison camera
+            const beforePhoto = this.photos.find(p => 
+              p.room === room && 
+              p.name === name && 
+              p.mode === 'before'
+            );
+            
+            if (beforePhoto) {
+              // Set the before photo reference for the comparison camera
+              this.currentBeforePhoto = beforePhoto;
+              this.pendingPhotoName = name;
+              
+              // Open the comparison camera view (after mode) with the before photo
+              this.showPhotoFullscreen(beforePhoto);
+            } else {
+              console.error('Cannot take after photo without corresponding before photo');
+              // Return to gallery if error
+              setTimeout(() => {
+                this.showAllPhotosModal();
+              }, 100);
+            }
+          }
         }
 
         async showPhotoFullscreenFromModal(photo) {
@@ -3403,28 +3476,50 @@
 
           // Small delay to ensure cleanup completes before updating gallery
           setTimeout(() => {
-            // Update gallery to show new after photo
-            const photosContainer = document.getElementById('photos-container');
-            if (photosContainer) {
-              photosContainer.innerHTML = this.getPhotosHTML();
-              this.attachPhotoListeners(); // Re-attach event listeners for new photo elements
-            }
-
-            // Hide action buttons and return to gallery view
-            this.hideActionButtons();
-            
-            // Clear the before photo reference
-            this.currentBeforePhoto = null;
-            
-            // Auto-cycle to next unpaired before photo in current room
-            // Only auto-cycle if we're still in the same room where the photo was taken
-            if (this.currentRoom === beforePhoto.room) {
-              this.autoCycleToNextBeforePhoto(this.currentRoom);
-            } else {
-              // User switched rooms - just restore the UI and return to gallery
-              this.showMainRoomTabs();
+            // Check if photo was taken from gallery dummy card
+            if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery) {
+              console.log('Returning to gallery after photo from dummy card');
+              
+              // Clear the gallery return context
+              this.galleryReturnContext = null;
+              
+              // Clear the before photo reference
+              this.currentBeforePhoto = null;
+              
+              // Hide action buttons and restore UI
               this.hideActionButtons();
+              this.showMainRoomTabs();
               document.body.style.overflow = '';
+              
+              // Return to All Photos gallery
+              setTimeout(() => {
+                this.showAllPhotosModal();
+              }, 200);
+              
+            } else {
+              // Normal flow - update main gallery
+              const photosContainer = document.getElementById('photos-container');
+              if (photosContainer) {
+                photosContainer.innerHTML = this.getPhotosHTML();
+                this.attachPhotoListeners(); // Re-attach event listeners for new photo elements
+              }
+
+              // Hide action buttons and return to gallery view
+              this.hideActionButtons();
+              
+              // Clear the before photo reference
+              this.currentBeforePhoto = null;
+              
+              // Auto-cycle to next unpaired before photo in current room
+              // Only auto-cycle if we're still in the same room where the photo was taken
+              if (this.currentRoom === beforePhoto.room) {
+                this.autoCycleToNextBeforePhoto(this.currentRoom);
+              } else {
+                // User switched rooms - just restore the UI and return to gallery
+                this.showMainRoomTabs();
+                this.hideActionButtons();
+                document.body.style.overflow = '';
+              }
             }
           }, 100);
         }
@@ -5029,8 +5124,8 @@
           // First photos are always "before" photos
           const photoMode = 'before';
           
-          // Create simple position-based name
-          const photoName = this.generatePhotoName(this.currentRoom, photoMode);
+          // Create simple position-based name or use pending name from gallery
+          const photoName = this.pendingPhotoName || this.generatePhotoName(this.currentRoom, photoMode);
           
           const photo = {
             id: Date.now(),
@@ -5082,6 +5177,55 @@
           if (photosContainer) {
             photosContainer.innerHTML = this.getPhotosHTML();
             this.attachPhotoListeners();
+          }
+
+          // Check if photo was taken from gallery dummy card (before photo)
+          if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery && this.galleryReturnContext.mode === 'before') {
+            console.log('Before photo taken from gallery dummy card - closing camera and returning to gallery');
+            
+            // Close the before photo modal
+            setTimeout(() => {
+              // Stop camera stream
+              const video = document.querySelector('video');
+              if (video && video.srcObject) {
+                const stream = video.srcObject;
+                stream.getTracks().forEach(track => track.stop());
+              }
+              
+              // Close modal overlays
+              const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index"]');
+              existingModals.forEach(modal => {
+                try {
+                  if (modal.parentNode &&
+                      !modal.id.includes('bottom-panel') &&
+                      !modal.id.includes('sticky-tabs-container') &&
+                      modal.id !== 'bottom-panel' &&
+                      modal.id !== 'sticky-tabs-container') {
+                    if (modal.parentNode === document.body) {
+                      document.body.removeChild(modal);
+                    } else if (modal.parentNode) {
+                      modal.parentNode.removeChild(modal);
+                    }
+                  }
+                } catch (error) {
+                  console.log('Modal already removed:', error);
+                }
+              });
+              
+              // Clear the gallery return context
+              this.galleryReturnContext = null;
+              
+              // Hide action buttons and restore UI
+              this.hideActionButtons();
+              this.showMainRoomTabs();
+              document.body.style.overflow = '';
+              
+              // Return to All Photos gallery
+              setTimeout(() => {
+                this.showAllPhotosModal();
+              }, 200);
+              
+            }, 500); // Small delay to let user see the photo was captured
           }
 
           console.log('Photo capture completed');
