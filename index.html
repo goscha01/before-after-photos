@@ -217,6 +217,7 @@
           this.currentRoom = 'kitchen';
           this.currentTab = 'photo';
           this.isLandscape = false;
+          this.currentTemplate = 'default'; // Default template for all photos
           this.loadPhotos(); // Load photos first
           this.init();
         }
@@ -1135,6 +1136,7 @@
                 flex-shrink: 0;
               ">
                 <h2 style="margin: 0; font-size: 20px; font-weight: bold;">📷 All Photos</h2>
+                
                 <button id="close-all-photos-modal" style="
                   background: transparent;
                   border: none;
@@ -1173,6 +1175,7 @@
             this.closeAllPhotosModal(modal);
           });
 
+
           // Close on background click
           modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -1181,12 +1184,26 @@
           });
 
           // Add photo click listeners for fullscreen view
+          this.attachGalleryPhotoListeners(modal);
+        }
+
+        attachGalleryPhotoListeners(modal = null) {
           setTimeout(() => {
+            // If no modal provided, try to find it
+            if (!modal) {
+              modal = document.querySelector('[style*="position: fixed"][style*="z-index: 2500"]');
+            }
+            
+            if (!modal) return;
+            
             const photoItems = modal.querySelectorAll('.photo-item');
             
             photoItems.forEach((item, index) => {
+              // Remove any existing listeners by cloning the element
+              const newItem = item.cloneNode(true);
+              item.parentNode.replaceChild(newItem, item);
               
-              item.addEventListener('click', (e) => {
+              newItem.addEventListener('click', (e) => {
                 
                 const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
                 if (photoIndex >= 0 && photoIndex < this.photos.length) {
@@ -1216,63 +1233,8 @@
         }
 
         async showPhotoFullscreenFromModal(photo) {
-          
-          // For now, just show a simple fullscreen view for ALL photo types to test
-          const modal = document.createElement('div');
-          modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95); z-index: 2500; display: flex;
-            align-items: center; justify-content: center;
-          `;
-          
-          modal.innerHTML = `
-            <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
-              <img src="${photo.dataUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain;" />
-              
-              <!-- Photo info overlay -->
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
-                <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">
-                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.toUpperCase()}
-                </div>
-                <div style="font-size: 16px; opacity: 0.9;">
-                  ${new Date(photo.timestamp).toLocaleString()}
-                </div>
-              </div>
-              
-              <!-- Close button -->
-              <button id="close-photo-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 15px; border-radius: 50%; font-size: 18px; cursor: pointer;">
-                ✕
-              </button>
-            </div>
-          `;
-          
-          document.body.appendChild(modal);
-          document.body.style.overflow = 'hidden';
-          
-          
-          // Add close functionality
-          document.getElementById('close-photo-btn').addEventListener('click', () => {
-            document.body.removeChild(modal);
-            document.body.style.overflow = '';
-            
-            // Reopen the All Photos modal
-            setTimeout(() => {
-              this.showAllPhotosModal();
-            }, 100);
-          });
-
-          // Close on background click
-          modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-              document.body.removeChild(modal);
-              document.body.style.overflow = '';
-              
-              // Reopen the All Photos modal
-              setTimeout(() => {
-                this.showAllPhotosModal();
-              }, 100);
-            }
-          });
+          // Use the same enhanced fullscreen view as the main function
+          this.showPhotoFullscreen(photo);
         }
         
         getPhotosHTML() {
@@ -1957,12 +1919,18 @@
         
         attachPhotoListeners() {
           // Only attach listeners for photo elements (called after photo grid updates)
+          // Clear any existing listeners first to prevent duplicates
           setTimeout(() => {
             document.querySelectorAll('.photo-item').forEach(item => {
+              // Remove any existing listeners by cloning the element
+              const newItem = item.cloneNode(true);
+              item.parentNode.replaceChild(newItem, item);
+              
               // Photo click to view fullscreen
-              item.addEventListener('click', (e) => {
+              newItem.addEventListener('click', (e) => {
                 // Don't trigger if clicking delete button or retake button
-                if (e.target.classList.contains('delete-photo-btn') || e.target.classList.contains('retake-combined-btn')) {
+                if (e.target.classList.contains('delete-photo-btn') || 
+                    e.target.classList.contains('retake-combined-btn')) {
                   return;
                 }
 
@@ -1973,11 +1941,11 @@
               });
 
               // Add hover effect
-              item.addEventListener('mouseenter', (e) => {
+              newItem.addEventListener('mouseenter', (e) => {
                 e.currentTarget.style.transform = 'scale(1.02)';
               });
 
-              item.addEventListener('mouseleave', (e) => {
+              newItem.addEventListener('mouseleave', (e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               });
             });
@@ -2581,23 +2549,67 @@
               });
             }
           } else {
-            // Regular fullscreen for other photo types
+            // Regular fullscreen for other photo types - show actual dimensions without transformation
+            const orientation = this.detectPhotoOrientation(photo.naturalWidth || 800, photo.naturalHeight || 600);
+            const templateType = photo.templateType || 'default';
+            
             modal.innerHTML = `
-              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
-                <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: cover;" />
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95);">
+                <!-- Scrollable container for actual size viewing -->
+                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: 95vh; overflow: auto;">
+                  <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
+                </div>
                 
                 <!-- Photo info overlay -->
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
-                  <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">
+                <div style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px 20px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
+                  <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
                     ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
                   </div>
-                  <div style="font-size: 16px; opacity: 0.9;">
+                  <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
                     ${new Date(photo.timestamp).toLocaleString()}
+                  </div>
+                  <div style="font-size: 12px; opacity: 0.7;">
+                    Orientation: ${orientation} | Template: ${templateType}
                   </div>
                 </div>
                 
+                <!-- Template selector for combined photos -->
+                ${photo.mode === 'mix' ? `
+                <div style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; min-width: 300px;">
+                  <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">📐 Template Size</div>
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" name="template-selector" value="default" style="margin-right: 8px;" ${templateType === 'default' ? 'checked' : ''}>
+                      <span style="font-size: 12px;">📐 Default</span>
+                    </label>
+                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" name="template-selector" value="square" style="margin-right: 8px;" ${templateType === 'square' ? 'checked' : ''}>
+                      <span style="font-size: 12px;">⬜ Square</span>
+                    </label>
+                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" name="template-selector" value="portrait" style="margin-right: 8px;" ${templateType === 'portrait' ? 'checked' : ''}>
+                      <span style="font-size: 12px;">📱 Portrait</span>
+                    </label>
+                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" name="template-selector" value="landscape" style="margin-right: 8px;" ${templateType === 'landscape' ? 'checked' : ''}>
+                      <span style="font-size: 12px;">💻 Landscape</span>
+                    </label>
+                  </div>
+                </div>
+                ` : ''}
+
+                <!-- View mode toggle -->
+                <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
+                  <button id="fit-screen-btn" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                    📺 Fit to Screen
+                  </button>
+                  <button id="actual-size-btn" style="background: #F2C31B; color: #303030; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                    📐 Actual Size
+                  </button>
+                </div>
+                
                 <!-- Close button -->
-                <button id="close-photo-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
+                <button id="close-photo-btn" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px); z-index: 10;">
                   ✕
                 </button>
               </div>
@@ -2607,6 +2619,69 @@
 
             // Prevent background scrolling when modal is open
             document.body.style.overflow = 'hidden';
+
+            // Get elements for view mode switching
+            const imgElement = modal.querySelector('#fullscreen-photo');
+            const imgContainer = modal.querySelector('#photo-container');
+            
+            // Set initial state to fit screen
+            imgElement.style.maxWidth = '100%';
+            imgElement.style.maxHeight = '100%';
+            imgElement.style.width = 'auto';
+            imgElement.style.height = 'auto';
+            
+            // View mode toggle functionality
+            document.getElementById('fit-screen-btn').addEventListener('click', () => {
+              // Fit to screen mode - scale image to fit within viewport
+              imgElement.style.maxWidth = '100%';
+              imgElement.style.maxHeight = '100%';
+              imgElement.style.width = 'auto';
+              imgElement.style.height = 'auto';
+              imgContainer.style.maxWidth = '95vw';
+              imgContainer.style.maxHeight = '95vh';
+              imgContainer.style.overflow = 'hidden';
+              
+              // Update button states
+              document.getElementById('fit-screen-btn').style.background = '#667eea';
+              document.getElementById('actual-size-btn').style.background = '#e1e5e9';
+            });
+            
+            document.getElementById('actual-size-btn').addEventListener('click', () => {
+              // Actual size mode - show image at its true dimensions
+              imgElement.style.maxWidth = 'none';
+              imgElement.style.maxHeight = 'none';
+              imgElement.style.width = 'auto';
+              imgElement.style.height = 'auto';
+              imgContainer.style.maxWidth = 'none';
+              imgContainer.style.maxHeight = 'none';
+              imgContainer.style.overflow = 'auto';
+              
+              // Update button states
+              document.getElementById('fit-screen-btn').style.background = '#e1e5e9';
+              document.getElementById('actual-size-btn').style.background = '#F2C31B';
+            });
+
+            // Template selector radio buttons (only for combined photos)
+            if (photo.mode === 'mix') {
+              const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
+              templateRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                  if (e.target.checked) {
+                    const newTemplate = e.target.value;
+                    console.log('Changing template for this photo to:', newTemplate);
+                    
+                    // Show loading state
+                    const imgElement = modal.querySelector('#fullscreen-photo');
+                    if (imgElement) {
+                      imgElement.style.opacity = '0.5';
+                    }
+                    
+                    // Regenerate this specific photo with new template
+                    this.regenerateSpecificPhoto(photo, newTemplate, modal);
+                  }
+                });
+              });
+            }
 
             document.getElementById('close-photo-btn').addEventListener('click', () => {
               document.body.removeChild(modal);
@@ -2905,28 +2980,18 @@
             console.log('Added new after photo for before photo:', beforePhoto.id);
           }
 
-          // Automatically create combined photo
-          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room, beforePhoto.name);
+          // Automatically create combined photo using current template
+          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room, beforePhoto.name, this.currentTemplate);
 
           this.savePhotos();
         }
         
-        createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName) {
-          console.log('Creating combined photo automatically for room:', room, 'with name:', photoName);
+        createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
+          // Use current global template if none specified
+          const actualTemplateType = templateType || this.currentTemplate;
+          console.log('Creating combined photo automatically for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
           
-          // Create a canvas to combine the photos
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          // Set canvas size
-          canvas.width = 800;
-          canvas.height = 600;
-          
-          // Fill white background
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          // Create image objects
+          // Create image objects to get dimensions
           const beforeImg = new Image();
           const afterImg = new Image();
           
@@ -2936,42 +3001,8 @@
           const onImageLoad = () => {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-              // All images loaded, now draw them
-              const halfHeight = canvas.height / 2;
-              
-              // Draw before photo (top half)
-              ctx.drawImage(beforeImg, 0, 0, canvas.width, halfHeight);
-              
-              // Draw divider line
-              ctx.strokeStyle = '#000000';
-              ctx.lineWidth = 4;
-              ctx.beginPath();
-              ctx.moveTo(0, halfHeight);
-              ctx.lineTo(canvas.width, halfHeight);
-              ctx.stroke();
-              
-              // Draw after photo (bottom half)
-              ctx.drawImage(afterImg, 0, halfHeight, canvas.width, halfHeight);
-              
-              // Add labels
-              ctx.fillStyle = 'rgba(0,0,0,0.8)';
-              ctx.font = 'bold 18px Arial';
-              ctx.textAlign = 'center';
-              
-              // Before label
-              ctx.fillRect(canvas.width/2 - 50, 20, 100, 30);
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText('BEFORE', canvas.width/2, 40);
-              
-              // After label
-              ctx.fillStyle = 'rgba(0,0,0,0.8)';
-              ctx.fillRect(canvas.width/2 - 50, halfHeight + 20, 100, 30);
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText('AFTER', canvas.width/2, halfHeight + 40);
-              
-              // Convert to data URL and save
-              const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-              this.saveCombinedPhoto(combinedDataUrl, room, photoName);
+              // All images loaded, now process them with enhanced sizing
+              this.processEnhancedCombinedPhoto(beforeImg, afterImg, room, photoName, templateType);
             }
           };
           
@@ -2980,6 +3011,748 @@
           afterImg.onload = onImageLoad;
           beforeImg.src = beforeDataUrl;
           afterImg.src = afterDataUrl;
+        }
+
+        processEnhancedCombinedPhoto(beforeImg, afterImg, room, photoName, templateType) {
+          // Calculate template dimensions using enhanced system
+          const templateDimensions = this.calculateTemplateDimensions(
+            { width: beforeImg.width, height: beforeImg.height },
+            { width: afterImg.width, height: afterImg.height },
+            templateType
+          );
+
+          // Create canvas with calculated dimensions
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          canvas.width = templateDimensions.targetWidth;
+          canvas.height = templateDimensions.targetHeight;
+          
+          // Fill white background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Apply cropping and positioning based on split type
+          // Save the context state before clipping
+          ctx.save();
+          
+          // Clip to the exact template dimensions
+          ctx.beginPath();
+          ctx.rect(0, 0, canvas.width, canvas.height);
+          ctx.clip();
+          
+          if (templateDimensions.splitType === 'vertical') {
+            this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
+          } else {
+            this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
+          }
+          
+          // Restore the context state
+          ctx.restore();
+          
+          // Add labels
+          this.addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
+          
+          // Convert to data URL and save
+          const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          this.saveCombinedPhoto(combinedDataUrl, room, photoName, templateType);
+        }
+
+        drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions) {
+          const { beforeCrop, afterCrop, targetWidth, targetHeight } = templateDimensions;
+          
+          // For vertical split, each photo takes exactly half the height
+          const halfHeight = targetHeight / 2;
+          
+          // Draw before photo (top half) - crop from center and fill the space
+          const beforeAspectRatio = beforeCrop.cropWidth / beforeCrop.cropHeight;
+          const topTargetAspectRatio = targetWidth / halfHeight;
+          
+          let beforeSrcX = beforeCrop.cropX;
+          let beforeSrcY = beforeCrop.cropY;
+          let beforeSrcWidth = beforeCrop.cropWidth;
+          let beforeSrcHeight = beforeCrop.cropHeight;
+          
+          // Adjust source crop to match target aspect ratio
+          if (beforeAspectRatio > topTargetAspectRatio) {
+            // Source is wider, crop from sides
+            const newSrcWidth = beforeCrop.cropHeight * topTargetAspectRatio;
+            beforeSrcX = beforeCrop.cropX + (beforeCrop.cropWidth - newSrcWidth) / 2;
+            beforeSrcWidth = newSrcWidth;
+          } else if (beforeAspectRatio < topTargetAspectRatio) {
+            // Source is taller, crop from top/bottom
+            const newSrcHeight = beforeCrop.cropWidth / topTargetAspectRatio;
+            beforeSrcY = beforeCrop.cropY + (beforeCrop.cropHeight - newSrcHeight) / 2;
+            beforeSrcHeight = newSrcHeight;
+          }
+          
+          // Draw before photo filling the top half exactly
+          ctx.drawImage(
+            beforeImg,
+            beforeSrcX, beforeSrcY, beforeSrcWidth, beforeSrcHeight,
+            0, 0, targetWidth, halfHeight
+          );
+          
+          // Draw divider line
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(0, halfHeight);
+          ctx.lineTo(targetWidth, halfHeight);
+          ctx.stroke();
+          
+          // Draw after photo (bottom half) - crop from center and fill the space
+          const afterAspectRatio = afterCrop.cropWidth / afterCrop.cropHeight;
+          const bottomTargetAspectRatio = targetWidth / halfHeight;
+          
+          let afterSrcX = afterCrop.cropX;
+          let afterSrcY = afterCrop.cropY;
+          let afterSrcWidth = afterCrop.cropWidth;
+          let afterSrcHeight = afterCrop.cropHeight;
+          
+          // Adjust source crop to match target aspect ratio
+          if (afterAspectRatio > bottomTargetAspectRatio) {
+            // Source is wider, crop from sides
+            const newSrcWidth = afterCrop.cropHeight * bottomTargetAspectRatio;
+            afterSrcX = afterCrop.cropX + (afterCrop.cropWidth - newSrcWidth) / 2;
+            afterSrcWidth = newSrcWidth;
+          } else if (afterAspectRatio < bottomTargetAspectRatio) {
+            // Source is taller, crop from top/bottom
+            const newSrcHeight = afterCrop.cropWidth / bottomTargetAspectRatio;
+            afterSrcY = afterCrop.cropY + (afterCrop.cropHeight - newSrcHeight) / 2;
+            afterSrcHeight = newSrcHeight;
+          }
+          
+          // Draw after photo filling the bottom half exactly
+          ctx.drawImage(
+            afterImg,
+            afterSrcX, afterSrcY, afterSrcWidth, afterSrcHeight,
+            0, halfHeight, targetWidth, halfHeight
+          );
+        }
+
+        drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions) {
+          const { beforeCrop, afterCrop, targetWidth, targetHeight } = templateDimensions;
+          
+          // For horizontal split, each photo takes exactly half the width
+          const halfWidth = targetWidth / 2;
+          
+          // Draw before photo (left half) - crop from center and fill the space
+          const beforeAspectRatio = beforeCrop.cropWidth / beforeCrop.cropHeight;
+          const leftTargetAspectRatio = halfWidth / targetHeight;
+          
+          let beforeSrcX = beforeCrop.cropX;
+          let beforeSrcY = beforeCrop.cropY;
+          let beforeSrcWidth = beforeCrop.cropWidth;
+          let beforeSrcHeight = beforeCrop.cropHeight;
+          
+          // Adjust source crop to match target aspect ratio
+          if (beforeAspectRatio > leftTargetAspectRatio) {
+            // Source is wider, crop from sides
+            const newSrcWidth = beforeCrop.cropHeight * leftTargetAspectRatio;
+            beforeSrcX = beforeCrop.cropX + (beforeCrop.cropWidth - newSrcWidth) / 2;
+            beforeSrcWidth = newSrcWidth;
+          } else if (beforeAspectRatio < leftTargetAspectRatio) {
+            // Source is taller, crop from top/bottom
+            const newSrcHeight = beforeCrop.cropWidth / leftTargetAspectRatio;
+            beforeSrcY = beforeCrop.cropY + (beforeCrop.cropHeight - newSrcHeight) / 2;
+            beforeSrcHeight = newSrcHeight;
+          }
+          
+          // Draw before photo filling the left half exactly
+          ctx.drawImage(
+            beforeImg,
+            beforeSrcX, beforeSrcY, beforeSrcWidth, beforeSrcHeight,
+            0, 0, halfWidth, targetHeight
+          );
+          
+          // Draw divider line
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(halfWidth, 0);
+          ctx.lineTo(halfWidth, targetHeight);
+          ctx.stroke();
+          
+          // Draw after photo (right half) - crop from center and fill the space
+          const afterAspectRatio = afterCrop.cropWidth / afterCrop.cropHeight;
+          const rightTargetAspectRatio = halfWidth / targetHeight;
+          
+          let afterSrcX = afterCrop.cropX;
+          let afterSrcY = afterCrop.cropY;
+          let afterSrcWidth = afterCrop.cropWidth;
+          let afterSrcHeight = afterCrop.cropHeight;
+          
+          // Adjust source crop to match target aspect ratio
+          if (afterAspectRatio > rightTargetAspectRatio) {
+            // Source is wider, crop from sides
+            const newSrcWidth = afterCrop.cropHeight * rightTargetAspectRatio;
+            afterSrcX = afterCrop.cropX + (afterCrop.cropWidth - newSrcWidth) / 2;
+            afterSrcWidth = newSrcWidth;
+          } else if (afterAspectRatio < rightTargetAspectRatio) {
+            // Source is taller, crop from top/bottom
+            const newSrcHeight = afterCrop.cropWidth / rightTargetAspectRatio;
+            afterSrcY = afterCrop.cropY + (afterCrop.cropHeight - newSrcHeight) / 2;
+            afterSrcHeight = newSrcHeight;
+          }
+          
+          // Draw after photo filling the right half exactly
+          ctx.drawImage(
+            afterImg,
+            afterSrcX, afterSrcY, afterSrcWidth, afterSrcHeight,
+            halfWidth, 0, halfWidth, targetHeight
+          );
+        }
+
+        addPhotoLabels(ctx, canvasWidth, canvasHeight, splitType) {
+              ctx.fillStyle = 'rgba(0,0,0,0.8)';
+              ctx.font = 'bold 18px Arial';
+              ctx.textAlign = 'center';
+              
+          const labelWidth = 100;
+          const labelHeight = 30;
+          
+          if (splitType === 'vertical') {
+            // Before label (top)
+            const beforeLabelY = 20;
+            ctx.fillRect(canvasWidth/2 - labelWidth/2, beforeLabelY, labelWidth, labelHeight);
+              ctx.fillStyle = '#ffffff';
+            ctx.fillText('BEFORE', canvasWidth/2, beforeLabelY + 20);
+              
+            // After label (bottom)
+            const afterLabelY = canvasHeight/2 + 20;
+              ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(canvasWidth/2 - labelWidth/2, afterLabelY, labelWidth, labelHeight);
+              ctx.fillStyle = '#ffffff';
+            ctx.fillText('AFTER', canvasWidth/2, afterLabelY + 20);
+          } else {
+            // Before label (left)
+            const beforeLabelX = canvasWidth/4 - labelWidth/2;
+            ctx.fillRect(beforeLabelX, 20, labelWidth, labelHeight);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('BEFORE', beforeLabelX + labelWidth/2, 40);
+            
+            // After label (right)
+            const afterLabelX = (3 * canvasWidth/4) - labelWidth/2;
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(afterLabelX, 20, labelWidth, labelHeight);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('AFTER', afterLabelX + labelWidth/2, 40);
+          }
+        }
+
+        showTemplateSelector(beforePhoto, afterPhoto) {
+          // Clean up any existing template selector modals first
+          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2500"]');
+          existingModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
+          // Create modal container
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: rgba(0,0,0,0.8); z-index: 2500; 
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+          `;
+
+          // Get template previews
+          const templates = this.getTemplateOptions();
+
+          modal.innerHTML = `
+            <div style="
+              background: white; 
+              border-radius: 12px; 
+              padding: 20px; 
+              max-width: 90vw; 
+              max-height: 90vh; 
+              overflow-y: auto;
+              box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            ">
+              <h3 style="margin: 0 0 20px 0; text-align: center; color: #303030; font-size: 20px;">
+                📐 Choose Template Size
+              </h3>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                ${templates.map(template => `
+                  <div class="template-option" data-template-type="${template.type}" style="
+                    border: 2px solid #e1e5e9; 
+                    border-radius: 8px; 
+                    padding: 15px; 
+                    text-align: center; 
+                    cursor: pointer; 
+                    transition: all 0.2s;
+                    background: white;
+                  " onmouseover="this.style.borderColor='#667eea'; this.style.background='#f8f9ff';" onmouseout="this.style.borderColor='#e1e5e9'; this.style.background='white';">
+                    <div style="
+                      width: 120px; 
+                      height: ${template.previewHeight}px; 
+                      background: #f0f0f0; 
+                      border: 1px solid #ddd; 
+                      margin: 0 auto 10px; 
+                      border-radius: 4px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 12px;
+                      color: #666;
+                    ">
+                      ${template.ratio}
+                    </div>
+                    <div style="font-weight: bold; margin-bottom: 5px; color: #303030;">
+                      ${template.name}
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                      ${template.description}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div style="display: flex; justify-content: center; gap: 15px;">
+                <button id="cancel-template-btn" style="
+                  background: #e1e5e9; 
+                  color: #666; 
+                  border: none; 
+                  padding: 10px 20px; 
+                  border-radius: 6px; 
+                  cursor: pointer;
+                  font-weight: bold;
+                ">Cancel</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+
+          // Add click handlers for template options
+          modal.querySelectorAll('.template-option').forEach(option => {
+            option.addEventListener('click', () => {
+              const templateType = option.dataset.templateType;
+              this.regenerateCombinedPhoto(beforePhoto, afterPhoto, templateType);
+              document.body.removeChild(modal);
+            });
+          });
+
+          // Cancel button
+          modal.querySelector('#cancel-template-btn').addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+
+          // Close on backdrop click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+            }
+          });
+        }
+
+        getTemplateOptions() {
+          return [
+            {
+              type: 'default',
+              name: 'Default',
+              ratio: '4:3',
+              description: 'Original size (800×600)',
+              previewHeight: 90
+            },
+            {
+              type: 'square',
+              name: 'Square',
+              ratio: '1:1',
+              description: 'Perfect for social media',
+              previewHeight: 120
+            },
+            {
+              type: 'portrait',
+              name: 'Portrait',
+              ratio: '4:5',
+              description: 'Tall format (800×1000)',
+              previewHeight: 150
+            },
+            {
+              type: 'landscape',
+              name: 'Landscape',
+              ratio: '16:9',
+              description: 'Wide format (800×450)',
+              previewHeight: 68
+            }
+          ];
+        }
+
+        regenerateCombinedPhoto(beforePhoto, afterPhoto, templateType) {
+          console.log('Regenerating combined photo with template:', templateType);
+          
+          // Remove existing combined photos for this before/after pair
+          this.photos = this.photos.filter(p => 
+            !(p.mode === 'mix' && p.name === beforePhoto.name && p.room === beforePhoto.room)
+          );
+
+          // Create new combined photo with selected template
+          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhoto.dataUrl, beforePhoto.room, beforePhoto.name, templateType);
+
+          // Update UI
+          setTimeout(() => {
+            const photosContainer = document.getElementById('photos-container');
+            if (photosContainer) {
+              photosContainer.innerHTML = this.getPhotosHTML();
+              this.attachPhotoListeners();
+            }
+          }, 500); // Give time for photo generation
+        }
+
+        changeGlobalTemplate(newTemplate) {
+          console.log('Changing global template from', this.currentTemplate, 'to', newTemplate);
+          
+          this.currentTemplate = newTemplate;
+          
+          // Show loading indicator
+          const templateSelector = document.getElementById('template-selector');
+          if (templateSelector) {
+            templateSelector.style.opacity = '0.5';
+            templateSelector.disabled = true;
+          }
+          
+          // Find all combined photo pairs and regenerate them
+          const beforeAfterPairs = [];
+          
+          // Group photos into before/after pairs
+          this.photos.forEach(photo => {
+            if (photo.mode === 'before') {
+              const afterPhoto = this.photos.find(p => 
+                p.mode === 'after' && p.beforePhotoId === photo.id
+              );
+              if (afterPhoto) {
+                beforeAfterPairs.push({ before: photo, after: afterPhoto });
+              }
+            }
+          });
+          
+          console.log('Found', beforeAfterPairs.length, 'photo pairs to regenerate');
+          
+          // Remove all existing combined photos
+          this.photos = this.photos.filter(p => p.mode !== 'mix');
+          
+          // Regenerate all combined photos with new template
+          let regeneratedCount = 0;
+          const totalPairs = beforeAfterPairs.length;
+          
+          beforeAfterPairs.forEach((pair, index) => {
+            setTimeout(() => {
+              this.createCombinedPhoto(
+                pair.before.dataUrl, 
+                pair.after.dataUrl, 
+                pair.before.room, 
+                pair.before.name, 
+                newTemplate
+              );
+              
+              regeneratedCount++;
+              
+              // Update UI after all photos are regenerated
+              if (regeneratedCount === totalPairs) {
+                setTimeout(() => {
+                  // Update main photos container
+                  const photosContainer = document.getElementById('photos-container');
+                  if (photosContainer) {
+                    photosContainer.innerHTML = this.getPhotosHTML();
+                    this.attachPhotoListeners();
+                  }
+                  
+                  // Update gallery modal if it's open
+                  const allPhotosContent = document.getElementById('all-photos-content');
+                  if (allPhotosContent) {
+                    allPhotosContent.innerHTML = this.getAllPhotosHTML();
+                    // Reattach gallery photo listeners
+                    this.attachGalleryPhotoListeners();
+                  }
+                  
+                  // Re-enable template selector
+                  if (templateSelector) {
+                    templateSelector.style.opacity = '1';
+                    templateSelector.disabled = false;
+                  }
+                  
+                  // Save photos to localStorage after regeneration
+                  this.savePhotos();
+                  
+                  // Backup: Ensure listeners are attached after a longer delay
+                  setTimeout(() => {
+                    const photosContainer = document.getElementById('photos-container');
+                    if (photosContainer) {
+                      this.attachPhotoListeners();
+                    }
+                    const allPhotosContent = document.getElementById('all-photos-content');
+                    if (allPhotosContent) {
+                      this.attachGalleryPhotoListeners();
+                    }
+                  }, 1000);
+                  
+                  console.log('Template change complete:', newTemplate);
+                  console.log('Total photos after regeneration:', this.photos.length);
+                }, 500);
+              }
+            }, index * 100); // Stagger the regeneration to avoid overwhelming the browser
+          });
+          
+          // If no pairs to regenerate, just re-enable the selector
+          if (totalPairs === 0) {
+            if (templateSelector) {
+              templateSelector.style.opacity = '1';
+              templateSelector.disabled = false;
+            }
+          }
+        }
+
+        regenerateSpecificPhoto(photo, newTemplate, modal) {
+          console.log('=== REGENERATE SPECIFIC PHOTO ===');
+          console.log('Photo:', photo);
+          console.log('New template:', newTemplate);
+          console.log('Modal:', modal);
+          console.log('Current photos count:', this.photos.length);
+          
+          // Find the before and after photos that created this combined photo
+          const beforePhoto = this.photos.find(p => 
+            p.mode === 'before' && p.room === photo.room && p.name === photo.name
+          );
+          const afterPhoto = this.photos.find(p => 
+            p.mode === 'after' && p.room === photo.room && p.name === photo.name
+          );
+          
+          console.log('Found before photo:', beforePhoto);
+          console.log('Found after photo:', afterPhoto);
+          
+          if (!beforePhoto || !afterPhoto) {
+            console.error('Could not find before/after photos for regeneration');
+            console.error('Looking for room:', photo.room, 'name:', photo.name);
+            console.error('Available photos:', this.photos.map(p => ({mode: p.mode, room: p.room, name: p.name})));
+            
+            // Reset image opacity and show error
+            const imgElement = modal.querySelector('#fullscreen-photo');
+            if (imgElement) {
+              imgElement.style.opacity = '1';
+            }
+            return;
+          }
+          
+          // Store original photo info before removal
+          const originalPhotoInfo = {
+            id: photo.id,
+            room: photo.room,
+            name: photo.name,
+            timestamp: photo.timestamp
+          };
+          
+          // Remove the old combined photo from the array
+          const photoIndex = this.photos.findIndex(p => p.id === photo.id);
+          if (photoIndex !== -1) {
+            console.log('Removing old photo at index:', photoIndex);
+            this.photos.splice(photoIndex, 1);
+          }
+          
+          // Create new combined photo with the selected template and store reference
+          this.createCombinedPhotoWithCallback(
+            beforePhoto.dataUrl, 
+            afterPhoto.dataUrl, 
+            originalPhotoInfo.room, 
+            originalPhotoInfo.name, 
+            newTemplate,
+            (createdPhoto) => {
+              // Callback with the newly created photo
+              this.handlePhotoRegenerated(createdPhoto, modal, originalPhotoInfo);
+            }
+          );
+          
+        }
+
+        createCombinedPhotoWithCallback(beforeDataUrl, afterDataUrl, room, photoName, templateType = null, callback) {
+          // Use current global template if none specified
+          const actualTemplateType = templateType || this.currentTemplate;
+          console.log('Creating combined photo with callback for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
+          
+          // Create image objects to get dimensions
+          const beforeImg = new Image();
+          const afterImg = new Image();
+          
+          let imagesLoaded = 0;
+          const totalImages = 2;
+          
+          const onImageLoad = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+              // All images loaded, now process them with enhanced sizing
+              const createdPhoto = this.processEnhancedCombinedPhotoWithCallback(beforeImg, afterImg, room, photoName, actualTemplateType, callback);
+            }
+          };
+          
+          // Load images
+          beforeImg.onload = onImageLoad;
+          afterImg.onload = onImageLoad;
+          beforeImg.src = beforeDataUrl;
+          afterImg.src = afterDataUrl;
+        }
+
+        processEnhancedCombinedPhotoWithCallback(beforeImg, afterImg, room, photoName, templateType, callback) {
+          // Calculate template dimensions using enhanced system
+          const templateDimensions = this.calculateTemplateDimensions(
+            { width: beforeImg.width, height: beforeImg.height },
+            { width: afterImg.width, height: afterImg.height },
+            templateType
+          );
+
+          // Create canvas with calculated dimensions
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          canvas.width = templateDimensions.targetWidth;
+          canvas.height = templateDimensions.targetHeight;
+          
+          // Fill white background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Apply cropping and positioning based on split type
+          // Save the context state before clipping
+          ctx.save();
+          
+          // Clip to the exact template dimensions
+          ctx.beginPath();
+          ctx.rect(0, 0, canvas.width, canvas.height);
+          ctx.clip();
+          
+          if (templateDimensions.splitType === 'vertical') {
+            this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
+          } else {
+            this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
+          }
+          
+          // Restore the context state
+          ctx.restore();
+          
+          // Add labels
+          this.addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
+          
+          // Convert to data URL and save with callback
+          const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          const createdPhoto = this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, templateType, callback);
+          return createdPhoto;
+        }
+
+        saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, templateType = 'default', callback) {
+          console.log('saveCombinedPhoto with callback called with name:', photoName, 'template:', templateType);
+          
+          // Create the combined photo with the same name as before/after photos
+          const combinedPhoto = {
+            id: Date.now(),
+            dataUrl: combinedDataUrl,
+            room: room,
+            mode: 'mix',
+            name: photoName, // Use the same name as before/after photos
+            templateType: templateType, // Store template type for future reference
+            timestamp: Date.now()
+          };
+          
+          console.log('Created combined photo with callback:', combinedPhoto);
+          
+          // Add the combined photo
+          this.photos.push(combinedPhoto);
+          
+          // Call the callback immediately with the created photo
+          if (callback) {
+            callback(combinedPhoto);
+          }
+          
+          return combinedPhoto;
+        }
+
+        handlePhotoRegenerated(createdPhoto, modal, originalPhotoInfo) {
+          console.log('Handling photo regeneration with created photo:', createdPhoto);
+          
+          // Update the image in the modal
+          const imgElement = modal.querySelector('#fullscreen-photo');
+          if (imgElement) {
+            imgElement.src = createdPhoto.dataUrl;
+            imgElement.style.opacity = '1'; // Remove loading state
+            
+            // Update the photo info
+            const infoDiv = modal.querySelector('[style*="position: fixed; top: 20px; left: 20px"]');
+            if (infoDiv) {
+              const orientation = this.detectPhotoOrientation(createdPhoto.naturalWidth || 800, createdPhoto.naturalHeight || 600);
+              infoDiv.innerHTML = `
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                  ${createdPhoto.room.charAt(0).toUpperCase() + createdPhoto.room.slice(1).replace('-', ' ')} - ${createdPhoto.mode.charAt(0).toUpperCase() + createdPhoto.mode.slice(1)}
+                </div>
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                  ${new Date(createdPhoto.timestamp).toLocaleString()}
+                </div>
+                <div style="font-size: 12px; opacity: 0.7;">
+                  Orientation: ${orientation} | Template: ${createdPhoto.templateType}
+                </div>
+              `;
+            }
+          }
+          
+          // Update main photos container
+          const photosContainer = document.getElementById('photos-container');
+          if (photosContainer) {
+            photosContainer.innerHTML = this.getPhotosHTML();
+            this.attachPhotoListeners();
+          }
+          
+          // Update gallery modal if it's open
+          const allPhotosContent = document.getElementById('all-photos-content');
+          if (allPhotosContent) {
+            allPhotosContent.innerHTML = this.getAllPhotosHTML();
+            this.attachGalleryPhotoListeners();
+          }
+          
+          // Save updated photos
+          this.savePhotos();
+          
+          // Reattach template selector listeners to the modal
+          this.reattachTemplateListeners(modal, createdPhoto);
+          
+          console.log('Photo regeneration complete with template:', createdPhoto.templateType);
+        }
+
+        reattachTemplateListeners(modal, photo) {
+          console.log('Reattaching template listeners for photo:', photo);
+          
+          if (!modal || !photo || photo.mode !== 'mix') {
+            console.log('Skipping template listener reattachment - not a combined photo');
+            return;
+          }
+          
+          const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
+          console.log('Found template radios:', templateRadios.length);
+          
+          templateRadios.forEach(radio => {
+            // Remove existing listeners by cloning
+            const newRadio = radio.cloneNode(true);
+            radio.parentNode.replaceChild(newRadio, radio);
+            
+            // Add fresh event listener
+            newRadio.addEventListener('change', (e) => {
+              if (e.target.checked) {
+                const newTemplate = e.target.value;
+                console.log('Template changed to:', newTemplate);
+                
+                // Show loading state
+                const imgElement = modal.querySelector('#fullscreen-photo');
+                if (imgElement) {
+                  imgElement.style.opacity = '0.5';
+                }
+                
+                // Regenerate this specific photo with new template
+                this.regenerateSpecificPhoto(photo, newTemplate, modal);
+              }
+            });
+          });
+          
+          console.log('Template listeners reattached successfully');
         }
         
         
@@ -3179,8 +3952,8 @@
           });
         }
         
-        saveCombinedPhoto(combinedDataUrl, room, photoName) {
-          console.log('saveCombinedPhoto called with name:', photoName);
+        saveCombinedPhoto(combinedDataUrl, room, photoName, templateType = 'default') {
+          console.log('saveCombinedPhoto called with name:', photoName, 'template:', templateType);
           
           // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
@@ -3189,6 +3962,7 @@
             room: room,
             mode: 'mix',
             name: photoName, // Use the same name as before/after photos
+            templateType: templateType, // Store template type for future reference
             timestamp: Date.now()
           };
           
@@ -3377,25 +4151,179 @@
           }
         }
 
-        // Helper function to calculate canvas dimensions with correct aspect ratio
-        calculateCanvasDimensions(videoWidth, videoHeight, maxSize = 800) {
-          const aspectRatio = this.getAspectRatio();
-          const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-          const videoAspectRatio = videoWidth / videoHeight;
+        // Enhanced photo sizing and cropping system
+        // Default sizes for different templates
+        getTemplateSizes() {
+          return {
+            'default': { width: 800, height: 600 }, // Current default
+            'square': { width: 800, height: 800 },   // 1:1 square
+            'portrait': { width: 800, height: 1000 }, // 4:5 portrait
+            'landscape': { width: 800, height: 450 }  // 16:9 landscape
+          };
+        }
 
-          let width, height;
-
-          if (videoAspectRatio > targetAspectRatio) {
-            // Video is wider than target aspect ratio
-            height = Math.min(maxSize, videoHeight);
-            width = height * targetAspectRatio;
+        // Detect photo orientation based on aspect ratio
+        detectPhotoOrientation(width, height) {
+          const aspectRatio = width / height;
+          
+          // Optimized ratios:
+          // Vertical photos: 1:1.15 (≈0.87) - optimal for minimal crop on 1:1 and 4:5
+          // Horizontal photos: 8:9 (≈0.889) - optimal for 16:9 when combined side-by-side
+          if (aspectRatio <= 0.87) {
+            return 'vertical'; // 1:1.15 ratio (W:H ≈ 0.87)
           } else {
-            // Video is taller than target aspect ratio
-            width = Math.min(maxSize, videoWidth);
-            height = width / targetAspectRatio;
+            return 'horizontal'; // 8:9 ratio (W:H ≈ 0.889)
           }
+        }
 
-          return { width: Math.floor(width), height: Math.floor(height) };
+        // Calculate crop dimensions for individual photos based on template and orientation
+        calculatePhotoCropDimensions(photoWidth, photoHeight, templateType, orientation) {
+          const W = photoWidth;
+          const H = photoHeight;
+          
+          let cropWidth, cropHeight;
+          
+          switch (templateType) {
+            case 'square': // 1:1
+              if (orientation === 'vertical') {
+                // Vertical photos (1:1.15): Crop ~13% vertically for minimal loss
+                cropWidth = W;
+                cropHeight = W; // Square crop using full width
+              } else {
+                // Horizontal photos (8:9): Crop ~10-20% for square
+                const minDimension = Math.min(W, H);
+                cropWidth = minDimension;
+                cropHeight = minDimension;
+              }
+              break;
+              
+            case 'portrait': // 4:5
+              if (orientation === 'vertical') {
+                // Vertical photos (1:1.15): Crop ~7% vertically for minimal loss
+                cropWidth = W;
+                cropHeight = W * 1.25; // 4:5 ratio
+              } else {
+                // Horizontal photos (8:9): Crop ~10-20% for portrait
+                cropHeight = H;
+                cropWidth = cropHeight * 0.8; // 4:5 ratio
+              }
+              break;
+              
+            case 'landscape': // 16:9
+              if (orientation === 'vertical') {
+                // Vertical photos: Use for side-by-side combination
+                cropWidth = W;
+                cropHeight = H;
+              } else {
+                // Horizontal photos (8:9): Perfect for side-by-side → 16:9
+                cropWidth = W;
+                cropHeight = H;
+              }
+              break;
+              
+            default: // 'default' - preserve original ratios
+              cropWidth = W;
+              cropHeight = H;
+              break;
+          }
+          
+          // Ensure crops don't exceed original dimensions
+          cropWidth = Math.min(cropWidth, W);
+          cropHeight = Math.min(cropHeight, H);
+          
+          return {
+            cropWidth: Math.round(cropWidth),
+            cropHeight: Math.round(cropHeight),
+            cropX: Math.round((W - cropWidth) / 2),
+            cropY: Math.round((H - cropHeight) / 2)
+          };
+        }
+
+        // Calculate final template dimensions after combining photos
+        calculateTemplateDimensions(beforePhoto, afterPhoto, templateType, splitType = null) {
+          const beforeOrientation = this.detectPhotoOrientation(beforePhoto.width, beforePhoto.height);
+          const afterOrientation = this.detectPhotoOrientation(afterPhoto.width, afterPhoto.height);
+          
+          // Smart split type selection based on optimized ratios
+          if (!splitType) {
+            if (templateType === 'landscape') {
+              // 16:9 → always use side-by-side for optimal ratio
+              splitType = 'horizontal';
+            } else if (templateType === 'portrait') {
+              // 4:5 → use stacked for optimal ratio
+              splitType = 'vertical';
+            } else if (templateType === 'square') {
+              // 1:1 → choose based on orientation for minimal crop
+              splitType = beforeOrientation === 'vertical' ? 'vertical' : 'horizontal';
+            } else {
+              // Default → preserve original behavior
+              splitType = 'vertical';
+            }
+          }
+          
+          // Get individual photo crop dimensions
+          const beforeCrop = this.calculatePhotoCropDimensions(
+            beforePhoto.width, beforePhoto.height, templateType, beforeOrientation
+          );
+          const afterCrop = this.calculatePhotoCropDimensions(
+            afterPhoto.width, afterPhoto.height, templateType, afterOrientation
+          );
+          
+          let combinedWidth, combinedHeight;
+          
+          if (splitType === 'vertical') {
+            // Stacked: before on top, after below
+            combinedWidth = Math.max(beforeCrop.cropWidth, afterCrop.cropWidth);
+            combinedHeight = beforeCrop.cropHeight + afterCrop.cropHeight;
+          } else {
+            // Side-by-side: before left, after right
+            combinedWidth = beforeCrop.cropWidth + afterCrop.cropWidth;
+            combinedHeight = Math.max(beforeCrop.cropHeight, afterCrop.cropHeight);
+          }
+          
+          // Get target template dimensions
+          const templateSizes = this.getTemplateSizes();
+          const targetTemplate = templateSizes[templateType] || templateSizes.default;
+          
+          // For proper cropping, we want to fill the entire target canvas
+          // The scale should be calculated to ensure we fill the canvas completely
+          const scaleToFitWidth = targetTemplate.width / combinedWidth;
+          const scaleToFitHeight = targetTemplate.height / combinedHeight;
+          
+          // Use the larger scale to ensure the combined image fills the entire canvas
+          // This means some content might be cropped, but no empty space
+          const scale = Math.max(scaleToFitWidth, scaleToFitHeight);
+          
+          return {
+            combinedWidth,
+            combinedHeight,
+            targetWidth: targetTemplate.width,
+            targetHeight: targetTemplate.height,
+            splitType,
+            beforeCrop,
+            afterCrop,
+            scale
+          };
+        }
+
+        // Helper function to calculate canvas dimensions with correct aspect ratio (enhanced)
+        calculateCanvasDimensions(videoWidth, videoHeight, maxSize = 800, templateType = 'default') {
+          const orientation = this.detectPhotoOrientation(videoWidth, videoHeight);
+          const cropDimensions = this.calculatePhotoCropDimensions(
+            videoWidth, videoHeight, templateType, orientation
+          );
+          
+          // Scale to fit within maxSize while maintaining aspect ratio
+          const scale = Math.min(
+            maxSize / cropDimensions.cropWidth,
+            maxSize / cropDimensions.cropHeight
+          );
+          
+          return {
+            width: Math.round(cropDimensions.cropWidth * scale),
+            height: Math.round(cropDimensions.cropHeight * scale),
+            cropDimensions
+          };
         }
 
         // Helper function to calculate square size for grids
