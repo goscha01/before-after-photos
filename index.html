@@ -978,6 +978,7 @@
           // Display photos grouped by room
           Object.keys(photosByRoom).forEach(room => {
             const roomPhotos = photosByRoom[room];
+            const actualPhotos = roomPhotos.filter(p => !p.isDummy); // Count only real photos
             const roomName = room.charAt(0).toUpperCase() + room.slice(1).replace('-', ' ');
             const roomIcon = roomIcons[room] || '🏠';
             
@@ -985,7 +986,7 @@
             html += `
               <div style="margin-bottom: 30px;">
                 <h3 style="margin: 0 0 15px 0; padding: 0 10px; color: #303030; font-size: 18px; display: flex; align-items: center; justify-content: space-between;">
-                  <span style="display: flex; align-items: center; gap: 8px;">${roomIcon} ${roomName} (${roomPhotos.length})</span>
+                  <span style="display: flex; align-items: center; gap: 8px;">${roomIcon} ${roomName} (${actualPhotos.length})</span>
                   <span style="font-size: 12px; color: #666; font-weight: normal;">
                     ${roomPhotos.length > 0 ? new Date(roomPhotos[0].timestamp).toLocaleDateString() : ''}
                   </span>
@@ -1333,9 +1334,7 @@
           // Show template selector for all photos when in enlarged view, not just combined
           return `
             <!-- Template selector for photos (larger icons, 2 rows) -->
-            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-              <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">📐 Choose Format</div>
-              
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
               <!-- First row: Default and Landscape -->
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
                 <!-- Default 4:3 -->
@@ -1410,13 +1409,16 @@
           imgContainer.style.maxHeight = '95vh';
           imgContainer.style.overflow = 'hidden';
 
-          // Template selector functionality (for all photos)
+          // Template selector functionality (generate on-demand)
           const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
           templateRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
               if (e.target.checked) {
                 const newTemplate = e.target.value;
-                console.log('Changing template for this photo to:', newTemplate);
+                console.log('Generating template on-demand:', newTemplate);
+                
+                // Update visual selection state
+                this.updateTemplateVisualSelection(modal, newTemplate);
                 
                 // Show loading state
                 const imgElement = modal.querySelector('#fullscreen-photo');
@@ -1427,10 +1429,10 @@
                 // Handle template change based on photo type
                 if (photo.mode === 'mix') {
                   // For combined photos, regenerate with new template
-                  this.regenerateSpecificPhoto(photo, newTemplate, modal);
+                  this.generateCombinedPhotoOnDemand(photo, newTemplate, modal);
                 } else {
-                  // For individual photos, find the pair and regenerate combined photo
-                  this.regenerateFromIndividualPhoto(photo, newTemplate, modal);
+                  // For individual photos, crop the single photo to the selected template
+                  this.cropIndividualPhotoOnDemand(photo, newTemplate, modal);
                 }
               }
             });
@@ -1584,6 +1586,256 @@
           
           console.log('Modal updated with new photo:', newPhoto.templateType);
         }
+
+        generateCombinedPhotoOnDemand(photo, templateType, modal) {
+          console.log('Generating combined photo on-demand:', templateType);
+          
+          // Find the before and after photos
+          let beforePhoto, afterPhoto;
+          
+          if (photo.mode === 'before') {
+            beforePhoto = photo;
+            afterPhoto = this.photos.find(p => p.mode === 'after' && p.beforePhotoId === photo.id);
+          } else if (photo.mode === 'after') {
+            afterPhoto = photo;
+            beforePhoto = this.photos.find(p => p.mode === 'before' && p.id === photo.beforePhotoId);
+          } else if (photo.mode === 'mix') {
+            // For temporary combined photos, use the embedded references
+            if (photo.beforePhoto && photo.afterPhoto) {
+              beforePhoto = photo.beforePhoto;
+              afterPhoto = photo.afterPhoto;
+            } else {
+              // Fallback: find the original pair
+              beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === photo.room && p.name === photo.name);
+              afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === photo.room && p.name === photo.name);
+            }
+          }
+          
+          if (!beforePhoto || !afterPhoto) {
+            console.error('Cannot find before/after pair for on-demand generation');
+            const imgElement = modal.querySelector('#fullscreen-photo');
+            if (imgElement) {
+              imgElement.style.opacity = '1';
+            }
+            return;
+          }
+          
+          // Generate combined photo without storing it
+          this.createCombinedPhotoInMemory(beforePhoto.dataUrl, afterPhoto.dataUrl, templateType, (combinedDataUrl) => {
+            // Update modal with generated photo
+            const imgElement = modal.querySelector('#fullscreen-photo');
+            if (imgElement) {
+              imgElement.src = combinedDataUrl;
+              imgElement.style.opacity = '1';
+            }
+            
+            // Update photo info to show it's a generated combined photo
+            const infoDiv = modal.querySelector('[style*="position: fixed; top: 20px; left: 20px"]');
+            if (infoDiv) {
+              const orientation = this.detectPhotoOrientation(beforePhoto.width || 800, beforePhoto.height || 600);
+              infoDiv.innerHTML = `
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                  ${beforePhoto.room.charAt(0).toUpperCase() + beforePhoto.room.slice(1).replace('-', ' ')} - Combined (${templateType})
+                </div>
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                  Generated on-demand
+                </div>
+                <div style="font-size: 12px; opacity: 0.7;">
+                  Template: ${templateType} | Not stored locally
+                </div>
+              `;
+            }
+            
+            // Update the current photo object's template type for future reference
+            photo.templateType = templateType;
+          });
+        }
+
+        createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, callback) {
+          console.log('Creating combined photo in memory for template:', templateType);
+          
+          // Create image objects to get dimensions
+          const beforeImg = new Image();
+          const afterImg = new Image();
+          
+          let imagesLoaded = 0;
+          const totalImages = 2;
+          
+          const onImageLoad = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+              // Calculate template dimensions
+              const templateDimensions = this.calculateTemplateDimensions(
+                { width: beforeImg.width, height: beforeImg.height },
+                { width: afterImg.width, height: afterImg.height },
+                templateType
+              );
+
+              // Create canvas
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              canvas.width = templateDimensions.targetWidth;
+              canvas.height = templateDimensions.targetHeight;
+              
+              // Fill white background
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              
+              // Apply cropping and positioning
+              ctx.save();
+              ctx.beginPath();
+              ctx.rect(0, 0, canvas.width, canvas.height);
+              ctx.clip();
+              
+              if (templateDimensions.splitType === 'vertical') {
+                this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
+              } else {
+                this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
+              }
+              
+              ctx.restore();
+              
+              // Add labels
+              this.addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
+              
+              // Convert to data URL and return via callback
+              const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              callback(combinedDataUrl);
+            }
+          };
+          
+          // Load images
+          beforeImg.onload = onImageLoad;
+          afterImg.onload = onImageLoad;
+          beforeImg.src = beforeDataUrl;
+          afterImg.src = afterDataUrl;
+        }
+
+        updateTemplateVisualSelection(modal, selectedTemplate) {
+          // Update the visual state of all template labels
+          const templateLabels = modal.querySelectorAll('label');
+          templateLabels.forEach(label => {
+            const radio = label.querySelector('input[name="template-selector"]');
+            if (radio) {
+              const templateValue = radio.value;
+              
+              if (templateValue === selectedTemplate) {
+                // Selected state - golden border and background
+                label.style.border = '2px solid #F2C31B';
+                label.style.background = 'rgba(242, 195, 27, 0.2)';
+              } else {
+                // Unselected state - transparent border and background
+                label.style.border = '2px solid transparent';
+                label.style.background = 'transparent';
+              }
+            }
+          });
+        }
+
+        cropIndividualPhotoOnDemand(photo, templateType, modal) {
+          console.log('Cropping individual photo on-demand:', photo.mode, 'to template:', templateType);
+          
+          // Create image object to get dimensions and crop
+          const img = new Image();
+          
+          img.onload = () => {
+            // Get template dimensions
+            const templateSizes = this.getTemplateSizes();
+            const targetTemplate = templateSizes[templateType] || templateSizes.default;
+            
+            // Detect photo orientation
+            const orientation = this.detectPhotoOrientation(img.width, img.height);
+            
+            // Calculate crop dimensions for this individual photo
+            const cropDimensions = this.calculatePhotoCropDimensions(
+              img.width, img.height, templateType, orientation
+            );
+            
+            // Create canvas with target template size
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = targetTemplate.width;
+            canvas.height = targetTemplate.height;
+            
+            // Fill white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate how to fit the cropped photo into the template canvas
+            const cropAspectRatio = cropDimensions.cropWidth / cropDimensions.cropHeight;
+            const templateAspectRatio = targetTemplate.width / targetTemplate.height;
+            
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (cropAspectRatio > templateAspectRatio) {
+              // Crop is wider, fit to height
+              drawHeight = targetTemplate.height;
+              drawWidth = drawHeight * cropAspectRatio;
+              drawX = (targetTemplate.width - drawWidth) / 2;
+              drawY = 0;
+            } else {
+              // Crop is taller, fit to width
+              drawWidth = targetTemplate.width;
+              drawHeight = drawWidth / cropAspectRatio;
+              drawX = 0;
+              drawY = (targetTemplate.height - drawHeight) / 2;
+            }
+            
+            // Draw the cropped photo
+            ctx.drawImage(
+              img,
+              cropDimensions.cropX, cropDimensions.cropY, 
+              cropDimensions.cropWidth, cropDimensions.cropHeight,
+              drawX, drawY, drawWidth, drawHeight
+            );
+            
+            // Add photo type label
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            
+            const labelWidth = 120;
+            const labelHeight = 30;
+            const labelX = (canvas.width - labelWidth) / 2;
+            const labelY = 20;
+            
+            ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(photo.mode.toUpperCase(), canvas.width / 2, labelY + 20);
+            
+            // Convert to data URL and update modal
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Update modal with cropped photo
+            const imgElement = modal.querySelector('#fullscreen-photo');
+            if (imgElement) {
+              imgElement.src = croppedDataUrl;
+              imgElement.style.opacity = '1';
+            }
+            
+            // Update photo info
+            const infoDiv = modal.querySelector('[style*="position: fixed; top: 20px; left: 20px"]');
+            if (infoDiv) {
+              infoDiv.innerHTML = `
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+                </div>
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                  Cropped to ${templateType} format
+                </div>
+                <div style="font-size: 12px; opacity: 0.7;">
+                  Template: ${templateType} | Generated on-demand | Orientation: ${orientation}
+                </div>
+              `;
+            }
+            
+            console.log('Individual photo cropped to template:', templateType);
+          };
+          
+          img.src = photo.dataUrl;
+        }
         
         getPhotosHTML() {
 
@@ -1617,44 +1869,81 @@
             );
 
             if (afterPhoto) {
-              // Show split-screen before/after
-              const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
+              // Check if there's a stored combined photo
+              const combinedPhoto = this.photos.find(p => 
+                p.mode === 'mix' && p.room === beforePhoto.room && p.name === beforePhoto.name
+              );
+              
+              if (combinedPhoto) {
+                // Show stored combined photo
+                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
-              gridItems.push(`
-                <div class="photo-item" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
-                  <!-- Split screen container taking full card space -->
-                  <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
-                    <!-- Before photo (top half) -->
-                    <div style="height: 50%; overflow: hidden; position: relative;">
-                      <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover; filter: blur(3px);" />
-                      <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">BEFORE</div>
+                gridItems.push(`
+                  <div class="photo-item" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
+                    <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover; filter: blur(3px);" />
+
+                    <!-- Retake button in center -->
+                    <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 10;">
+                      🔄 Retake
+                    </button>
+
+                    <!-- Transparent title overlay -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                      <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
+                      <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
                     </div>
-                    <!-- Divider line -->
-                    <div style="height: 2px; background: #000;"></div>
-                    <!-- After photo (bottom half) -->
-                    <div style="height: 50%; overflow: hidden; position: relative;">
-                      <img src="${afterPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover; filter: blur(3px);" />
-                      <div style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">AFTER</div>
+
+                    <!-- Delete button -->
+                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                      🗑️
+                    </button>
+                  </div>
+                `);
+              } else {
+                // Show split-screen preview if no combined photo exists yet
+                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
+
+                gridItems.push(`
+                  <div class="photo-item combined-preview" data-before-photo-id="${beforePhoto.id}" data-after-photo-id="${afterPhoto.id}" style="border: 1px solid #10B981; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; background: #f8f9fa;">
+                    <!-- 1:1 Combined preview mask -->
+                    <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
+                      <!-- Before photo (top half) -->
+                      <div style="height: 50%; overflow: hidden; position: relative;">
+                        <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">BEFORE</div>
+                      </div>
+                      <!-- Divider line -->
+                      <div style="height: 2px; background: #000;"></div>
+                      <!-- After photo (bottom half) -->
+                      <div style="height: 50%; overflow: hidden; position: relative;">
+                        <img src="${afterPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <div style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">AFTER</div>
+                      </div>
                     </div>
+
+                    <!-- Preview indicator -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; z-index: 10; backdrop-filter: blur(5px);">
+                      📐 Preview
+                    </div>
+
+                    <!-- Retake button -->
+                    <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 8px; left: 8px; background: #F2C31B; color: #303030; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;">
+                      🔄
+                    </button>
+
+                    <!-- Transparent title overlay -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                      <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
+                      <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
+                    </div>
+
+                    <!-- Delete button -->
+                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                      🗑️
+                    </button>
                   </div>
-
-                  <!-- Retake button in center -->
-                  <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 10;">
-                    🔄 Retake
-                  </button>
-
-                  <!-- Transparent title overlay -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                    <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
-                  </div>
-
-                  <!-- Delete button -->
-                  <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
-                    🗑️
-                  </button>
-                </div>
-              `);
+                `);
+              }
             } else {
               // Show only before photo
               const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
@@ -2320,6 +2609,7 @@
               });
             });
 
+
             // Dummy photos click handlers
             document.querySelectorAll('.dummy-photo').forEach(dummy => {
               dummy.addEventListener('click', (e) => {
@@ -2902,9 +3192,9 @@
             const templateType = photo.templateType || 'default';
             
             modal.innerHTML = `
-              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 120px; box-sizing: border-box;">
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: flex-start; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 200px; box-sizing: border-box;">
                 <!-- Scrollable container for actual size viewing -->
-                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 200px); overflow: auto;">
+                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 280px); overflow: auto; margin-top: 20px;">
                   <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
                 </div>
                 
@@ -2923,9 +3213,7 @@
                 
                 <!-- Template selector for combined photos (larger icons, 2 rows) -->
                 ${photo.mode === 'mix' ? `
-                <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-                  <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">📐 Choose Format</div>
-                  
+                <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
                   <!-- First row: Default and Landscape -->
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
                     <!-- Default 4:3 -->
