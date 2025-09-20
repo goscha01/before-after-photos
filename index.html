@@ -107,6 +107,7 @@
         max-width: 300px;
       }
     </style>
+    <script src="config.js"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1518,6 +1519,19 @@
                 </div>
               </div>
 
+              <!-- Compression Quality -->
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
+                  🗜️ Compression Quality
+                </label>
+                <select id="compression-quality" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; box-sizing: border-box;">
+                  <option value="high">High Quality (1920×1080 pixels)</option>
+                  <option value="medium">Medium Quality (1600×900 pixels)</option>
+                  <option value="low" selected>Fast Upload (1024×576 pixels)</option>
+                  <option value="superfast">Super Fast (800×450 pixels)</option>
+                </select>
+              </div>
+
               <!-- Photo Formats -->
               <div style="margin-bottom: 24px;">
                 <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 12px; font-size: 16px;">
@@ -1664,6 +1678,7 @@
           // Get selected options
           const albumName = document.getElementById('album-name-input').value.trim();
           const selectedCity = document.getElementById('upload-city-select').value;
+          const compressionQuality = document.getElementById('compression-quality').value;
           
           const photoTypes = {
             before: document.getElementById('upload-before').checked,
@@ -1706,20 +1721,29 @@
             albumName,
             city: selectedCity,
             photoTypes,
-            photoFormats
+            photoFormats,
+            compressionQuality
           });
         }
 
         processUpload(options) {
           console.log('Starting upload with options:', options);
+          console.log('Total photos in app:', this.photos.length);
+          console.log('All photos:', this.photos.map(p => ({ name: p.name, mode: p.mode, room: p.room })));
           
           // Filter photos based on selected types
           let photosToUpload = this.photos.filter(photo => {
-            if (photo.mode === 'before' && options.photoTypes.before) return true;
-            if (photo.mode === 'after' && options.photoTypes.after) return true;
-            if (photo.mode === 'mix' && options.photoTypes.combined) return true;
-            return false;
+            const shouldInclude = (
+              (photo.mode === 'before' && options.photoTypes.before) ||
+              (photo.mode === 'after' && options.photoTypes.after) ||
+              (photo.mode === 'mix' && options.photoTypes.combined)
+            );
+            console.log(`Photo ${photo.name} (${photo.mode}): ${shouldInclude ? 'INCLUDED' : 'EXCLUDED'}`);
+            return shouldInclude;
           });
+
+          console.log('Photos to upload:', photosToUpload.length);
+          console.log('Filtered photos:', photosToUpload.map(p => ({ name: p.name, mode: p.mode, room: p.room })));
 
           if (photosToUpload.length === 0) {
             alert('No photos found matching the selected criteria');
@@ -1755,6 +1779,9 @@
               <div style="margin-bottom: 16px;">
                 <div style="font-size: 16px; color: #666; margin-bottom: 8px;">Album: <strong>${options.albumName}</strong></div>
                 <div style="font-size: 16px; color: #666; margin-bottom: 8px;">City: <strong>${this.formatLocationName(options.city)}</strong></div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+                  Compression: <strong>${this.getCompressionSettings(options.compressionQuality).description}</strong>
+                </div>
               </div>
 
               <div style="margin-bottom: 20px;">
@@ -1778,53 +1805,704 @@
 
           document.body.appendChild(modal);
 
-          // Simulate upload process (replace with real upload logic)
-          this.simulateUpload(photos, options, modal);
+          // Start real upload process with parallel uploads
+          this.parallelUpload(photos, options, modal);
         }
 
-        simulateUpload(photos, options, modal) {
+        async realUpload(photos, options, modal) {
           const progressBar = document.getElementById('upload-progress-bar');
           const currentSpan = document.getElementById('upload-current');
           const statusDiv = document.getElementById('upload-status');
           
           let currentIndex = 0;
           let cancelled = false;
+          let uploadedFiles = [];
+          let errors = [];
 
-          // Cancel button
-          document.getElementById('cancel-upload-process').addEventListener('click', () => {
-            cancelled = true;
-            document.body.removeChild(modal);
-            document.body.style.overflow = '';
+          // Get environment variables based on location
+          const locationKey = this.getLocationKey(options.city);
+          const SCRIPT_URL = window[`VITE_${locationKey}_SCRIPT_URL`] || window.GOOGLE_SCRIPT_URL;
+          const FOLDER_ID = window[`VITE_${locationKey}_FOLDER_ID`] || window.GOOGLE_FOLDER_ID;
+          
+          console.log('Upload configuration:', {
+            city: options.city,
+            locationKey: locationKey,
+            scriptUrl: SCRIPT_URL,
+            folderId: FOLDER_ID ? FOLDER_ID.substring(0, 10) + '...' : 'undefined'
           });
 
-          const uploadNext = () => {
-            if (cancelled || currentIndex >= photos.length) {
-              if (!cancelled) {
-                // Upload complete
+          if (!SCRIPT_URL || !FOLDER_ID) {
+            statusDiv.textContent = 'Configuration error: Missing script URL or folder ID';
+            setTimeout(() => {
+              alert('Upload configuration is missing. Please contact administrator.');
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+            }, 2000);
+            return;
+          }
+
+          // Cancel button with confirmation
+          document.getElementById('cancel-upload-process').addEventListener('click', () => {
+            this.showCancelUploadConfirmation(modal, () => {
+              cancelled = true;
+              statusDiv.textContent = 'Upload cancelled by user';
+              
+              // Update button text and disable it
+              const cancelBtn = document.getElementById('cancel-upload-process');
+              if (cancelBtn) {
+                cancelBtn.textContent = 'Cancelling...';
+                cancelBtn.disabled = true;
+                cancelBtn.style.opacity = '0.6';
+                cancelBtn.style.cursor = 'not-allowed';
+              }
+              
+              // Close modal after a brief delay to show cancellation status
+              setTimeout(() => {
+                document.body.removeChild(modal);
+                document.body.style.overflow = '';
+              }, 1000);
+            });
+          });
+
+          const uploadPhoto = async (photo, format = 'default') => {
+            console.log(`Starting upload for ${photo.name} (${photo.mode}) in ${format} format`);
+            
+            try {
+              let photoData = photo.dataUrl;
+              let filename = `${photo.name}_${photo.mode}`;
+              
+              // Generate different formats if needed
+              if (format !== 'default' && photo.mode === 'mix') {
+                console.log(`Generating ${format} format for ${photo.name}`);
+                // Generate the specific format on-the-fly
+                photoData = await this.generatePhotoFormat(photo, format);
+                filename = `${photo.name}_${photo.mode}_${format}`;
+              }
+              
+              // Apply compression based on quality setting
+              const compressionSettings = this.getCompressionSettings(options.compressionQuality);
+              console.log(`Compressing ${filename} with ${options.compressionQuality} quality`);
+              
+              const originalSize = photoData.length;
+              const compressionStart = performance.now();
+              
+              photoData = await this.compressPhoto(
+                photoData, 
+                compressionSettings.quality, 
+                compressionSettings.maxWidth, 
+                compressionSettings.maxHeight
+              );
+              
+              const compressionTime = performance.now() - compressionStart;
+              const compressedSize = photoData.length;
+              const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+              
+              console.log(`🗜️ ${filename} compressed: ${reduction}% reduction (${Math.round(originalSize/1024)}KB → ${Math.round(compressedSize/1024)}KB) in ${Math.round(compressionTime)}ms`);
+              
+              // Add file extension
+              filename += '.jpg';
+              console.log(`Uploading compressed file: ${filename}`);
+              
+              // Prepare form data
+              const formData = new FormData();
+              formData.append('folderId', FOLDER_ID);
+              formData.append('filename', filename);
+              formData.append('albumName', options.albumName);
+              formData.append('room', photo.room || 'general');
+              formData.append('type', photo.mode);
+              formData.append('format', format);
+              formData.append('timestamp', photo.timestamp || Date.now());
+              formData.append('location', options.city);
+              formData.append('cleanerName', new URLSearchParams(window.location.search).get('cleaner') || 'Kate');
+              formData.append('image', photoData);
+
+              console.log(`📤 Making fetch request to: ${SCRIPT_URL}`);
+              const uploadStart = performance.now();
+              
+              const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+              });
+
+              const uploadTime = performance.now() - uploadStart;
+              console.log(`📥 Response received for ${filename}: ${response.status} ${response.statusText} in ${Math.round(uploadTime)}ms`);
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const result = await response.json();
+              console.log(`Upload result for ${filename}:`, result);
+              
+              if (result.success) {
+                console.log(`✅ Successfully uploaded ${filename}`);
+                uploadedFiles.push({
+                  ...result,
+                  originalPhoto: photo,
+                  format: format
+                });
+                return result;
+              } else {
+                throw new Error(result.message || 'Upload failed');
+              }
+            } catch (error) {
+              console.error(`❌ Upload error for ${photo.name}:`, error);
+              errors.push({
+                photo: photo,
+                format: format,
+                error: error.message
+              });
+              throw error;
+            }
+          };
+
+          const uploadNext = async () => {
+            console.log(`uploadNext called - currentIndex: ${currentIndex}, photos.length: ${photos.length}, cancelled: ${cancelled}`);
+            
+            if (cancelled) {
+              console.log('Upload cancelled, stopping');
+              return;
+            }
+
+            if (currentIndex >= photos.length) {
+              console.log('All photos processed, showing results');
+              // All photos processed, show results
+              const successCount = uploadedFiles.length;
+              const errorCount = errors.length;
+              
+              if (errorCount === 0) {
                 statusDiv.textContent = 'Upload completed successfully!';
                 setTimeout(() => {
                   document.body.removeChild(modal);
                   document.body.style.overflow = '';
-                  alert(`Successfully uploaded ${photos.length} photos to "${options.albumName}"`);
+                  alert(`Successfully uploaded ${successCount} files to "${options.albumName}"`);
+                }, 2000);
+              } else {
+                statusDiv.textContent = `Upload completed with ${errorCount} errors`;
+                setTimeout(() => {
+                  document.body.removeChild(modal);
+                  document.body.style.overflow = '';
+                  alert(`Upload completed:\n- ${successCount} files uploaded successfully\n- ${errorCount} files failed\n\nCheck console for error details.`);
+                  console.log('Upload errors:', errors);
                 }, 2000);
               }
               return;
             }
 
             const photo = photos[currentIndex];
-            statusDiv.textContent = `Uploading ${photo.mode} photo: ${photo.name}`;
+            console.log(`Processing photo ${currentIndex + 1}/${photos.length}:`, {
+              name: photo.name,
+              mode: photo.mode,
+              room: photo.room,
+              id: photo.id
+            });
             
-            // Simulate upload delay
-            setTimeout(() => {
-              currentIndex++;
-              currentSpan.textContent = currentIndex;
-              progressBar.style.width = `${(currentIndex / photos.length) * 100}%`;
+            try {
+              // Determine which formats to upload for this photo
+              const formatsToUpload = [];
               
+              if (options.photoFormats.default) formatsToUpload.push('default');
+              if (options.photoFormats.square) formatsToUpload.push('square');
+              if (options.photoFormats.portrait) formatsToUpload.push('portrait');
+              if (options.photoFormats.landscape) formatsToUpload.push('landscape');
+              if (options.photoFormats.blog) formatsToUpload.push('blog');
+
+              // For individual photos (before/after), only upload default format
+              const actualFormats = (photo.mode === 'mix' && formatsToUpload.length > 1) ? formatsToUpload : ['default'];
+              console.log(`Formats to upload for ${photo.name}:`, actualFormats);
+              
+              for (let formatIndex = 0; formatIndex < actualFormats.length; formatIndex++) {
+                if (cancelled) {
+                  console.log('Upload cancelled during format processing');
+                  return;
+                }
+                
+                const format = actualFormats[formatIndex];
+                const formatLabel = format === 'default' ? '' : ` (${format})`;
+                
+                statusDiv.textContent = `Uploading ${photo.mode} photo: ${photo.name}${formatLabel}`;
+                
+                try {
+                  await uploadPhoto(photo, format);
+                } catch (error) {
+                  if (cancelled) {
+                    console.log('Upload cancelled during photo upload');
+                    return;
+                  }
+                  // Error already handled in uploadPhoto function
+                }
+                
+                // Check cancellation again after upload
+                if (cancelled) {
+                  console.log('Upload cancelled after photo upload');
+                  return;
+                }
+                
+                // Update progress for each format
+                const totalUploads = photos.reduce((total, p) => {
+                  const formats = (p.mode === 'mix' && formatsToUpload.length > 1) ? formatsToUpload.length : 1;
+                  return total + formats;
+                }, 0);
+                
+                const currentUpload = uploadedFiles.length + errors.length;
+                currentSpan.textContent = currentUpload;
+                progressBar.style.width = `${(currentUpload / totalUploads) * 100}%`;
+                
+                // Small delay between formats (with cancellation check)
+                await new Promise(resolve => {
+                  setTimeout(() => {
+                    if (cancelled) {
+                      console.log('Upload cancelled during delay');
+                    }
+                    resolve();
+                  }, 500);
+                });
+                
+                if (cancelled) return;
+              }
+              
+            } catch (error) {
+              console.error(`Failed to upload ${photo.mode} photo ${photo.name}:`, error);
+            }
+
+            console.log(`Finished processing photo ${photo.name}, moving to next. currentIndex: ${currentIndex} -> ${currentIndex + 1}`);
+            currentIndex++;
+            
+            // Add small delay before processing next photo
+            setTimeout(() => {
               uploadNext();
-            }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+            }, 100);
           };
 
+          // Start upload process
           uploadNext();
+        }
+
+        async parallelUpload(photos, options, modal) {
+          const progressBar = document.getElementById('upload-progress-bar');
+          const currentSpan = document.getElementById('upload-current');
+          const statusDiv = document.getElementById('upload-status');
+          
+          let cancelled = false;
+          let completedUploads = 0;
+          let uploadedFiles = [];
+          let errors = [];
+
+          // Get environment variables based on location
+          const locationKey = this.getLocationKey(options.city);
+          const SCRIPT_URL = window[`VITE_${locationKey}_SCRIPT_URL`] || window.GOOGLE_SCRIPT_URL;
+          const FOLDER_ID = window[`VITE_${locationKey}_FOLDER_ID`] || window.GOOGLE_FOLDER_ID;
+          
+          console.log('Upload configuration:', {
+            city: options.city,
+            locationKey: locationKey,
+            scriptUrl: SCRIPT_URL,
+            folderId: FOLDER_ID ? FOLDER_ID.substring(0, 10) + '...' : 'undefined'
+          });
+
+          if (!SCRIPT_URL || !FOLDER_ID) {
+            statusDiv.textContent = 'Configuration error: Missing script URL or folder ID';
+            setTimeout(() => {
+              alert('Upload configuration is missing. Please contact administrator.');
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+            }, 2000);
+            return;
+          }
+
+          // Cancel button with confirmation
+          document.getElementById('cancel-upload-process').addEventListener('click', () => {
+            this.showCancelUploadConfirmation(modal, () => {
+              cancelled = true;
+              statusDiv.textContent = 'Upload cancelled by user';
+              
+              const cancelBtn = document.getElementById('cancel-upload-process');
+              if (cancelBtn) {
+                cancelBtn.textContent = 'Cancelling...';
+                cancelBtn.disabled = true;
+                cancelBtn.style.opacity = '0.6';
+                cancelBtn.style.cursor = 'not-allowed';
+              }
+              
+              setTimeout(() => {
+                document.body.removeChild(modal);
+                document.body.style.overflow = '';
+              }, 1000);
+            });
+          });
+
+          // Create upload tasks for all photos and formats
+          const uploadTasks = [];
+          
+          photos.forEach(photo => {
+            const formatsToUpload = [];
+            
+            if (options.photoFormats.default) formatsToUpload.push('default');
+            if (options.photoFormats.square) formatsToUpload.push('square');
+            if (options.photoFormats.portrait) formatsToUpload.push('portrait');
+            if (options.photoFormats.landscape) formatsToUpload.push('landscape');
+            if (options.photoFormats.blog) formatsToUpload.push('blog');
+
+            // For individual photos (before/after), only upload default format
+            const actualFormats = (photo.mode === 'mix' && formatsToUpload.length > 1) ? formatsToUpload : ['default'];
+            
+            actualFormats.forEach(format => {
+              uploadTasks.push({ photo, format });
+            });
+          });
+
+          const totalTasks = uploadTasks.length;
+          console.log(`🚀 Starting parallel upload of ${totalTasks} tasks (${photos.length} photos)`);
+
+          const uploadPhoto = async (photo, format = 'default') => {
+            if (cancelled) return null;
+            
+            console.log(`Starting upload for ${photo.name} (${photo.mode}) in ${format} format`);
+            
+            try {
+              let photoData = photo.dataUrl;
+              let filename = `${photo.name}_${photo.mode}`;
+              
+              // Generate different formats if needed
+              if (format !== 'default' && photo.mode === 'mix') {
+                console.log(`Generating ${format} format for ${photo.name}`);
+                photoData = await this.generatePhotoFormat(photo, format);
+                filename = `${photo.name}_${photo.mode}_${format}`;
+              }
+              
+              // Apply compression based on quality setting
+              const compressionSettings = this.getCompressionSettings(options.compressionQuality);
+              
+              const originalSize = photoData.length;
+              const compressionStart = performance.now();
+              
+              photoData = await this.compressPhoto(
+                photoData, 
+                compressionSettings.quality, 
+                compressionSettings.maxWidth, 
+                compressionSettings.maxHeight
+              );
+              
+              const compressionTime = performance.now() - compressionStart;
+              const compressedSize = photoData.length;
+              const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+              
+              console.log(`🗜️ ${filename} compressed: ${reduction}% reduction (${Math.round(originalSize/1024)}KB → ${Math.round(compressedSize/1024)}KB) in ${Math.round(compressionTime)}ms`);
+              
+              filename += '.jpg';
+              
+              // Prepare form data
+              const formData = new FormData();
+              formData.append('folderId', FOLDER_ID);
+              formData.append('filename', filename);
+              formData.append('albumName', options.albumName);
+              formData.append('room', photo.room || 'general');
+              formData.append('type', photo.mode);
+              formData.append('format', format);
+              formData.append('timestamp', photo.timestamp || Date.now());
+              formData.append('location', options.city);
+              formData.append('cleanerName', new URLSearchParams(window.location.search).get('cleaner') || 'Kate');
+              formData.append('image', photoData);
+
+              console.log(`📤 Making fetch request to: ${SCRIPT_URL}`);
+              const uploadStart = performance.now();
+              
+              const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+              });
+
+              const uploadTime = performance.now() - uploadStart;
+              console.log(`📥 Response received for ${filename}: ${response.status} ${response.statusText} in ${Math.round(uploadTime)}ms`);
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const result = await response.json();
+              
+              if (result.success) {
+                console.log(`✅ Successfully uploaded ${filename} in ${Math.round(uploadTime)}ms`);
+                return {
+                  ...result,
+                  originalPhoto: photo,
+                  format: format
+                };
+              } else {
+                throw new Error(result.message || 'Upload failed');
+              }
+            } catch (error) {
+              console.error(`❌ Upload error for ${photo.name}:`, error);
+              throw { photo, format, error: error.message };
+            }
+          };
+
+          // Process uploads in parallel batches (increased for better speed)
+          const BATCH_SIZE = 5; // Upload 5 photos at a time for better parallelization
+          const batches = [];
+          
+          for (let i = 0; i < uploadTasks.length; i += BATCH_SIZE) {
+            batches.push(uploadTasks.slice(i, i + BATCH_SIZE));
+          }
+
+          console.log(`📦 Processing ${batches.length} batches of up to ${BATCH_SIZE} concurrent uploads`);
+
+          for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+            if (cancelled) break;
+            
+            const batch = batches[batchIndex];
+            statusDiv.textContent = `Processing batch ${batchIndex + 1}/${batches.length}...`;
+            
+            console.log(`🔄 Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} uploads`);
+            
+            // Process all uploads in this batch simultaneously
+            const batchPromises = batch.map(task => uploadPhoto(task.photo, task.format));
+            
+            try {
+              const results = await Promise.allSettled(batchPromises);
+              
+              results.forEach((result, index) => {
+                completedUploads++;
+                
+                if (result.status === 'fulfilled' && result.value) {
+                  uploadedFiles.push(result.value);
+                } else if (result.status === 'rejected') {
+                  errors.push(result.reason);
+                }
+                
+                // Update progress
+                currentSpan.textContent = completedUploads;
+                progressBar.style.width = `${(completedUploads / totalTasks) * 100}%`;
+              });
+              
+            } catch (error) {
+              console.error('Batch processing error:', error);
+            }
+            
+            // Small delay between batches to avoid overwhelming the server
+            if (batchIndex < batches.length - 1 && !cancelled) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+
+          // Show final results
+          const successCount = uploadedFiles.length;
+          const errorCount = errors.length;
+          
+          if (cancelled) {
+            statusDiv.textContent = 'Upload cancelled';
+          } else if (errorCount === 0) {
+            statusDiv.textContent = 'Upload completed successfully!';
+            setTimeout(() => {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+              alert(`Successfully uploaded ${successCount} files to "${options.albumName}"`);
+            }, 2000);
+          } else {
+            statusDiv.textContent = `Upload completed with ${errorCount} errors`;
+            setTimeout(() => {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+              alert(`Upload completed:\n- ${successCount} files uploaded successfully\n- ${errorCount} files failed\n\nCheck console for error details.`);
+              console.log('Upload errors:', errors);
+            }, 2000);
+          }
+        }
+
+        getLocationKey(city) {
+          // Map cities to location keys from .env file
+          const locationMap = {
+            'tampa': 'LOCATION_A',
+            'st-petersburg': 'LOCATION_B', 
+            'jacksonville': 'LOCATION_C',
+            'miami': 'LOCATION_D'
+          };
+          return locationMap[city] || 'LOCATION_A'; // Default to Tampa
+        }
+
+        getCompressionSettings(quality) {
+          const settings = {
+            'high': {
+              quality: 0.85,      // 85% JPEG quality
+              maxWidth: 1920,     // Max 1920px width
+              maxHeight: 1080,    // Max 1080px height
+              description: 'High Quality (1920×1080 pixels)'
+            },
+            'medium': {
+              quality: 0.7,       // 70% JPEG quality
+              maxWidth: 1600,     // Max 1600px width
+              maxHeight: 900,     // Max 900px height
+              description: 'Medium Quality (1600×900 pixels)'
+            },
+            'low': {
+              quality: 0.5,       // 50% JPEG quality
+              maxWidth: 1024,     // Max 1024px width
+              maxHeight: 576,     // Max 576px height
+              description: 'Fast Upload (1024×576 pixels)'
+            },
+            'superfast': {
+              quality: 0.3,       // 30% JPEG quality
+              maxWidth: 800,      // Max 800px width
+              maxHeight: 450,     // Max 450px height
+              description: 'Super Fast (800×450 pixels)'
+            }
+          };
+          return settings[quality] || settings['medium'];
+        }
+
+        showCancelUploadConfirmation(parentModal, onConfirm) {
+          // Create confirmation modal
+          const confirmModal = document.createElement('div');
+          confirmModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 3100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+          `;
+
+          confirmModal.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 24px; max-width: 350px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+              <!-- Warning Icon -->
+              <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+              
+              <!-- Title -->
+              <h3 style="margin: 0 0 12px 0; color: #303030; font-size: 20px; font-weight: bold;">Cancel Upload?</h3>
+              
+              <!-- Message -->
+              <p style="margin: 0 0 24px 0; color: #666; font-size: 16px; line-height: 1.4;">
+                Are you sure you want to cancel the upload? Any photos already uploaded will remain in your Google Drive.
+              </p>
+              
+              <!-- Upload Progress Info -->
+              <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 24px; text-align: left;">
+                <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Upload Status:</div>
+                <div style="font-size: 14px; font-weight: bold; color: #303030;" id="cancel-progress-info">
+                  Checking current progress...
+                </div>
+              </div>
+              
+              <!-- Action Buttons -->
+              <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cancel-upload-no" style="background: #f5f5f5; color: #666; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f5f5f5'">
+                  Continue Upload
+                </button>
+                <button id="cancel-upload-yes" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+                  Yes, Cancel Upload
+                </button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(confirmModal);
+
+          // Update progress info
+          setTimeout(() => {
+            const progressInfo = document.getElementById('cancel-progress-info');
+            const currentSpan = parentModal.querySelector('#upload-current');
+            const totalSpan = parentModal.querySelector('#upload-total');
+            
+            if (progressInfo && currentSpan && totalSpan) {
+              const current = currentSpan.textContent || '0';
+              const total = totalSpan.textContent || '0';
+              progressInfo.textContent = `${current} of ${total} files uploaded`;
+            }
+          }, 100);
+
+          // Event listeners
+          document.getElementById('cancel-upload-no').addEventListener('click', () => {
+            document.body.removeChild(confirmModal);
+          });
+
+          document.getElementById('cancel-upload-yes').addEventListener('click', () => {
+            document.body.removeChild(confirmModal);
+            onConfirm();
+          });
+
+          // Close on background click
+          confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+              document.body.removeChild(confirmModal);
+            }
+          });
+
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              document.body.removeChild(confirmModal);
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
+        }
+
+        async compressPhoto(dataUrl, quality = 0.7, maxWidth = 1920, maxHeight = 1080) {
+          return new Promise((resolve) => {
+            const originalSize = dataUrl.length;
+            
+            // Skip compression for already small photos (less than 200KB)
+            if (originalSize < 200000) {
+              console.log(`Skipping compression for small photo (${Math.round(originalSize/1024)}KB)`);
+              resolve(dataUrl);
+              return;
+            }
+            
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              // Calculate new dimensions while maintaining aspect ratio
+              let { width, height } = img;
+              
+              // Only resize if image is larger than max dimensions
+              if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              
+              // Enable image smoothing for better quality
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              
+              // Draw and compress
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Convert to compressed JPEG
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+              
+              // Only use compressed version if it's actually smaller
+              const compressedSize = compressedDataUrl.length;
+              if (compressedSize < originalSize) {
+                const compressionRatio = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+                console.log(`Photo compressed: ${compressionRatio}% reduction (${originalSize} → ${compressedSize} bytes)`);
+                resolve(compressedDataUrl);
+              } else {
+                console.log(`Compression would increase size, using original (${Math.round(originalSize/1024)}KB)`);
+                resolve(dataUrl);
+              }
+            };
+            img.src = dataUrl;
+          });
+        }
+
+        async generatePhotoFormat(photo, format) {
+          return new Promise((resolve) => {
+            // For now, return the original photo data
+            // In the future, you could implement client-side format conversion here
+            resolve(photo.dataUrl);
+          });
         }
 
         openCameraFromGallery(room, name, mode) {
