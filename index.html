@@ -1137,20 +1137,39 @@
               ">
                 <h2 style="margin: 0; font-size: 20px; font-weight: bold;">📷 All Photos</h2>
                 
-                <button id="close-all-photos-modal" style="
-                  background: transparent;
-                  border: none;
-                  color: #303030;
-                  font-size: 24px;
-                  cursor: pointer;
-                  padding: 5px;
-                  border-radius: 50%;
-                  width: 35px;
-                  height: 35px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">×</button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <button id="delete-all-photos-btn" style="
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    transition: background 0.2s;
+                  " onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+                    🗑️ Delete All
+                  </button>
+                  
+                  <button id="close-all-photos-modal" style="
+                    background: transparent;
+                    border: none;
+                    color: #303030;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 5px;
+                    border-radius: 50%;
+                    width: 35px;
+                    height: 35px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  ">×</button>
+                </div>
               </div>
               
               <!-- Scrollable content -->
@@ -1173,6 +1192,17 @@
           // Add event listeners
           document.getElementById('close-all-photos-modal').addEventListener('click', () => {
             this.closeAllPhotosModal(modal);
+          });
+
+          // Delete All button functionality
+          document.getElementById('delete-all-photos-btn').addEventListener('click', () => {
+            // Close the gallery modal first
+            this.closeAllPhotosModal(modal);
+            
+            // Show the delete all confirmation (same as upload button)
+            setTimeout(() => {
+              this.showDeleteAllConfirmation();
+            }, 100);
           });
 
 
@@ -1233,8 +1263,326 @@
         }
 
         async showPhotoFullscreenFromModal(photo) {
-          // Use the same enhanced fullscreen view as the main function
-          this.showPhotoFullscreen(photo);
+          // For gallery view, always show enlarged photo without camera functionality
+          this.showPhotoEnlarged(photo);
+        }
+
+        async showPhotoEnlarged(photo) {
+          // Always show enlarged view regardless of photo mode - no camera functionality
+          // Clean up any existing photo fullscreen modals first
+          const existingPhotoModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
+          existingPhotoModals.forEach(existing => {
+            if (existing.parentNode) {
+              document.body.removeChild(existing);
+            }
+          });
+
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
+            flex-direction: column;
+          `;
+
+          // Use the same template as the regular fullscreen but without camera functionality
+          const orientation = this.detectPhotoOrientation(photo.naturalWidth || 800, photo.naturalHeight || 600);
+          const templateType = photo.templateType || 'default';
+          
+          // Use the same HTML structure as the regular fullscreen
+          modal.innerHTML = this.getEnlargedPhotoHTML(photo, orientation, templateType);
+          
+          document.body.appendChild(modal);
+          document.body.style.overflow = 'hidden';
+
+          // Set up the same functionality as regular fullscreen
+          this.setupEnlargedPhotoListeners(modal, photo);
+        }
+
+        getEnlargedPhotoHTML(photo, orientation, templateType) {
+          return `
+            <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 120px; box-sizing: border-box;">
+              <!-- Scrollable container for actual size viewing -->
+              <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 200px); overflow: auto;">
+                <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
+              </div>
+              
+              <!-- Photo info overlay -->
+              <div style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px 20px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+                </div>
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                  ${new Date(photo.timestamp).toLocaleString()}
+                </div>
+                <div style="font-size: 12px; opacity: 0.7;">
+                  Orientation: ${orientation} | Template: ${templateType}
+                </div>
+              </div>
+              
+              ${this.getTemplateSelector(photo, templateType)}
+              
+              <!-- Close button -->
+              <button id="close-photo-btn" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px); z-index: 10;">
+                ✕
+              </button>
+            </div>
+          `;
+        }
+
+        getTemplateSelector(photo, templateType) {
+          // Show template selector for all photos when in enlarged view, not just combined
+          return `
+            <!-- Template selector for photos (larger icons, 2 rows) -->
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+              <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">📐 Choose Format</div>
+              
+              <!-- First row: Default and Landscape -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                <!-- Default 4:3 -->
+                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 12px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="default" style="display: none;" ${templateType === 'default' ? 'checked' : ''}>
+                  <div style="width: 32px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <div style="font-size: 8px; color: #303030; font-weight: bold;">4:3</div>
+                  </div>
+                  <div style="font-size: 11px; font-weight: bold; text-align: center;">Default</div>
+                  <div style="font-size: 9px; opacity: 0.8; text-align: center;">Standard</div>
+                </label>
+
+                <!-- Landscape 16:9 -->
+                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 12px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+                  <div style="width: 40px; height: 22px; background: #F2C31B; border-radius: 2px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <div style="font-size: 8px; color: #303030; font-weight: bold;">16:9</div>
+                  </div>
+                  <div style="font-size: 11px; font-weight: bold; text-align: center;">Landscape</div>
+                  <div style="font-size: 9px; opacity: 0.8; text-align: center;">YouTube</div>
+                </label>
+              </div>
+
+              <!-- Second row: Square, Portrait, Blog -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <!-- Square 1:1 -->
+                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="square" style="display: none;" ${templateType === 'square' ? 'checked' : ''}>
+                  <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <div style="font-size: 7px; color: #303030; font-weight: bold;">1:1</div>
+                  </div>
+                  <div style="font-size: 10px; font-weight: bold; text-align: center;">Square</div>
+                  <div style="font-size: 8px; opacity: 0.8; text-align: center;">Instagram</div>
+                </label>
+
+                <!-- Portrait 4:5 -->
+                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'portrait' ? 'checked' : ''}>
+                  <div style="width: 19px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <div style="font-size: 7px; color: #303030; font-weight: bold;">4:5</div>
+                  </div>
+                  <div style="font-size: 10px; font-weight: bold; text-align: center;">Portrait</div>
+                  <div style="font-size: 8px; opacity: 0.8; text-align: center;">LinkedIn</div>
+                </label>
+
+                <!-- Blog 3:2 -->
+                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'blog' ? 'checked' : ''}>
+                  <div style="width: 28px; height: 19px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <div style="font-size: 7px; color: #303030; font-weight: bold;">3:2</div>
+                  </div>
+                  <div style="font-size: 10px; font-weight: bold; text-align: center;">Blog</div>
+                  <div style="font-size: 8px; opacity: 0.8; text-align: center;">Articles</div>
+                </label>
+              </div>
+
+            </div>
+          `;
+        }
+
+        setupEnlargedPhotoListeners(modal, photo) {
+          // Set default to fit screen mode
+          const imgElement = modal.querySelector('#fullscreen-photo');
+          const imgContainer = modal.querySelector('#photo-container');
+          
+          // Configure for fit-to-screen display
+          imgElement.style.maxWidth = '100%';
+          imgElement.style.maxHeight = '100%';
+          imgElement.style.width = 'auto';
+          imgElement.style.height = 'auto';
+          imgContainer.style.maxWidth = '95vw';
+          imgContainer.style.maxHeight = '95vh';
+          imgContainer.style.overflow = 'hidden';
+
+          // Template selector functionality (for all photos)
+          const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
+          templateRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+              if (e.target.checked) {
+                const newTemplate = e.target.value;
+                console.log('Changing template for this photo to:', newTemplate);
+                
+                // Show loading state
+                const imgElement = modal.querySelector('#fullscreen-photo');
+                if (imgElement) {
+                  imgElement.style.opacity = '0.5';
+                }
+                
+                // Handle template change based on photo type
+                if (photo.mode === 'mix') {
+                  // For combined photos, regenerate with new template
+                  this.regenerateSpecificPhoto(photo, newTemplate, modal);
+                } else {
+                  // For individual photos, find the pair and regenerate combined photo
+                  this.regenerateFromIndividualPhoto(photo, newTemplate, modal);
+                }
+              }
+            });
+          });
+
+          document.getElementById('close-photo-btn').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+            
+            // Reopen the All Photos modal
+            setTimeout(() => {
+              this.showAllPhotosModal();
+            }, 100);
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+              
+              // Reopen the All Photos modal
+              setTimeout(() => {
+                this.showAllPhotosModal();
+              }, 100);
+            }
+          });
+        }
+
+        regenerateFromIndividualPhoto(photo, newTemplate, modal) {
+          console.log('Regenerating from individual photo:', photo.mode, 'with template:', newTemplate);
+          
+          if (photo.mode === 'before') {
+            // Find the corresponding after photo
+            const afterPhoto = this.photos.find(p => 
+              p.mode === 'after' && p.beforePhotoId === photo.id
+            );
+            
+            if (afterPhoto) {
+              // Find and remove existing combined photo
+              const existingCombined = this.photos.find(p => 
+                p.mode === 'mix' && p.room === photo.room && p.name === photo.name
+              );
+              if (existingCombined) {
+                const combinedIndex = this.photos.findIndex(p => p.id === existingCombined.id);
+                if (combinedIndex !== -1) {
+                  this.photos.splice(combinedIndex, 1);
+                }
+              }
+              
+              // Create new combined photo with selected template
+              this.createCombinedPhotoWithCallback(
+                photo.dataUrl,
+                afterPhoto.dataUrl,
+                photo.room,
+                photo.name,
+                newTemplate,
+                (createdPhoto) => {
+                  // Show the newly created combined photo
+                  this.updateModalWithNewPhoto(modal, createdPhoto);
+                }
+              );
+            } else {
+              // No after photo, just reset loading state
+              const imgElement = modal.querySelector('#fullscreen-photo');
+              if (imgElement) {
+                imgElement.style.opacity = '1';
+              }
+            }
+          } else if (photo.mode === 'after') {
+            // Find the corresponding before photo
+            const beforePhoto = this.photos.find(p => 
+              p.mode === 'before' && p.id === photo.beforePhotoId
+            );
+            
+            if (beforePhoto) {
+              // Find and remove existing combined photo
+              const existingCombined = this.photos.find(p => 
+                p.mode === 'mix' && p.room === photo.room && p.name === photo.name
+              );
+              if (existingCombined) {
+                const combinedIndex = this.photos.findIndex(p => p.id === existingCombined.id);
+                if (combinedIndex !== -1) {
+                  this.photos.splice(combinedIndex, 1);
+                }
+              }
+              
+              // Create new combined photo with selected template
+              this.createCombinedPhotoWithCallback(
+                beforePhoto.dataUrl,
+                photo.dataUrl,
+                photo.room,
+                photo.name,
+                newTemplate,
+                (createdPhoto) => {
+                  // Show the newly created combined photo
+                  this.updateModalWithNewPhoto(modal, createdPhoto);
+                }
+              );
+            } else {
+              // No before photo, just reset loading state
+              const imgElement = modal.querySelector('#fullscreen-photo');
+              if (imgElement) {
+                imgElement.style.opacity = '1';
+              }
+            }
+          }
+        }
+
+        updateModalWithNewPhoto(modal, newPhoto) {
+          // Update the modal to show the newly created combined photo
+          const imgElement = modal.querySelector('#fullscreen-photo');
+          if (imgElement) {
+            imgElement.src = newPhoto.dataUrl;
+            imgElement.style.opacity = '1';
+          }
+          
+          // Update photo info
+          const infoDiv = modal.querySelector('[style*="position: fixed; top: 20px; left: 20px"]');
+          if (infoDiv) {
+            const orientation = this.detectPhotoOrientation(newPhoto.naturalWidth || 800, newPhoto.naturalHeight || 600);
+            infoDiv.innerHTML = `
+              <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                ${newPhoto.room.charAt(0).toUpperCase() + newPhoto.room.slice(1).replace('-', ' ')} - ${newPhoto.mode.charAt(0).toUpperCase() + newPhoto.mode.slice(1)}
+              </div>
+              <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                ${new Date(newPhoto.timestamp).toLocaleString()}
+              </div>
+              <div style="font-size: 12px; opacity: 0.7;">
+                Orientation: ${orientation} | Template: ${newPhoto.templateType}
+              </div>
+            `;
+          }
+          
+          // Update main photos container
+          const photosContainer = document.getElementById('photos-container');
+          if (photosContainer) {
+            photosContainer.innerHTML = this.getPhotosHTML();
+            this.attachPhotoListeners();
+          }
+          
+          // Update gallery modal if it's open
+          const allPhotosContent = document.getElementById('all-photos-content');
+          if (allPhotosContent) {
+            allPhotosContent.innerHTML = this.getAllPhotosHTML();
+            this.attachGalleryPhotoListeners();
+          }
+          
+          // Save updated photos
+          this.savePhotos();
+          
+          console.log('Modal updated with new photo:', newPhoto.templateType);
         }
         
         getPhotosHTML() {
@@ -2554,9 +2902,9 @@
             const templateType = photo.templateType || 'default';
             
             modal.innerHTML = `
-              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95);">
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 120px; box-sizing: border-box;">
                 <!-- Scrollable container for actual size viewing -->
-                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: 95vh; overflow: auto;">
+                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 200px); overflow: auto;">
                   <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
                 </div>
                 
@@ -2573,40 +2921,70 @@
                   </div>
                 </div>
                 
-                <!-- Template selector for combined photos -->
+                <!-- Template selector for combined photos (larger icons, 2 rows) -->
                 ${photo.mode === 'mix' ? `
-                <div style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; min-width: 300px;">
-                  <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">📐 Template Size</div>
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                      <input type="radio" name="template-selector" value="default" style="margin-right: 8px;" ${templateType === 'default' ? 'checked' : ''}>
-                      <span style="font-size: 12px;">📐 Default</span>
+                <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+                  <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">📐 Choose Format</div>
+                  
+                  <!-- First row: Default and Landscape -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+                    <!-- Default 4:3 -->
+                    <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 12px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                      <input type="radio" name="template-selector" value="default" style="display: none;" ${templateType === 'default' ? 'checked' : ''}>
+                      <div style="width: 32px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        <div style="font-size: 8px; color: #303030; font-weight: bold;">4:3</div>
+                      </div>
+                      <div style="font-size: 11px; font-weight: bold; text-align: center;">Default</div>
+                      <div style="font-size: 9px; opacity: 0.8; text-align: center;">Standard</div>
                     </label>
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                      <input type="radio" name="template-selector" value="square" style="margin-right: 8px;" ${templateType === 'square' ? 'checked' : ''}>
-                      <span style="font-size: 12px;">⬜ Square</span>
-                    </label>
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                      <input type="radio" name="template-selector" value="portrait" style="margin-right: 8px;" ${templateType === 'portrait' ? 'checked' : ''}>
-                      <span style="font-size: 12px;">📱 Portrait</span>
-                    </label>
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                      <input type="radio" name="template-selector" value="landscape" style="margin-right: 8px;" ${templateType === 'landscape' ? 'checked' : ''}>
-                      <span style="font-size: 12px;">💻 Landscape</span>
+
+                    <!-- Landscape 16:9 -->
+                    <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 12px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                      <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+                      <div style="width: 40px; height: 22px; background: #F2C31B; border-radius: 2px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        <div style="font-size: 8px; color: #303030; font-weight: bold;">16:9</div>
+                      </div>
+                      <div style="font-size: 11px; font-weight: bold; text-align: center;">Landscape</div>
+                      <div style="font-size: 9px; opacity: 0.8; text-align: center;">YouTube</div>
                     </label>
                   </div>
+
+                  <!-- Second row: Square, Portrait, Blog -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <!-- Square 1:1 -->
+                    <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                      <input type="radio" name="template-selector" value="square" style="display: none;" ${templateType === 'square' ? 'checked' : ''}>
+                      <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        <div style="font-size: 7px; color: #303030; font-weight: bold;">1:1</div>
+                      </div>
+                      <div style="font-size: 10px; font-weight: bold; text-align: center;">Square</div>
+                      <div style="font-size: 8px; opacity: 0.8; text-align: center;">Instagram</div>
+                    </label>
+
+                    <!-- Portrait 4:5 -->
+                    <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                      <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'portrait' ? 'checked' : ''}>
+                      <div style="width: 19px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        <div style="font-size: 7px; color: #303030; font-weight: bold;">4:5</div>
+                      </div>
+                      <div style="font-size: 10px; font-weight: bold; text-align: center;">Portrait</div>
+                      <div style="font-size: 8px; opacity: 0.8; text-align: center;">LinkedIn</div>
+                    </label>
+
+                    <!-- Blog 3:2 -->
+                    <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                      <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'blog' ? 'checked' : ''}>
+                      <div style="width: 28px; height: 19px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        <div style="font-size: 7px; color: #303030; font-weight: bold;">3:2</div>
+                      </div>
+                      <div style="font-size: 10px; font-weight: bold; text-align: center;">Blog</div>
+                      <div style="font-size: 8px; opacity: 0.8; text-align: center;">Articles</div>
+                    </label>
+                  </div>
+
                 </div>
                 ` : ''}
 
-                <!-- View mode toggle -->
-                <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
-                  <button id="fit-screen-btn" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                    📺 Fit to Screen
-                  </button>
-                  <button id="actual-size-btn" style="background: #F2C31B; color: #303030; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                    📐 Actual Size
-                  </button>
-                </div>
                 
                 <!-- Close button -->
                 <button id="close-photo-btn" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px); z-index: 10;">
@@ -2620,48 +2998,20 @@
             // Prevent background scrolling when modal is open
             document.body.style.overflow = 'hidden';
 
-            // Get elements for view mode switching
+            // Set default to fit screen mode
             const imgElement = modal.querySelector('#fullscreen-photo');
             const imgContainer = modal.querySelector('#photo-container');
             
-            // Set initial state to fit screen
+            // Configure for fit-to-screen display
             imgElement.style.maxWidth = '100%';
             imgElement.style.maxHeight = '100%';
             imgElement.style.width = 'auto';
             imgElement.style.height = 'auto';
-            
-            // View mode toggle functionality
-            document.getElementById('fit-screen-btn').addEventListener('click', () => {
-              // Fit to screen mode - scale image to fit within viewport
-              imgElement.style.maxWidth = '100%';
-              imgElement.style.maxHeight = '100%';
-              imgElement.style.width = 'auto';
-              imgElement.style.height = 'auto';
-              imgContainer.style.maxWidth = '95vw';
-              imgContainer.style.maxHeight = '95vh';
-              imgContainer.style.overflow = 'hidden';
-              
-              // Update button states
-              document.getElementById('fit-screen-btn').style.background = '#667eea';
-              document.getElementById('actual-size-btn').style.background = '#e1e5e9';
-            });
-            
-            document.getElementById('actual-size-btn').addEventListener('click', () => {
-              // Actual size mode - show image at its true dimensions
-              imgElement.style.maxWidth = 'none';
-              imgElement.style.maxHeight = 'none';
-              imgElement.style.width = 'auto';
-              imgElement.style.height = 'auto';
-              imgContainer.style.maxWidth = 'none';
-              imgContainer.style.maxHeight = 'none';
-              imgContainer.style.overflow = 'auto';
-              
-              // Update button states
-              document.getElementById('fit-screen-btn').style.background = '#e1e5e9';
-              document.getElementById('actual-size-btn').style.background = '#F2C31B';
-            });
+            imgContainer.style.maxWidth = '95vw';
+            imgContainer.style.maxHeight = '95vh';
+            imgContainer.style.overflow = 'hidden';
 
-            // Template selector radio buttons (only for combined photos)
+            // Template selector functionality (only for combined photos)
             if (photo.mode === 'mix') {
               const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
               templateRadios.forEach(radio => {
@@ -3726,6 +4076,7 @@
             return;
           }
           
+          // Reattach radio button listeners (always visible now)
           const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
           console.log('Found template radios:', templateRadios.length);
           
@@ -4155,10 +4506,11 @@
         // Default sizes for different templates
         getTemplateSizes() {
           return {
-            'default': { width: 800, height: 600 }, // Current default
-            'square': { width: 800, height: 800 },   // 1:1 square
-            'portrait': { width: 800, height: 1000 }, // 4:5 portrait
-            'landscape': { width: 800, height: 450 }  // 16:9 landscape
+            'default': { width: 800, height: 600 }, // 4:3 default
+            'square': { width: 800, height: 800 },   // 1:1 square - Instagram & Facebook
+            'portrait': { width: 800, height: 1000 }, // 4:5 portrait - Instagram & LinkedIn
+            'landscape': { width: 800, height: 450 }, // 16:9 landscape - Facebook & YouTube
+            'blog': { width: 800, height: 533 }      // 3:2 blog - blogs & web articles
           };
         }
 
@@ -4221,6 +4573,18 @@
               }
               break;
               
+            case 'blog': // 3:2
+              if (orientation === 'vertical') {
+                // Vertical photos: Crop for 3:2 ratio
+                cropWidth = W;
+                cropHeight = W * 1.5; // 3:2 ratio
+              } else {
+                // Horizontal photos: Use for 3:2 combination
+                cropWidth = W;
+                cropHeight = H;
+              }
+              break;
+              
             default: // 'default' - preserve original ratios
               cropWidth = W;
               cropHeight = H;
@@ -4248,6 +4612,9 @@
           if (!splitType) {
             if (templateType === 'landscape') {
               // 16:9 → always use side-by-side for optimal ratio
+              splitType = 'horizontal';
+            } else if (templateType === 'blog') {
+              // 3:2 → use side-by-side for optimal ratio
               splitType = 'horizontal';
             } else if (templateType === 'portrait') {
               // 4:5 → use stacked for optimal ratio
@@ -4485,98 +4852,6 @@
           }, 100);
         }
 
-        showPhotoEnlarged(photo) {
-          // Clean up any existing enlarged photo modals first
-          const existingModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 4000"]');
-          existingModals.forEach(existing => {
-            if (existing.parentNode) {
-              document.body.removeChild(existing);
-            }
-          });
-
-          const modal = document.createElement('div');
-          modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); z-index: 4000; display: flex;
-            align-items: center; justify-content: center; padding: 20px;
-            opacity: 0; transition: opacity 0.3s ease-in-out;
-          `;
-
-          modal.innerHTML = `
-            <div style="position: relative; max-width: 90vw; max-height: 90vh; transform: scale(0.8); transition: transform 0.3s ease-in-out;">
-              <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);" />
-              
-              <!-- Photo info overlay -->
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 20px; text-align: center; color: white; border-radius: 0 0 12px 12px;">
-                <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
-                  ${photo.name}
-                </div>
-                <div style="font-size: 14px; opacity: 0.9;">
-                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
-                </div>
-                <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">
-                  ${new Date(photo.timestamp).toLocaleString()}
-                </div>
-              </div>
-              
-              <!-- Close button -->
-              <button id="close-enlarged-photo-btn" style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.7)'">
-                ✕
-              </button>
-            </div>
-          `;
-
-          document.body.appendChild(modal);
-
-          // Trigger animation
-          setTimeout(() => {
-            modal.style.opacity = '1';
-            const imgContainer = modal.querySelector('div');
-            imgContainer.style.transform = 'scale(1)';
-          }, 10);
-
-          // Close button event listener
-          document.getElementById('close-enlarged-photo-btn').addEventListener('click', () => {
-            modal.style.opacity = '0';
-            const imgContainer = modal.querySelector('div');
-            imgContainer.style.transform = 'scale(0.8)';
-            setTimeout(() => {
-              if (modal.parentNode) {
-                document.body.removeChild(modal);
-              }
-            }, 300);
-          });
-
-          // Close on background click
-          modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-              modal.style.opacity = '0';
-              const imgContainer = modal.querySelector('div');
-              imgContainer.style.transform = 'scale(0.8)';
-              setTimeout(() => {
-                if (modal.parentNode) {
-                  document.body.removeChild(modal);
-                }
-              }, 300);
-            }
-          });
-
-          // Close on Escape key
-          const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-              modal.style.opacity = '0';
-              const imgContainer = modal.querySelector('div');
-              imgContainer.style.transform = 'scale(0.8)';
-              setTimeout(() => {
-                if (modal.parentNode) {
-                  document.body.removeChild(modal);
-                }
-                document.removeEventListener('keydown', handleEscape);
-              }, 300);
-            }
-          };
-          document.addEventListener('keydown', handleEscape);
-        }
 
         savePhotos() {
           try {
