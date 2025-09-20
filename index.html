@@ -1632,7 +1632,7 @@
             this.handleUploadStart(modal);
           });
 
-          // Update album name when city changes
+          // Update album name and URL when city changes
           document.getElementById('upload-city-select').addEventListener('change', (e) => {
             const albumNameInput = document.getElementById('album-name-input');
             const currentCleaner = new URLSearchParams(window.location.search).get('cleaner') || 'Kate';
@@ -1645,6 +1645,18 @@
             });
             const newAlbumName = `${currentCleaner} - ${this.formatLocationName(selectedLocation)} - ${dateStr}`;
             albumNameInput.value = newAlbumName;
+            
+            // Update URL parameters to reflect new city selection
+            if (selectedLocation) {
+              const newUrl = `${window.location.origin}${window.location.pathname}?cleaner=${encodeURIComponent(currentCleaner)}&location=${encodeURIComponent(selectedLocation)}`;
+              
+              // Update URL without page reload using pushState
+              window.history.pushState({ cleaner: currentCleaner, location: selectedLocation }, '', newUrl);
+              
+              // Update the header to reflect the new city (if needed)
+              // Since the header shows cleaner name, no change needed there
+              console.log('Updated URL to:', newUrl);
+            }
           });
         }
 
