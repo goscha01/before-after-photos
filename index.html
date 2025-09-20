@@ -219,15 +219,30 @@
           this.currentTab = 'photo';
           this.isLandscape = false;
           this.currentTemplate = 'default'; // Default template for all photos
+          this.currentBeforeZoom = 1; // Initialize default zoom level
           this.loadPhotos(); // Load photos first
           this.init();
         }
         
         init() {
-          // Check if user is signed in (has URL parameters)
+          // Check if user is signed in (has URL parameters or stored data)
           const urlParams = new URLSearchParams(window.location.search);
-          const cleaner = urlParams.get('cleaner');
-          const location = urlParams.get('location');
+          let cleaner = urlParams.get('cleaner');
+          let location = urlParams.get('location');
+          
+          // If no URL params, check localStorage for stored user data
+          if (!cleaner || !location) {
+            const storedUserData = this.getStoredUserData();
+            if (storedUserData.cleaner && storedUserData.location) {
+              // Auto-login with stored data
+              cleaner = storedUserData.cleaner;
+              location = storedUserData.location;
+              
+              // Update URL with stored data (optional - for consistency)
+              const newUrl = `${window.location.origin}${window.location.pathname}?cleaner=${encodeURIComponent(cleaner)}&location=${encodeURIComponent(location)}`;
+              window.history.replaceState({ cleaner, location }, '', newUrl);
+            }
+          }
           
           if (!cleaner || !location) {
             // Show sign-in screen
@@ -329,6 +344,37 @@
           if (rootElement) {
             rootElement.innerHTML = this.getSignInHTML();
             this.attachSignInListeners();
+            this.populateStoredUserData();
+          }
+        }
+
+        populateStoredUserData() {
+          const storedData = this.getStoredUserData();
+          if (storedData.cleaner || storedData.location) {
+            const nameInput = document.getElementById('signin-name');
+            const citySelect = document.getElementById('signin-city');
+            const clearDataContainer = document.getElementById('clear-data-container');
+            
+            if (nameInput && storedData.cleaner) {
+              nameInput.value = storedData.cleaner;
+            }
+            
+            if (citySelect && storedData.location) {
+              citySelect.value = storedData.location;
+            }
+            
+            // Show the clear data button if we populated any data
+            if (clearDataContainer) {
+              clearDataContainer.style.display = 'block';
+            }
+            
+            // Add event listener for clear data button
+            const clearDataBtn = document.getElementById('clear-data-btn');
+            if (clearDataBtn) {
+              clearDataBtn.addEventListener('click', () => {
+                this.showClearDataWarning(nameInput, citySelect, clearDataContainer);
+              });
+            }
           }
         }
 
@@ -377,6 +423,13 @@
                   <button type="submit" id="signin-btn" style="width: 100%; background: #F2C31B; color: #303030; border: none; padding: 16px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(242, 195, 27, 0.3);" onmouseover="this.style.background='#E6B800'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(242, 195, 27, 0.4)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(242, 195, 27, 0.3)'">
                     🚀 Start Taking Photos
                   </button>
+                  
+                  <!-- Clear stored data link (if data exists) -->
+                  <div id="clear-data-container" style="margin-top: 16px; text-align: center; display: none;">
+                    <button type="button" id="clear-data-btn" style="background: none; border: none; color: #666; font-size: 14px; cursor: pointer; text-decoration: underline;">
+                      🔄 Use different name/location
+                    </button>
+                  </div>
                 </form>
 
                 <!-- Footer -->
@@ -442,6 +495,9 @@
             alert('Please enter a valid name (at least 2 characters)');
             return;
           }
+
+          // Save user data to localStorage for future use
+          this.saveUserData(name, city);
 
           // Update URL with parameters and reload
           const newUrl = `${window.location.origin}${window.location.pathname}?cleaner=${encodeURIComponent(name)}&location=${encodeURIComponent(city)}`;
@@ -732,7 +788,7 @@
                   </div>
                   
                   <!-- Zoom controls -->
-                  <div id="zoom-controls-comparison" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                  <div id="zoom-controls-comparison" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                     <button class="zoom-btn-comparison" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                     <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
@@ -777,7 +833,7 @@
                   </div>
                   
                   <!-- Zoom controls for portrait mode comparison -->
-                  <div id="zoom-controls-comparison" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                  <div id="zoom-controls-comparison" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                     <button class="zoom-btn-comparison" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                     <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
@@ -872,8 +928,13 @@
                   📷 All Photos
                 </button>
 
-                <!-- Center - Cleaner name -->
-                <div style="font-size: 16px; font-weight: bold;">${currentCleaner}</div>
+                <!-- Center - Cleaner name with change user option -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="font-size: 16px; font-weight: bold;">${currentCleaner}</div>
+                  <button id="change-user-btn" style="background: none; border: none; color: #666; font-size: 12px; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.2s;" title="Change User" onmouseover="this.style.background='rgba(0,0,0,0.1)'; this.style.color='#303030'" onmouseout="this.style.background='none'; this.style.color='#666'">
+                    👤
+                  </button>
+                </div>
 
                 <!-- Right side - Upload button -->
                 <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
@@ -3212,50 +3273,6 @@
                     </button>
                   </div>
                 `);
-              } else {
-                // Show split-screen preview if no combined photo exists yet
-                const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
-
-                gridItems.push(`
-                  <div class="photo-item combined-preview" data-before-photo-id="${beforePhoto.id}" data-after-photo-id="${afterPhoto.id}" style="border: 1px solid #10B981; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; background: #f8f9fa;">
-                    <!-- 1:1 Combined preview mask -->
-                    <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
-                      <!-- Before photo (top half) -->
-                      <div style="height: 50%; overflow: hidden; position: relative;">
-                        <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                        <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">BEFORE</div>
-                      </div>
-                      <!-- Divider line -->
-                      <div style="height: 2px; background: #000;"></div>
-                      <!-- After photo (bottom half) -->
-                      <div style="height: 50%; overflow: hidden; position: relative;">
-                        <img src="${afterPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
-                        <div style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px; font-weight: bold;">AFTER</div>
-                      </div>
-                    </div>
-
-                    <!-- Preview indicator -->
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; z-index: 10; backdrop-filter: blur(5px);">
-                      📐 Preview
-                    </div>
-
-                    <!-- Retake button -->
-                    <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 8px; left: 8px; background: #F2C31B; color: #303030; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10;">
-                      🔄
-                    </button>
-
-                    <!-- Transparent title overlay -->
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                      <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
-                      <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
-                    </div>
-
-                    <!-- Delete button -->
-                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(afterPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
-                      🗑️
-                    </button>
-                  </div>
-                `);
               }
             } else {
               // Show only before photo
@@ -3995,6 +4012,14 @@
             });
           }
           
+          // Change User button - clear stored data and reload to sign-in
+          const changeUserBtn = document.getElementById('change-user-btn');
+          if (changeUserBtn) {
+            changeUserBtn.addEventListener('click', () => {
+              this.showChangeUserWarning();
+            });
+          }
+          
           // Location select
           const locationSelect = document.getElementById('location-select');
           if (locationSelect) {
@@ -4354,7 +4379,7 @@
               video.srcObject = stream;
               
               let currentFacingMode = 'environment';
-              let currentZoom = 1; // Start with 1x zoom
+              let currentZoom = this.currentBeforePhoto?.zoomLevel || 1; // Use before photo's zoom level
               
               // Initialize zoom controls for comparison camera
               this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
@@ -4432,7 +4457,7 @@
                 video.srcObject = stream;
                 
                 let currentFacingMode = 'environment';
-                let currentZoom = 1; // Start with 1x zoom
+                let currentZoom = linkedBeforePhoto?.zoomLevel || 1; // Use before photo's zoom level
                 
                 // Initialize zoom controls for comparison camera
                 this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
@@ -4863,7 +4888,7 @@
             video.srcObject = stream;
             
             let currentFacingMode = 'environment';
-            let currentZoom = 1; // Start with 1x zoom
+            let currentZoom = this.currentBeforePhoto?.zoomLevel || 1; // Use before photo's zoom level
             
             // Initialize zoom controls for comparison camera
             this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
@@ -6055,6 +6080,7 @@
             // Store current facing mode and zoom level
             let currentFacingMode = 'environment'; // Start with back camera
             let currentZoom = 1; // Start with 1x zoom
+            this.currentBeforeZoom = currentZoom; // Track zoom for before photos
             
             // Initialize zoom controls
             this.initializeZoomControls(stream, 'camera-video', currentZoom);
@@ -6154,6 +6180,25 @@
 
           const zoomButtons = zoomControls.querySelectorAll(`.${zoomButtonClass}`);
           
+          // Set initial active button based on currentZoom
+          zoomButtons.forEach(btn => {
+            const btnZoom = parseFloat(btn.dataset.zoom);
+            if (btnZoom === currentZoom) {
+              btn.classList.add('active');
+              btn.style.background = '#F2C31B';
+              btn.style.color = '#303030';
+            } else {
+              btn.classList.remove('active');
+              btn.style.background = 'rgba(255,255,255,0.2)';
+              btn.style.color = 'white';
+            }
+          });
+          
+          // Apply initial zoom level
+          setTimeout(() => {
+            this.applyZoom(stream, videoElementId, currentZoom);
+          }, 100);
+          
           // Set up zoom button event listeners
           zoomButtons.forEach(button => {
             button.addEventListener('click', async () => {
@@ -6169,6 +6214,11 @@
               button.classList.add('active');
               button.style.background = '#F2C31B';
               button.style.color = '#303030';
+              
+              // Track zoom level for before photos
+              if (mode === 'before') {
+                this.currentBeforeZoom = newZoom;
+              }
               
               // Apply zoom to video stream
               await this.applyZoom(stream, videoElementId, newZoom);
@@ -6466,7 +6516,8 @@
             room: this.currentRoom,
             mode: photoMode,
             name: photoName,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            zoomLevel: this.currentBeforeZoom || 1 // Store the zoom level used
           };
           
           console.log('Photo created:', photo);
@@ -6720,6 +6771,317 @@
           if (saved) {
             this.photos = JSON.parse(saved);
           }
+        }
+
+        // User data storage methods
+        getStoredUserData() {
+          const stored = localStorage.getItem('user-preferences');
+          if (stored) {
+            try {
+              return JSON.parse(stored);
+            } catch (e) {
+              console.error('Error parsing stored user data:', e);
+              return {};
+            }
+          }
+          return {};
+        }
+
+        saveUserData(cleaner, location) {
+          const userData = {
+            cleaner: cleaner,
+            location: location,
+            savedAt: Date.now()
+          };
+          localStorage.setItem('user-preferences', JSON.stringify(userData));
+          console.log('User preferences saved:', userData);
+        }
+
+        clearUserData() {
+          localStorage.removeItem('user-preferences');
+          console.log('User preferences cleared');
+        }
+
+        showChangeUserWarning() {
+          // Get current user info for the warning
+          const urlParams = new URLSearchParams(window.location.search);
+          const currentCleaner = urlParams.get('cleaner') || 'Current User';
+          
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: rgba(0,0,0,0.6); z-index: 3000; display: flex; 
+            align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(5px);
+          `;
+          
+          modal.innerHTML = `
+            <div style="
+              background: white; 
+              border-radius: 20px; 
+              padding: 40px; 
+              max-width: 400px; 
+              width: 100%; 
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+              text-align: center;
+              font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;
+              animation: slideIn 0.3s ease-out;
+            ">
+              <!-- Warning Icon -->
+              <div style="font-size: 64px; margin-bottom: 20px; color: #F2C31B;">
+                ⚠️
+              </div>
+              
+              <!-- Title -->
+              <h2 style="margin: 0 0 16px 0; color: #303030; font-size: 24px; font-weight: bold;">
+                Switch User?
+              </h2>
+              
+              <!-- Message -->
+              <div style="margin-bottom: 24px; color: #666; font-size: 16px; line-height: 1.5;">
+                <p style="margin: 0 0 12px 0;">You are currently signed in as:</p>
+                <p style="margin: 0 0 16px 0; font-weight: bold; color: #303030; font-size: 18px;">
+                  ${currentCleaner}
+                </p>
+                <p style="margin: 0; font-size: 14px;">
+                  Switching users will clear your stored preferences and you'll need to sign in again.
+                </p>
+              </div>
+              
+              <!-- Buttons -->
+              <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cancel-change-user" style="
+                  background: #f8f9fa; 
+                  color: #666; 
+                  border: 2px solid #e1e5e9; 
+                  padding: 12px 24px; 
+                  border-radius: 10px; 
+                  font-size: 16px; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  transition: all 0.2s;
+                  font-family: inherit;
+                " onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#d1d5db'" onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#e1e5e9'">
+                  Cancel
+                </button>
+                
+                <button id="confirm-change-user" style="
+                  background: #F2C31B; 
+                  color: #303030; 
+                  border: 2px solid #F2C31B; 
+                  padding: 12px 24px; 
+                  border-radius: 10px; 
+                  font-size: 16px; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  transition: all 0.2s;
+                  font-family: inherit;
+                  box-shadow: 0 4px 12px rgba(242, 195, 27, 0.3);
+                " onmouseover="this.style.background='#E6B800'; this.style.borderColor='#E6B800'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#F2C31B'; this.style.borderColor='#F2C31B'; this.style.transform='translateY(0)'">
+                  Switch User
+                </button>
+              </div>
+            </div>
+            
+            <style>
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: scale(0.8) translateY(20px);
+                }
+                to {
+                  opacity: 1;
+                  transform: scale(1) translateY(0);
+                }
+              }
+            </style>
+          `;
+          
+          document.body.appendChild(modal);
+          
+          // Prevent background scrolling
+          document.body.style.overflow = 'hidden';
+          
+          // Event listeners
+          document.getElementById('cancel-change-user').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+          });
+          
+          document.getElementById('confirm-change-user').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+            
+            // Clear user data and redirect
+            this.clearUserData();
+            window.location.href = `${window.location.origin}${window.location.pathname}`;
+          });
+          
+          // Close on backdrop click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+            }
+          });
+          
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              if (document.body.contains(modal)) {
+                document.body.removeChild(modal);
+                document.body.style.overflow = '';
+              }
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
+        }
+
+        showClearDataWarning(nameInput, citySelect, clearDataContainer) {
+          // Get stored user info for the warning
+          const storedData = this.getStoredUserData();
+          const storedName = storedData.cleaner || 'Unknown User';
+          const storedLocation = storedData.location || 'Unknown Location';
+          
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: rgba(0,0,0,0.6); z-index: 3000; display: flex; 
+            align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(5px);
+          `;
+          
+          modal.innerHTML = `
+            <div style="
+              background: white; 
+              border-radius: 20px; 
+              padding: 40px; 
+              max-width: 400px; 
+              width: 100%; 
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+              text-align: center;
+              font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;
+              animation: slideIn 0.3s ease-out;
+            ">
+              <!-- Warning Icon -->
+              <div style="font-size: 64px; margin-bottom: 20px; color: #F2C31B;">
+                🗑️
+              </div>
+              
+              <!-- Title -->
+              <h2 style="margin: 0 0 16px 0; color: #303030; font-size: 24px; font-weight: bold;">
+                Clear Stored Data?
+              </h2>
+              
+              <!-- Message -->
+              <div style="margin-bottom: 24px; color: #666; font-size: 16px; line-height: 1.5;">
+                <p style="margin: 0 0 12px 0;">This will remove your stored information:</p>
+                <div style="margin: 0 0 16px 0; padding: 16px; background: #f8f9fa; border-radius: 10px; border: 2px solid #e1e5e9;">
+                  <p style="margin: 0 0 8px 0; font-weight: bold; color: #303030;">
+                    📝 Name: ${storedName}
+                  </p>
+                  <p style="margin: 0; font-weight: bold; color: #303030;">
+                    📍 Location: ${storedLocation.charAt(0).toUpperCase() + storedLocation.slice(1).replace('-', ' ')}
+                  </p>
+                </div>
+                <p style="margin: 0; font-size: 14px;">
+                  You'll need to enter this information again next time you visit.
+                </p>
+              </div>
+              
+              <!-- Buttons -->
+              <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cancel-clear-data" style="
+                  background: #f8f9fa; 
+                  color: #666; 
+                  border: 2px solid #e1e5e9; 
+                  padding: 12px 24px; 
+                  border-radius: 10px; 
+                  font-size: 16px; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  transition: all 0.2s;
+                  font-family: inherit;
+                " onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#d1d5db'" onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#e1e5e9'">
+                  Keep Data
+                </button>
+                
+                <button id="confirm-clear-data" style="
+                  background: #dc2626; 
+                  color: white; 
+                  border: 2px solid #dc2626; 
+                  padding: 12px 24px; 
+                  border-radius: 10px; 
+                  font-size: 16px; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  transition: all 0.2s;
+                  font-family: inherit;
+                  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+                " onmouseover="this.style.background='#b91c1c'; this.style.borderColor='#b91c1c'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#dc2626'; this.style.borderColor='#dc2626'; this.style.transform='translateY(0)'">
+                  Clear Data
+                </button>
+              </div>
+            </div>
+            
+            <style>
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: scale(0.8) translateY(20px);
+                }
+                to {
+                  opacity: 1;
+                  transform: scale(1) translateY(0);
+                }
+              }
+            </style>
+          `;
+          
+          document.body.appendChild(modal);
+          
+          // Prevent background scrolling
+          document.body.style.overflow = 'hidden';
+          
+          // Event listeners
+          document.getElementById('cancel-clear-data').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+          });
+          
+          document.getElementById('confirm-clear-data').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+            
+            // Clear user data and form
+            this.clearUserData();
+            // Clear the form fields
+            if (nameInput) nameInput.value = '';
+            if (citySelect) citySelect.value = '';
+            // Hide the clear button
+            if (clearDataContainer) clearDataContainer.style.display = 'none';
+          });
+          
+          // Close on backdrop click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+            }
+          });
+          
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              if (document.body.contains(modal)) {
+                document.body.removeChild(modal);
+                document.body.style.overflow = '';
+              }
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
         }
       }
       
