@@ -2064,14 +2064,19 @@
                 setTimeout(() => {
                   document.body.removeChild(modal);
                   document.body.style.overflow = '';
-                  alert(`Successfully uploaded ${successCount} files to "${options.albumName}"`);
+                  this.showUploadSuccessNotification(successCount, options.albumName);
                 }, 2000);
               } else {
                 statusDiv.textContent = `Upload completed with ${errorCount} errors`;
                 setTimeout(() => {
                   document.body.removeChild(modal);
                   document.body.style.overflow = '';
-                  alert(`Upload completed:\n- ${successCount} files uploaded successfully\n- ${errorCount} files failed\n\nCheck console for error details.`);
+                  // Show custom notification for partial success
+                  this.showSuccessNotification(
+                    'Upload Partially Complete', 
+                    `${successCount} photos uploaded successfully, ${errorCount} failed. Check console for details.`,
+                    '⚠️'
+                  );
                   console.log('Upload errors:', errors);
                 }, 2000);
               }
@@ -2385,14 +2390,19 @@
             setTimeout(() => {
               document.body.removeChild(modal);
               document.body.style.overflow = '';
-              alert(`Successfully uploaded ${successCount} files to "${options.albumName}"`);
+              this.showUploadSuccessNotification(successCount, options.albumName);
             }, 2000);
           } else {
             statusDiv.textContent = `Upload completed with ${errorCount} errors`;
             setTimeout(() => {
               document.body.removeChild(modal);
               document.body.style.overflow = '';
-              alert(`Upload completed:\n- ${successCount} files uploaded successfully\n- ${errorCount} files failed\n\nCheck console for error details.`);
+              // Show custom notification for partial success
+              this.showSuccessNotification(
+                'Upload Partially Complete', 
+                `${successCount} photos uploaded successfully, ${errorCount} failed. Check console for details.`,
+                '⚠️'
+              );
               console.log('Upload errors:', errors);
             }, 2000);
           }
@@ -4213,6 +4223,9 @@
             // Save changes to localStorage
             this.savePhotos();
             
+            // Show success notification for individual photo deletion
+            this.showDeleteSuccessNotification(1);
+            
             // Reassign names to maintain proper sequential numbering
             this.reassignPhotoNames();
 
@@ -4314,9 +4327,9 @@
           this.updateModalPhotoGrid();
 
 
-          // Show confirmation message
+          // Show success notification
           setTimeout(() => {
-            alert('All photos have been deleted successfully!');
+            this.showDeleteSuccessNotification(deletedCount);
           }, 100);
         }
 
@@ -7082,6 +7095,119 @@
             }
           };
           document.addEventListener('keydown', handleEscape);
+        }
+
+        showSuccessNotification(title, message, icon = '✅') {
+          const notification = document.createElement('div');
+          notification.style.cssText = `
+            position: fixed; top: 20px; right: 20px; 
+            background: white; border-radius: 12px; 
+            padding: 20px; max-width: 350px; width: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            z-index: 4000; display: flex; align-items: flex-start; gap: 12px;
+            font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;
+            border-left: 4px solid #10B981;
+            animation: slideInRight 0.4s ease-out;
+          `;
+          
+          notification.innerHTML = `
+            <!-- Success Icon -->
+            <div style="font-size: 24px; color: #10B981; margin-top: 2px;">
+              ${icon}
+            </div>
+            
+            <!-- Content -->
+            <div style="flex: 1;">
+              <h3 style="margin: 0 0 8px 0; color: #303030; font-size: 18px; font-weight: bold;">
+                ${title}
+              </h3>
+              <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
+                ${message}
+              </p>
+            </div>
+            
+            <!-- Close button -->
+            <button id="close-notification" style="
+              background: none; border: none; color: #999; 
+              font-size: 16px; cursor: pointer; padding: 4px;
+              border-radius: 4px; transition: all 0.2s;
+            " onmouseover="this.style.background='#f3f4f6'; this.style.color='#666'" onmouseout="this.style.background='none'; this.style.color='#999'">
+              ✕
+            </button>
+            
+            <style>
+              @keyframes slideInRight {
+                from {
+                  opacity: 0;
+                  transform: translateX(100px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateX(0);
+                }
+              }
+              
+              @keyframes slideOutRight {
+                from {
+                  opacity: 1;
+                  transform: translateX(0);
+                }
+                to {
+                  opacity: 0;
+                  transform: translateX(100px);
+                }
+              }
+            </style>
+          `;
+          
+          document.body.appendChild(notification);
+          
+          // Close button functionality
+          const closeBtn = notification.querySelector('#close-notification');
+          closeBtn.addEventListener('click', () => {
+            this.removeNotification(notification);
+          });
+          
+          // Auto-remove after 4 seconds
+          setTimeout(() => {
+            if (document.body.contains(notification)) {
+              this.removeNotification(notification);
+            }
+          }, 4000);
+          
+          // Click anywhere on notification to close
+          notification.addEventListener('click', (e) => {
+            if (e.target !== closeBtn) {
+              this.removeNotification(notification);
+            }
+          });
+        }
+
+        removeNotification(notification) {
+          notification.style.animation = 'slideOutRight 0.3s ease-in';
+          setTimeout(() => {
+            if (document.body.contains(notification)) {
+              document.body.removeChild(notification);
+            }
+          }, 300);
+        }
+
+        showDeleteSuccessNotification(count = 1) {
+          const title = count > 1 ? 'Photos Deleted!' : 'Photo Deleted!';
+          const message = count > 1 
+            ? `Successfully deleted ${count} photos from your gallery.`
+            : 'Photo has been successfully removed from your gallery.';
+          
+          this.showSuccessNotification(title, message, '🗑️');
+        }
+
+        showUploadSuccessNotification(count, albumName) {
+          const title = count > 1 ? 'Photos Uploaded!' : 'Photo Uploaded!';
+          const message = count > 1
+            ? `Successfully uploaded ${count} photos to "${albumName}".`
+            : `Successfully uploaded photo to "${albumName}".`;
+          
+          this.showSuccessNotification(title, message, '📤');
         }
       }
       
