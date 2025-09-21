@@ -2214,7 +2214,7 @@
 
               <div style="margin-bottom: 20px;">
                 <div style="font-size: 18px; font-weight: bold; color: #303030; margin-bottom: 8px;">
-                  <span id="upload-current">0</span> / <span id="upload-total">${photos.length}</span> photos
+                  <span id="upload-current">0</span> / <span id="upload-total">${photos.length * Object.keys(options.formats).filter(key => options.formats[key]).length}</span> uploads
                 </div>
                 <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
                   <div id="upload-progress-bar" style="height: 100%; background: #F2C31B; width: 0%; transition: width 0.3s ease;"></div>
@@ -2300,8 +2300,8 @@
               let filename = `${photo.name}_${photo.mode}`;
               
               // Generate different formats if needed
-              if (format !== 'default' && photo.mode === 'mix') {
-                console.log(`Generating ${format} format for ${photo.name}`);
+              if (format !== 'default') {
+                console.log(`Generating ${format} format for ${photo.name} (${photo.mode})`);
                 // Generate the specific format on-the-fly
                 photoData = await this.generatePhotoFormat(photo, format);
                 filename = `${photo.name}_${photo.mode}_${format}`;
@@ -2435,13 +2435,13 @@
               const selectedFormats = Object.keys(options.formats).filter(key => options.formats[key]);
               console.log(`Formats to upload for ${photo.name}:`, selectedFormats);
               
-              for (let formatIndex = 0; formatIndex < actualFormats.length; formatIndex++) {
+              for (let formatIndex = 0; formatIndex < selectedFormats.length; formatIndex++) {
                 if (cancelled) {
                   console.log('Upload cancelled during format processing');
                   return;
                 }
                 
-                const format = actualFormats[formatIndex];
+                const format = selectedFormats[formatIndex];
                 const formatLabel = format === 'default' ? '' : ` (${format})`;
                 
                 statusDiv.textContent = `Uploading ${photo.mode} photo: ${photo.name}${formatLabel}`;
@@ -2463,7 +2463,7 @@
                 }
                 
                 // Update progress for each format
-                const totalUploads = photos.length; // Each photo gets one format
+                const totalUploads = photos.length * selectedFormats.length; // Each photo gets multiple formats
                 
                 const currentUpload = uploadedFiles.length + errors.length;
                 currentSpan.textContent = currentUpload;
@@ -2556,12 +2556,13 @@
           const uploadTasks = [];
           
           photos.forEach(photo => {
-            // Use the selected format for all photos
-            const format = options.format;
-            const actualFormats = [format];
+            // Get all selected formats
+            const selectedFormats = Object.keys(options.formats).filter(key => options.formats[key]);
+            console.log(`📋 Selected formats for ${photo.name}:`, selectedFormats);
             
-            actualFormats.forEach(format => {
+            selectedFormats.forEach(format => {
               uploadTasks.push({ photo, format });
+              console.log(`➕ Added upload task: ${photo.name} - ${format}`);
             });
           });
 
@@ -2578,8 +2579,8 @@
               let filename = `${photo.name}_${photo.mode}`;
               
               // Generate different formats if needed
-              if (format !== 'default' && photo.mode === 'mix') {
-                console.log(`Generating ${format} format for ${photo.name}`);
+              if (format !== 'default') {
+                console.log(`Generating ${format} format for ${photo.name} (${photo.mode})`);
                 photoData = await this.generatePhotoFormat(photo, format);
                 filename = `${photo.name}_${photo.mode}_${format}`;
               }
@@ -2917,10 +2918,88 @@
         }
 
         async generatePhotoFormat(photo, format) {
-          return new Promise((resolve) => {
-            // For now, return the original photo data
-            // In the future, you could implement client-side format conversion here
-            resolve(photo.dataUrl);
+          console.log(`🔄 generatePhotoFormat called with format: ${format}`);
+          return new Promise((resolve, reject) => {
+            try {
+              const img = new Image();
+              img.onload = () => {
+                console.log(`📐 Converting ${photo.name} to ${format} format`);
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Define format dimensions
+                let targetWidth, targetHeight;
+                
+                switch (format) {
+                  case 'instagram-facebook':
+                    // 4:5 aspect ratio (portrait)
+                    targetWidth = 1080;
+                    targetHeight = 1350;
+                    break;
+                  case 'linkedin-business':
+                    // 1:1 aspect ratio (square)
+                    targetWidth = 1080;
+                    targetHeight = 1080;
+                    break;
+                  case 'websites-presentations':
+                    // 16:9 aspect ratio (landscape)
+                    targetWidth = 1920;
+                    targetHeight = 1080;
+                    break;
+                  case 'blog-marketing':
+                    // 3:2 aspect ratio
+                    targetWidth = 1200;
+                    targetHeight = 800;
+                    break;
+                  case 'original':
+                    // Keep original dimensions
+                    targetWidth = img.naturalWidth;
+                    targetHeight = img.naturalHeight;
+                    break;
+                  default:
+                    targetWidth = img.naturalWidth;
+                    targetHeight = img.naturalHeight;
+                }
+                
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                
+                console.log(`🎯 Target dimensions for ${format}: ${targetWidth}x${targetHeight}`);
+                console.log(`📏 Original image: ${img.naturalWidth}x${img.naturalHeight}`);
+                
+                // Calculate scaling to fit the image within the target dimensions while maintaining aspect ratio
+                const scaleX = targetWidth / img.naturalWidth;
+                const scaleY = targetHeight / img.naturalHeight;
+                const scale = Math.min(scaleX, scaleY);
+                
+                const scaledWidth = img.naturalWidth * scale;
+                const scaledHeight = img.naturalHeight * scale;
+                
+                // Center the image
+                const offsetX = (targetWidth - scaledWidth) / 2;
+                const offsetY = (targetHeight - scaledHeight) / 2;
+                
+                // Fill background with white
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, targetWidth, targetHeight);
+                
+                // Draw the scaled image
+                ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+                
+                // Convert to data URL
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                console.log(`✅ Format conversion complete for ${photo.name}: ${format} (${targetWidth}x${targetHeight})`);
+                resolve(dataUrl);
+              };
+              
+              img.onerror = () => {
+                reject(new Error('Failed to load image for format conversion'));
+              };
+              
+              img.src = photo.dataUrl;
+            } catch (error) {
+              reject(error);
+            }
           });
         }
 
