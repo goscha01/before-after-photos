@@ -1515,7 +1515,7 @@
             day: 'numeric', 
             year: 'numeric' 
           });
-          const defaultAlbumName = `${currentCleaner} - ${this.formatLocationName(currentLocation)} - ${dateStr}`;
+          const defaultAlbumName = `${currentCleaner} - ${dateStr}`;
 
           const modal = document.createElement('div');
           modal.style.cssText = `
@@ -1534,119 +1534,130 @@
           `;
 
           modal.innerHTML = `
-            <div style="background: white; border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+            <div style="background: white; border-radius: 16px; padding: 20px; max-width: 450px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
               <!-- Header -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0;">
-                <h2 style="margin: 0; color: #303030; font-size: 24px; font-weight: bold;">📤 Upload Photos</h2>
-                <button id="close-upload-popup" style="background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='#333'" onmouseout="this.style.color='#666'">✕</button>
+              <div style="background: #F2C31B; margin: -20px -20px 20px -20px; padding: 14px 20px; border-radius: 16px 16px 0 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <h2 style="margin: 0; color: #303030; font-size: 24px; font-weight: bold;">📤 Upload</h2>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <select id="upload-city-select" style="width: 120px; padding: 10px 12px; border: 2px solid #000; border-radius: 6px; font-size: 14px; background: #F2C31B; color: #000; font-weight: bold;">
+                      <option value="tampa" ${currentLocation === 'tampa' ? 'selected' : ''}>Tampa</option>
+                      <option value="st-petersburg" ${currentLocation === 'st-petersburg' ? 'selected' : ''}>St. Petersburg</option>
+                      <option value="jacksonville" ${currentLocation === 'jacksonville' ? 'selected' : ''}>Jacksonville</option>
+                      <option value="miami" ${currentLocation === 'miami' ? 'selected' : ''}>Miami</option>
+                    </select>
+                    <button id="close-upload-popup" style="background: none; border: none; font-size: 24px; color: #303030; cursor: pointer; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#303030'">✕</button>
+                  </div>
+                </div>
               </div>
 
-              <!-- Album Name -->
-              <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
+              <!-- Upload Source and Album Name -->
+              <div style="margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div>
+                    <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 6px; font-size: 15px;">
+                      📤 Source
+                    </label>
+                    <select id="upload-method-select" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; box-sizing: border-box;">
+                      <option value="phone">📱 Phone</option>
+                      <option value="google-drive">☁️ Google Drive</option>
+                      <option value="dropbox">📦 Dropbox</option>
+                      <option value="storage">💾 Storage</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 6px; font-size: 15px;">
                   📁 Album Name
                 </label>
-                <input type="text" id="album-name-input" value="${defaultAlbumName}" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; box-sizing: border-box;" placeholder="Enter album name">
+                    <input type="text" id="album-name-input" value="${defaultAlbumName}" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; color: #303030; box-sizing: border-box;" placeholder="Enter album name" readonly>
+                  </div>
+                </div>
               </div>
 
-              <!-- City Selection -->
-              <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
-                  📍 City
+              <!-- Quality -->
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <label style="font-weight: bold; color: #303030; font-size: 15px;">
+                    🗜️ Quality
                 </label>
-                <select id="upload-city-select" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; box-sizing: border-box;">
-                  <option value="tampa" ${currentLocation === 'tampa' ? 'selected' : ''}>Tampa</option>
-                  <option value="st-petersburg" ${currentLocation === 'st-petersburg' ? 'selected' : ''}>St. Petersburg</option>
-                  <option value="jacksonville" ${currentLocation === 'jacksonville' ? 'selected' : ''}>Jacksonville</option>
-                  <option value="miami" ${currentLocation === 'miami' ? 'selected' : ''}>Miami</option>
-                </select>
+                  <button id="quality-info-btn" style="background: none; border: none; font-size: 16px; color: #666; cursor: pointer; padding: 2px; border-radius: 4px;" onmouseover="this.style.color='#F2C31B'" onmouseout="this.style.color='#666'" title="Quality Options Guide">ℹ️</button>
+              </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="radio" name="quality" value="messenger" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #000;">Messenger (WhatsApp, SMS, Telegram)</span>
+                </label>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="radio" name="quality" value="social" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Social (Instagram, Facebook, LinkedIn)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="radio" name="quality" value="presentation" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Presentation (Websites, Portfolios)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="radio" name="quality" value="print" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Print (Flyers, Brochures, High-Detail)</span>
+                  </label>
+                </div>
               </div>
 
               <!-- Photo Types -->
-              <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 12px; font-size: 16px;">
-                  📸 Photo Types to Upload
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 10px; font-size: 15px;">
+                  📸 Photo Types
                 </label>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-before" checked style="margin-right: 8px; transform: scale(1.2);">
-                    <span style="font-size: 14px; color: #F2C31B; font-weight: bold;">📸 Before</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="checkbox" id="upload-before" checked style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; color: #000; font-weight: bold;">Before</span>
                   </label>
-                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#3B82F6'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-after" checked style="margin-right: 8px; transform: scale(1.2);">
-                    <span style="font-size: 14px; color: #3B82F6; font-weight: bold;">📷 After</span>
+                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="checkbox" id="upload-after" checked style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; color: #000; font-weight: bold;">After</span>
                   </label>
-                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#10B981'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-combined" checked style="margin-right: 8px; transform: scale(1.2);">
-                    <span style="font-size: 14px; color: #10B981; font-weight: bold;">🔄 Combined</span>
+                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="checkbox" id="upload-combined" checked style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; color: #000; font-weight: bold;">Combined</span>
                   </label>
                 </div>
               </div>
 
-              <!-- Compression Quality -->
-              <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
-                  🗜️ Compression Quality
-                </label>
-                <select id="compression-quality" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; box-sizing: border-box;">
-                  <option value="high">High Quality (1920×1080 pixels)</option>
-                  <option value="medium">Medium Quality (1600×900 pixels)</option>
-                  <option value="low" selected>Fast Upload (1024×576 pixels)</option>
-                  <option value="superfast">Super Fast (800×450 pixels)</option>
-                </select>
-              </div>
 
-              <!-- Photo Formats -->
-              <div style="margin-bottom: 24px;">
-                <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 12px; font-size: 16px;">
-                  📐 Photo Formats to Upload
-                </label>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px;">
-                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-default" checked style="margin-right: 8px; transform: scale(1.2);">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <div style="width: 16px; height: 12px; background: #F2C31B; border-radius: 1px;"></div>
-                      <span style="font-size: 13px; font-weight: bold;">Default (4:3)</span>
-                    </div>
+              <!-- Formats -->
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                  <label style="font-weight: bold; color: #303030; font-size: 15px;">
+                    📐 Formats
                   </label>
-                  <label style="display: flex; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-landscape" style="margin-right: 8px; transform: scale(1.2);">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <div style="width: 20px; height: 11px; background: #F2C31B; border-radius: 1px;"></div>
-                      <span style="font-size: 13px; font-weight: bold;">Landscape (16:9)</span>
-                    </div>
-                  </label>
+                  <button id="format-info-btn" style="background: none; border: none; font-size: 16px; color: #666; cursor: pointer; padding: 2px; border-radius: 4px;" onmouseover="this.style.color='#F2C31B'" onmouseout="this.style.color='#666'" title="Formats Guide">ℹ️</button>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                  <label style="display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-square" style="margin-bottom: 4px; transform: scale(1.2);">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                      <div style="width: 12px; height: 12px; background: #F2C31B; border-radius: 1px;"></div>
-                      <span style="font-size: 11px; font-weight: bold; text-align: center;">Square</span>
-                      <span style="font-size: 9px; opacity: 0.7;">Instagram</span>
-                    </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="checkbox" id="format-instagram-facebook" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #000;">Instagram / Facebook Feed (4:5)</span>
                   </label>
-                  <label style="display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-portrait" style="margin-bottom: 4px; transform: scale(1.2);">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                      <div style="width: 10px; height: 12px; background: #F2C31B; border-radius: 1px;"></div>
-                      <span style="font-size: 11px; font-weight: bold; text-align: center;">Portrait</span>
-                      <span style="font-size: 9px; opacity: 0.7;">LinkedIn</span>
-                    </div>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="checkbox" id="format-linkedin-business" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">LinkedIn / Google My Business / Yelp (1:1)</span>
                   </label>
-                  <label style="display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'" onmouseout="this.style.borderColor='#e1e5e9'">
-                    <input type="checkbox" id="upload-blog" style="margin-bottom: 4px; transform: scale(1.2);">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                      <div style="width: 14px; height: 10px; background: #F2C31B; border-radius: 1px;"></div>
-                      <span style="font-size: 11px; font-weight: bold; text-align: center;">Blog</span>
-                      <span style="font-size: 9px; opacity: 0.7;">Articles</span>
-                    </div>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="checkbox" id="format-websites-presentations" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Websites / Presentations (16:9)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="checkbox" id="format-blog-marketing" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Blog Posts / Marketing Materials (3:2)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="checkbox" id="format-original" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Original Size / Ratio (4:3)</span>
                   </label>
                 </div>
               </div>
 
               <!-- Action Buttons -->
-              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+              <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button id="cancel-upload" style="background: #f5f5f5; color: #666; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f5f5f5'">
                   Cancel
                 </button>
@@ -1672,6 +1683,232 @@
             'miami': 'Miami'
           };
           return locationNames[location] || location;
+        }
+
+        formatUploadMethod(method) {
+          const methodNames = {
+            'phone': 'Phone',
+            'google-drive': 'Google Drive',
+            'dropbox': 'Dropbox',
+            'storage': 'Storage'
+          };
+          return methodNames[method] || method;
+        }
+
+        formatQuality(quality) {
+          const qualityNames = {
+            'messenger': 'Messenger (WhatsApp, SMS, Telegram)',
+            'social': 'Social (Instagram, Facebook, LinkedIn)',
+            'presentation': 'Presentation (Websites, Portfolios)',
+            'print': 'Print (Flyers, Brochures, High-Detail)'
+          };
+          return qualityNames[quality] || quality;
+        }
+
+        formatSelectedFormats(formats) {
+          const formatNames = {
+            'instagram-facebook': 'Instagram / Facebook Feed (4:5)',
+            'linkedin-business': 'LinkedIn / Google My Business / Yelp (1:1)',
+            'websites-presentations': 'Websites / Presentations (16:9)',
+            'blog-marketing': 'Blog Posts / Marketing Materials (3:2)',
+            'original': 'Original Size / Ratio (4:3)'
+          };
+          
+          const selectedFormats = Object.keys(formats).filter(key => formats[key]);
+          if (selectedFormats.length === 0) return 'None selected';
+          if (selectedFormats.length === 1) return formatNames[selectedFormats[0]];
+          if (selectedFormats.length === 2) return formatNames[selectedFormats[0]] + ', ' + formatNames[selectedFormats[1]];
+          return selectedFormats.length + ' formats selected';
+        }
+
+        showInfoPopup(type) {
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+          `;
+
+          let content = '';
+          let title = '';
+
+          if (type === 'quality') {
+            title = 'Quality Options Guide';
+            content = `
+              <div style="margin-bottom: 20px;">
+                <h3 style="color: #303030; margin: 0 0 15px 0; font-size: 18px;">1️⃣ Quality Options</h3>
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px;">
+                    <thead>
+                      <tr style="background: #f8f9fa;">
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Quality</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Platforms</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Resolution</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">JPEG</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Use Case</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Messenger</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">WhatsApp, SMS, Telegram</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">800×450 px</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">30%</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Quick send, small file size</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Social Media</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Instagram, Facebook, LinkedIn</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">1024×576 px</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">50%</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Best for feeds & stories</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Presentation</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Websites, Reports, Portfolios</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">1600×900 px</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">70%</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Sharp and professional</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Print</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Flyers, Brochures, High-Detail</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">1920×1080 px</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">85%</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Highest quality for print</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div style="margin-bottom: 20px;">
+                <h4 style="color: #303030; margin: 0 0 10px 0;">Notes:</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #666;">
+                  <li>Higher resolution and JPEG quality = larger file size.</li>
+                  <li>Choose the setting based on where the photo will be used.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 style="color: #303030; margin: 0 0 10px 0;">Tips for Choosing:</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #666;">
+                  <li><strong>Messenger:</strong> Quick sharing with clients or team members via WhatsApp/SMS/Telegram.</li>
+                  <li><strong>Social Media:</strong> Use for Instagram or Facebook posts; balanced quality keeps file size manageable.</li>
+                  <li><strong>Presentation:</strong> Professional look for slideshows, websites, or client portfolios.</li>
+                  <li><strong>Print:</strong> Use only when you need high-detail images for brochures, flyers, or archival purposes.</li>
+                </ul>
+              </div>
+            `;
+          } else if (type === 'format') {
+            title = 'Photo Formats Guide';
+            content = `
+              <div style="margin-bottom: 20px;">
+                <h3 style="color: #303030; margin: 0 0 15px 0; font-size: 18px;">2️⃣ Photo Formats (Aspect Ratios)</h3>
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px;">
+                    <thead>
+                      <tr style="background: #f8f9fa;">
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Format</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Platforms</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Ratio</th>
+                        <th style="padding: 8px 6px; text-align: left; border: 1px solid #ddd; font-size: 12px;">Use Case</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Instagram / Facebook Feed</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Instagram, Facebook</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">4:5</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Best for vertical feed posts</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">LinkedIn / Google My Business / Yelp</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">LinkedIn, GMB, Yelp</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">1:1</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Square format for business listings</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Websites / Presentations</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Websites, client reports</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">16:9</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Standard landscape for slides</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Blog Posts / Marketing Materials</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Blog posts, brochures</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">3:2</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Wide format for articles</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Original Size / Ratio</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Any</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">4:3 (or original)</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Keep original dimensions</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div style="margin-bottom: 20px;">
+                <h4 style="color: #303030; margin: 0 0 10px 0;">Notes:</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #666;">
+                  <li>Formats automatically adjust resolution proportionally to preserve quality.</li>
+                  <li>Users can pick a format independent of quality — e.g., Social Media quality with Square or Portrait format.</li>
+                </ul>
+              </div>
+            `;
+          }
+
+          modal.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 20px; max-width: 95vw; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3); margin: 0 10px;">
+              <!-- Header -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0; position: relative;">
+                <h2 style="margin: 0; color: #303030; font-size: 20px; font-weight: bold; line-height: 1.3;">📖 QuickBeforeAfter – Photo Export Guide</h2>
+                <button id="close-info-popup" style="background: #f5f5f5; border: 2px solid #ddd; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #666; cursor: pointer; position: absolute; top: -8px; right: -8px;" onmouseover="this.style.background='#e5e5e5'; this.style.borderColor='#ccc'" onmouseout="this.style.background='#f5f5f5'; this.style.borderColor='#ddd'">✕</button>
+              </div>
+
+              <div style="margin-bottom: 20px; color: #666; font-size: 14px; line-height: 1.5;">
+                This guide explains all export options in QuickBeforeAfter: Quality Levels, Resolutions, and Formats. Use it to pick the best settings for social media, client reports, presentations, or printing.
+              </div>
+
+              ${content}
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+          document.body.style.overflow = 'hidden';
+
+          // Add event listeners
+          document.getElementById('close-info-popup').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.body.style.overflow = '';
+          });
+
+          // Close on background click
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+            }
+          });
+
+          // Close on Escape key
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
         }
 
         setupUploadPopupListeners(modal) {
@@ -1736,13 +1973,133 @@
               console.log('Updated URL to:', newUrl);
             }
           });
+
+          // Add checkbox change handlers for dynamic styling
+          const checkboxIds = ['upload-before', 'upload-after', 'upload-combined'];
+          
+          checkboxIds.forEach(id => {
+            const checkbox = document.getElementById(id);
+            const label = checkbox.closest('label');
+            
+            checkbox.addEventListener('change', () => {
+              if (checkbox.checked) {
+                // Active state: yellow background, black text, yellow border
+                label.style.background = '#F2C31B';
+                label.style.borderColor = '#F2C31B';
+                
+                // Update text colors to black
+                const spans = label.querySelectorAll('span');
+                spans.forEach(span => {
+                  span.style.color = '#000';
+                });
+                
+                // Update visual indicators to black
+                const divs = label.querySelectorAll('div[style*="background:"]');
+                divs.forEach(div => {
+                  if (div.style.background.includes('999') || div.style.background.includes('#999')) {
+                    div.style.background = '#000';
+                  }
+                });
+              } else {
+                // Inactive state: gray background, gray text, gray border
+                label.style.background = '#f5f5f5';
+                label.style.borderColor = '#999';
+                
+                // Update text colors to gray
+                const spans = label.querySelectorAll('span');
+                spans.forEach(span => {
+                  span.style.color = '#999';
+                });
+                
+                // Update visual indicators to gray
+                const divs = label.querySelectorAll('div[style*="background:"]');
+                divs.forEach(div => {
+                  if (div.style.background.includes('000') || div.style.background.includes('#000')) {
+                    div.style.background = '#999';
+                  }
+                });
+              }
+            });
+          });
+
+          // Add radio button change handlers for quality selection
+          const qualityRadios = document.querySelectorAll('input[name="quality"]');
+          
+          qualityRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+              // Reset all quality labels to inactive state
+              qualityRadios.forEach(r => {
+                const label = r.closest('label');
+                label.style.background = '#f5f5f5';
+                label.style.borderColor = '#999';
+                
+                const spans = label.querySelectorAll('span');
+                spans.forEach(span => {
+                  span.style.color = '#999';
+                });
+              });
+              
+              // Set selected radio to active state
+              const selectedLabel = radio.closest('label');
+              selectedLabel.style.background = '#F2C31B';
+              selectedLabel.style.borderColor = '#F2C31B';
+              
+              const selectedSpans = selectedLabel.querySelectorAll('span');
+              selectedSpans.forEach(span => {
+                span.style.color = '#000';
+              });
+            });
+          });
+
+          // Add checkbox change handlers for format selection
+          const formatCheckboxIds = ['format-instagram-facebook', 'format-linkedin-business', 'format-websites-presentations', 'format-blog-marketing', 'format-original'];
+          
+          formatCheckboxIds.forEach(id => {
+            const checkbox = document.getElementById(id);
+            const label = checkbox.closest('label');
+            
+            checkbox.addEventListener('change', () => {
+              if (checkbox.checked) {
+                // Active state: yellow background, black text, yellow border
+                label.style.background = '#F2C31B';
+                label.style.borderColor = '#F2C31B';
+                
+                // Update text colors to black
+                const spans = label.querySelectorAll('span');
+                spans.forEach(span => {
+                  span.style.color = '#000';
+                });
+              } else {
+                // Inactive state: gray background, gray text, gray border
+                label.style.background = '#f5f5f5';
+                label.style.borderColor = '#999';
+                
+                // Update text colors to gray
+                const spans = label.querySelectorAll('span');
+                spans.forEach(span => {
+                  span.style.color = '#999';
+                });
+              }
+            });
+          });
+
+          // Add info button event listeners
+          document.getElementById('quality-info-btn').addEventListener('click', () => {
+            this.showInfoPopup('quality');
+          });
+
+          document.getElementById('format-info-btn').addEventListener('click', () => {
+            this.showInfoPopup('format');
+          });
+
         }
 
         handleUploadStart(modal) {
           // Get selected options
           const albumName = document.getElementById('album-name-input').value.trim();
           const selectedCity = document.getElementById('upload-city-select').value;
-          const compressionQuality = document.getElementById('compression-quality').value;
+          const uploadMethod = document.getElementById('upload-method-select').value;
+          const selectedQuality = document.querySelector('input[name="quality"]:checked').value;
           
           const photoTypes = {
             before: document.getElementById('upload-before').checked,
@@ -1750,12 +2107,12 @@
             combined: document.getElementById('upload-combined').checked
           };
 
-          const photoFormats = {
-            default: document.getElementById('upload-default').checked,
-            square: document.getElementById('upload-square').checked,
-            portrait: document.getElementById('upload-portrait').checked,
-            landscape: document.getElementById('upload-landscape').checked,
-            blog: document.getElementById('upload-blog').checked
+          const selectedFormats = {
+            'instagram-facebook': document.getElementById('format-instagram-facebook').checked,
+            'linkedin-business': document.getElementById('format-linkedin-business').checked,
+            'websites-presentations': document.getElementById('format-websites-presentations').checked,
+            'blog-marketing': document.getElementById('format-blog-marketing').checked,
+            'original': document.getElementById('format-original').checked
           };
 
           // Validation
@@ -1770,9 +2127,9 @@
             return;
           }
 
-          const hasSelectedFormats = Object.values(photoFormats).some(selected => selected);
+          const hasSelectedFormats = Object.values(selectedFormats).some(selected => selected);
           if (!hasSelectedFormats) {
-            alert('Please select at least one photo format to upload');
+            alert('Please select at least one format');
             return;
           }
 
@@ -1784,9 +2141,10 @@
           this.processUpload({
             albumName,
             city: selectedCity,
-            photoTypes,
-            photoFormats,
-            compressionQuality
+            uploadMethod,
+            quality: selectedQuality,
+            formats: selectedFormats,
+            photoTypes
           });
         }
 
@@ -1844,7 +2202,13 @@
                 <div style="font-size: 16px; color: #666; margin-bottom: 8px;">Album: <strong>${options.albumName}</strong></div>
                 <div style="font-size: 16px; color: #666; margin-bottom: 8px;">City: <strong>${this.formatLocationName(options.city)}</strong></div>
                 <div style="font-size: 14px; color: #666; margin-bottom: 4px;">
-                  Compression: <strong>${this.getCompressionSettings(options.compressionQuality).description}</strong>
+                  Upload Method: <strong>${this.formatUploadMethod(options.uploadMethod)}</strong>
+                </div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+                  Quality: <strong>${this.formatQuality(options.quality)}</strong>
+                </div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+                  Formats: <strong>${this.formatSelectedFormats(options.formats)}</strong>
                 </div>
               </div>
 
@@ -1944,8 +2308,8 @@
               }
               
               // Apply compression based on quality setting
-              const compressionSettings = this.getCompressionSettings(options.compressionQuality);
-              console.log(`Compressing ${filename} with ${options.compressionQuality} quality`);
+              const compressionSettings = this.getCompressionSettings(options.quality);
+              console.log(`Compressing ${filename} with ${options.quality} quality`);
               
               const originalSize = photoData.length;
               const compressionStart = performance.now();
@@ -2067,18 +2431,9 @@
             });
             
             try {
-              // Determine which formats to upload for this photo
-              const formatsToUpload = [];
-              
-              if (options.photoFormats.default) formatsToUpload.push('default');
-              if (options.photoFormats.square) formatsToUpload.push('square');
-              if (options.photoFormats.portrait) formatsToUpload.push('portrait');
-              if (options.photoFormats.landscape) formatsToUpload.push('landscape');
-              if (options.photoFormats.blog) formatsToUpload.push('blog');
-
-              // For individual photos (before/after), only upload default format
-              const actualFormats = (photo.mode === 'mix' && formatsToUpload.length > 1) ? formatsToUpload : ['default'];
-              console.log(`Formats to upload for ${photo.name}:`, actualFormats);
+              // Get all selected formats
+              const selectedFormats = Object.keys(options.formats).filter(key => options.formats[key]);
+              console.log(`Formats to upload for ${photo.name}:`, selectedFormats);
               
               for (let formatIndex = 0; formatIndex < actualFormats.length; formatIndex++) {
                 if (cancelled) {
@@ -2108,10 +2463,7 @@
                 }
                 
                 // Update progress for each format
-                const totalUploads = photos.reduce((total, p) => {
-                  const formats = (p.mode === 'mix' && formatsToUpload.length > 1) ? formatsToUpload.length : 1;
-                  return total + formats;
-                }, 0);
+                const totalUploads = photos.length; // Each photo gets one format
                 
                 const currentUpload = uploadedFiles.length + errors.length;
                 currentSpan.textContent = currentUpload;
@@ -2204,16 +2556,9 @@
           const uploadTasks = [];
           
           photos.forEach(photo => {
-            const formatsToUpload = [];
-            
-            if (options.photoFormats.default) formatsToUpload.push('default');
-            if (options.photoFormats.square) formatsToUpload.push('square');
-            if (options.photoFormats.portrait) formatsToUpload.push('portrait');
-            if (options.photoFormats.landscape) formatsToUpload.push('landscape');
-            if (options.photoFormats.blog) formatsToUpload.push('blog');
-
-            // For individual photos (before/after), only upload default format
-            const actualFormats = (photo.mode === 'mix' && formatsToUpload.length > 1) ? formatsToUpload : ['default'];
+            // Use the selected format for all photos
+            const format = options.format;
+            const actualFormats = [format];
             
             actualFormats.forEach(format => {
               uploadTasks.push({ photo, format });
@@ -2240,7 +2585,7 @@
               }
               
               // Apply compression based on quality setting
-              const compressionSettings = this.getCompressionSettings(options.compressionQuality);
+              const compressionSettings = this.getCompressionSettings(options.quality);
               
               const originalSize = photoData.length;
               const compressionStart = performance.now();
@@ -2396,32 +2741,32 @@
 
         getCompressionSettings(quality) {
           const settings = {
-            'high': {
-              quality: 0.85,      // 85% JPEG quality
-              maxWidth: 1920,     // Max 1920px width
-              maxHeight: 1080,    // Max 1080px height
-              description: 'High Quality (1920×1080 pixels)'
-            },
-            'medium': {
-              quality: 0.7,       // 70% JPEG quality
-              maxWidth: 1600,     // Max 1600px width
-              maxHeight: 900,     // Max 900px height
-              description: 'Medium Quality (1600×900 pixels)'
-            },
-            'low': {
-              quality: 0.5,       // 50% JPEG quality
-              maxWidth: 1024,     // Max 1024px width
-              maxHeight: 576,     // Max 576px height
-              description: 'Fast Upload (1024×576 pixels)'
-            },
-            'superfast': {
+            'messenger': {
               quality: 0.3,       // 30% JPEG quality
               maxWidth: 800,      // Max 800px width
               maxHeight: 450,     // Max 450px height
-              description: 'Super Fast (800×450 pixels)'
+              description: 'Messenger (Quick send, small size)'
+            },
+            'social': {
+              quality: 0.5,       // 50% JPEG quality
+              maxWidth: 1024,     // Max 1024px width
+              maxHeight: 576,     // Max 576px height
+              description: 'Social Media (Best for feeds & stories)'
+            },
+            'presentation': {
+              quality: 0.7,       // 70% JPEG quality
+              maxWidth: 1600,     // Max 1600px width
+              maxHeight: 900,     // Max 900px height
+              description: 'Presentation (Sharp & professional)'
+            },
+            'print': {
+              quality: 0.85,      // 85% JPEG quality
+              maxWidth: 1920,     // Max 1920px width
+              maxHeight: 1080,    // Max 1080px height
+              description: 'Print (Highest quality)'
             }
           };
-          return settings[quality] || settings['medium'];
+          return settings[quality] || settings['messenger'];
         }
 
         showCancelUploadConfirmation(parentModal, onConfirm) {
