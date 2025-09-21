@@ -25,17 +25,17 @@
 
     <title>Cleaning Photo App</title>
 
-    <!-- Google Fonts - Garamond -->
+    <!-- Google Fonts - Quicksand -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
       /* Prevent flash of unstyled content */
       body {
         margin: 0;
         padding: 0;
-        font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;
+        font-family: 'Quicksand', sans-serif;
         background-color: #f8fafc;
         color: #1e293b;
         overscroll-behavior-y: auto;
@@ -352,15 +352,15 @@
           const storedData = this.getStoredUserData();
           if (storedData.cleaner || storedData.location) {
             const nameInput = document.getElementById('signin-name');
-            const citySelect = document.getElementById('signin-city');
+            const cityInput = document.getElementById('signin-city');
             const clearDataContainer = document.getElementById('clear-data-container');
             
             if (nameInput && storedData.cleaner) {
               nameInput.value = storedData.cleaner;
             }
             
-            if (citySelect && storedData.location) {
-              citySelect.value = storedData.location;
+            if (cityInput && storedData.location) {
+              cityInput.value = storedData.location;
             }
             
             // Show the clear data button if we populated any data
@@ -372,7 +372,7 @@
             const clearDataBtn = document.getElementById('clear-data-btn');
             if (clearDataBtn) {
               clearDataBtn.addEventListener('click', () => {
-                this.showClearDataWarning(nameInput, citySelect, clearDataContainer);
+                this.showClearDataWarning(nameInput, cityInput, clearDataContainer);
               });
             }
           }
@@ -380,63 +380,40 @@
 
         getSignInHTML() {
           return `
-            <div style="min-height: 100vh; background: linear-gradient(135deg, #F2C31B 0%, #E6B800 100%); display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif;">
-              <div style="background: white; border-radius: 20px; padding: 40px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center;">
-                <!-- App Logo/Title -->
-                <div style="margin-bottom: 32px;">
-                  <div style="font-size: 48px; margin-bottom: 8px;">📸</div>
-                  <h1 style="margin: 0; color: #303030; font-size: 28px; font-weight: bold; margin-bottom: 8px;">Before & After</h1>
-                  <p style="margin: 0; color: #666; font-size: 16px;">Photo Documentation App</p>
-                </div>
+            <div style="min-height: 100vh; background: #F2C31B; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; font-family: 'Quicksand', sans-serif;">
+              
+              <!-- Logo -->
+              <div style="margin-bottom: 40px; text-align: center;">
+                <img src="/icons/proofpixwhite.png" alt="ProofPix" style="width: 400px; height: auto;">
+              </div>
+              
+              <!-- Sign In Form -->
+              <form id="signin-form" style="width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Name Input -->
+                <input type="text" id="signin-name" required style="width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; background: #ffffff; color: #333333; box-sizing: border-box; font-family: 'Quicksand', sans-serif;" placeholder="Enter your name">
 
-                <!-- Welcome Message -->
-                <div style="margin-bottom: 32px;">
-                  <h2 style="margin: 0 0 8px 0; color: #303030; font-size: 22px; font-weight: bold;">Welcome!</h2>
-                  <p style="margin: 0; color: #666; font-size: 16px; line-height: 1.4;">Please enter your name and select your default city to get started.</p>
-                </div>
+                <!-- City Selection -->
+                <select id="signin-city" required style="width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; background: #ffffff; color: #333333; box-sizing: border-box; font-family: 'Quicksand', sans-serif;">
+                  <option value="">Choose your city...</option>
+                  <option value="tampa">Tampa</option>
+                  <option value="st-petersburg">St. Petersburg</option>
+                  <option value="jacksonville">Jacksonville</option>
+                  <option value="miami">Miami</option>
+                </select>
 
-                <!-- Sign In Form -->
-                <form id="signin-form" style="text-align: left;">
-                  <!-- Name Input -->
-                  <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
-                      👤 Your Name
-                    </label>
-                    <input type="text" id="signin-name" required style="width: 100%; padding: 14px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: border-color 0.2s;" placeholder="Enter your name" onfocus="this.style.borderColor='#F2C31B'" onblur="this.style.borderColor='#e1e5e9'">
-                  </div>
-
-                  <!-- City Selection -->
-                  <div style="margin-bottom: 32px;">
-                    <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 8px; font-size: 16px;">
-                      📍 Default City
-                    </label>
-                    <select id="signin-city" required style="width: 100%; padding: 14px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; background: white; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#F2C31B'" onblur="this.style.borderColor='#e1e5e9'">
-                      <option value="">Select your city...</option>
-                      <option value="tampa">Tampa</option>
-                      <option value="st-petersburg">St. Petersburg</option>
-                      <option value="jacksonville">Jacksonville</option>
-                      <option value="miami">Miami</option>
-                    </select>
-                  </div>
-
-                  <!-- Sign In Button -->
-                  <button type="submit" id="signin-btn" style="width: 100%; background: #F2C31B; color: #303030; border: none; padding: 16px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(242, 195, 27, 0.3);" onmouseover="this.style.background='#E6B800'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(242, 195, 27, 0.4)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(242, 195, 27, 0.3)'">
-                    🚀 Start Taking Photos
+                <!-- Start Button -->
+                <button type="submit" id="signin-btn" style="width: 100%; background: #000000 !important; background-color: #000000 !important; color: #ffffff !important; border: none !important; padding: 16px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-family: 'Quicksand', sans-serif; margin-top: 20px; position: relative; z-index: 100; box-shadow: none !important; outline: none !important; opacity: 1 !important;" onmouseover="this.style.background='#333333' !important; this.style.backgroundColor='#333333' !important; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#000000' !important; this.style.backgroundColor='#000000' !important; this.style.transform='translateY(0)'">
+                  Start
+                </button>
+                
+                <!-- Clear stored data link (if data exists) -->
+                <div id="clear-data-container" style="margin-top: 16px; text-align: center; display: none;">
+                  <button type="button" id="clear-data-btn" style="background: none; border: none; color: #ffffff; font-size: 14px; cursor: pointer; text-decoration: underline;">
+                    🔄 Use different name/location
                   </button>
-                  
-                  <!-- Clear stored data link (if data exists) -->
-                  <div id="clear-data-container" style="margin-top: 16px; text-align: center; display: none;">
-                    <button type="button" id="clear-data-btn" style="background: none; border: none; color: #666; font-size: 14px; cursor: pointer; text-decoration: underline;">
-                      🔄 Use different name/location
-                    </button>
                   </div>
                 </form>
-
-                <!-- Footer -->
-                <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                  <p style="margin: 0; color: #999; font-size: 14px;">Your information is stored locally and used to personalize your experience.</p>
-                </div>
-              </div>
             </div>
           `;
         }
@@ -444,7 +421,7 @@
         attachSignInListeners() {
           const form = document.getElementById('signin-form');
           const nameInput = document.getElementById('signin-name');
-          const citySelect = document.getElementById('signin-city');
+          const cityInput = document.getElementById('signin-city');
           const signInBtn = document.getElementById('signin-btn');
 
           // Form submission
@@ -456,21 +433,19 @@
           // Real-time validation
           const validateForm = () => {
             const name = nameInput.value.trim();
-            const city = citySelect.value;
+            const city = cityInput.value.trim();
             
             if (name && city) {
               signInBtn.disabled = false;
-              signInBtn.style.opacity = '1';
               signInBtn.style.cursor = 'pointer';
             } else {
               signInBtn.disabled = true;
-              signInBtn.style.opacity = '0.6';
               signInBtn.style.cursor = 'not-allowed';
             }
           };
 
           nameInput.addEventListener('input', validateForm);
-          citySelect.addEventListener('change', validateForm);
+          cityInput.addEventListener('change', validateForm);
 
           // Initial validation
           validateForm();
@@ -483,10 +458,10 @@
 
         handleSignIn() {
           const name = document.getElementById('signin-name').value.trim();
-          const city = document.getElementById('signin-city').value;
+          const city = document.getElementById('signin-city').value.trim();
 
           if (!name || !city) {
-            alert('Please enter your name and select a city');
+            alert('Please enter your name and city');
             return;
           }
 
@@ -6951,7 +6926,7 @@
           document.addEventListener('keydown', handleEscape);
         }
 
-        showClearDataWarning(nameInput, citySelect, clearDataContainer) {
+        showClearDataWarning(nameInput, cityInput, clearDataContainer) {
           // Get stored user info for the warning
           const storedData = this.getStoredUserData();
           const storedName = storedData.cleaner || 'Unknown User';
@@ -7071,7 +7046,7 @@
             this.clearUserData();
             // Clear the form fields
             if (nameInput) nameInput.value = '';
-            if (citySelect) citySelect.value = '';
+            if (cityInput) cityInput.value = '';
             // Hide the clear button
             if (clearDataContainer) clearDataContainer.style.display = 'none';
           });
