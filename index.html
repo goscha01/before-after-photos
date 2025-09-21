@@ -699,8 +699,8 @@
                 </button>
                 
                 <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 8px; color: white;">
-                  <div style="font-size: 12px; font-weight: bold;">${photo.name}</div>
-                  <div style="font-size: 10px; opacity: 0.9;">${new Date(photo.timestamp).toLocaleTimeString()}</div>
+                  <div style="font-size: 12px; font-weight: bold; font-family: 'Quicksand', sans-serif;">${photo.name}</div>
+                  <div style="font-size: 10px; opacity: 0.9; font-family: 'Quicksand', sans-serif;">${new Date(photo.timestamp).toLocaleTimeString()}</div>
                 </div>
               </div>
             `);
@@ -905,7 +905,7 @@
 
                 <!-- Center - Cleaner name with change user option -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="font-size: 16px; font-weight: bold;">${currentCleaner}</div>
+                  <div style="font-size: 16px; font-weight: bold; font-family: 'Quicksand', sans-serif;">${currentCleaner}</div>
                   <button id="change-user-btn" style="background: none; border: none; color: #666; font-size: 12px; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.2s;" title="Change User" onmouseover="this.style.background='rgba(0,0,0,0.1)'; this.style.color='#303030'" onmouseout="this.style.background='none'; this.style.color='#666'">
                     👤
                   </button>
@@ -1251,7 +1251,7 @@
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
-                      <div style="font-weight: bold;">${displayName}</div>
+                      <div style="font-weight: bold; font-family: 'Quicksand', sans-serif;">${displayName}</div>
                     </div>
                   </div>
                 `;
@@ -1274,7 +1274,7 @@
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
-                      <div style="font-weight: bold;">${displayName}</div>
+                      <div style="font-weight: bold; font-family: 'Quicksand', sans-serif;">${displayName}</div>
                     </div>
                   </div>
                 `;
@@ -1560,16 +1560,16 @@
                     </label>
                     <select id="upload-method-select" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; box-sizing: border-box;">
                       <option value="phone">📱 Phone</option>
-                      <option value="google-drive">☁️ Google Drive</option>
+                      <option value="google-drive" selected>☁️ Google Drive</option>
                       <option value="dropbox">📦 Dropbox</option>
                       <option value="storage">💾 Storage</option>
                     </select>
                   </div>
                   <div>
                     <label style="display: block; font-weight: bold; color: #303030; margin-bottom: 6px; font-size: 15px;">
-                  📁 Album Name
-                </label>
-                    <input type="text" id="album-name-input" value="${defaultAlbumName}" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; color: #303030; box-sizing: border-box;" placeholder="Enter album name" readonly>
+                      📁 Album Name
+                    </label>
+                    <input type="text" id="album-name-input" value="${defaultAlbumName}" style="width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; background: white; color: #303030; box-sizing: border-box; font-family: 'Quicksand', sans-serif;" placeholder="Enter album name" readonly>
                   </div>
                 </div>
               </div>
@@ -1579,17 +1579,17 @@
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                   <label style="font-weight: bold; color: #303030; font-size: 15px;">
                     🗜️ Quality
-                </label>
+                  </label>
                   <button id="quality-info-btn" style="background: none; border: none; font-size: 16px; color: #666; cursor: pointer; padding: 2px; border-radius: 4px;" onmouseover="this.style.color='#F2C31B'" onmouseout="this.style.color='#666'" title="Quality Options Guide">ℹ️</button>
-              </div>
+                </div>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
-                    <input type="radio" name="quality" value="messenger" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #000;">Messenger (WhatsApp, SMS, Telegram)</span>
-                </label>
                   <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
-                    <input type="radio" name="quality" value="social" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #999;">Social (Instagram, Facebook, LinkedIn)</span>
+                    <input type="radio" name="quality" value="messenger" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Messenger (WhatsApp, SMS, Telegram)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="radio" name="quality" value="social" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #000;">Social (Instagram, Facebook, LinkedIn)</span>
                   </label>
                   <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
                     <input type="radio" name="quality" value="presentation" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
@@ -1608,13 +1608,13 @@
                   📸 Photo Types
                 </label>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
-                    <input type="checkbox" id="upload-before" checked style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; color: #000; font-weight: bold;">Before</span>
+                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="checkbox" id="upload-before" style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; color: #999; font-weight: bold;">Before</span>
                   </label>
-                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
-                    <input type="checkbox" id="upload-after" checked style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; color: #000; font-weight: bold;">After</span>
+                  <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
+                    <input type="checkbox" id="upload-after" style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; color: #999; font-weight: bold;">After</span>
                   </label>
                   <label style="display: flex; align-items: center; padding: 6px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
                     <input type="checkbox" id="upload-combined" checked style="margin-right: 6px; transform: scale(1.2); accent-color: #000;">
@@ -1637,9 +1637,9 @@
                     <input type="checkbox" id="format-instagram-facebook" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
                     <span style="font-size: 13px; font-weight: bold; color: #000;">Instagram / Facebook Feed (4:5)</span>
                   </label>
-                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
-                    <input type="checkbox" id="format-linkedin-business" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #999;">LinkedIn / Google My Business / Yelp (1:1)</span>
+                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
+                    <input type="checkbox" id="format-linkedin-business" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #000;">LinkedIn / Google My Business / Yelp (1:1)</span>
                   </label>
                   <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
                     <input type="checkbox" id="format-websites-presentations" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
@@ -3593,8 +3593,8 @@
 
                     <!-- Transparent title overlay -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                      <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${displayName}</div>
-                      <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
+                      <div style="color: white; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-family: 'Quicksand', sans-serif;">${displayName}</div>
+                      <div style="color: rgba(255,255,255,0.9); font-size: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-family: 'Quicksand', sans-serif;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
                     </div>
 
                     <!-- Delete button -->
@@ -3612,8 +3612,8 @@
                 <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 3px solid #F2C31B; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
                   <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
                   <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
-                    <div style="font-weight: bold; margin-bottom: 2px; color: #303030;">${displayName}</div>
-                    <div style="font-size: 10px; opacity: 0.8;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
+                    <div style="font-weight: bold; margin-bottom: 2px; color: #303030; font-family: 'Quicksand', sans-serif;">${displayName}</div>
+                    <div style="font-size: 10px; opacity: 0.8; font-family: 'Quicksand', sans-serif;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
                   </div>
                   <!-- Delete button -->
                   <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
