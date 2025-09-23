@@ -6502,27 +6502,32 @@
         // Update video element styling based on aspect ratio mode
         updateVideoStyling() {
           const aspectRatio = this.currentAspectRatio || '4:3';
+          console.log('DEBUG: updateVideoStyling called with aspectRatio:', aspectRatio);
+          console.log('DEBUG: this.currentAspectRatio:', this.currentAspectRatio);
           const videoElements = document.querySelectorAll('#camera-video, #comparison-camera');
+          console.log('DEBUG: Found video elements:', videoElements.length);
 
           videoElements.forEach(video => {
             if (aspectRatio === '3:4') {
-              // Side-by-side mode: Scale full camera picture (3024×4032) to fit half screen height
+              // Side-by-side mode: FORCE contain behavior to show full height with black bars on sides
               // Container is 100% width × 50% height (full width, half height)
-              // Camera aspect ratio: 3:4 (0.75), Half screen ratio: ~2:1 (2.0)
-              // When camera fits to height: width becomes ~0.5, height becomes 1.0
+              // Camera aspect ratio: 4:3 (taller), Half screen ratio: 2:3 (wider)
+              // object-fit: contain should fit the full height and add black bars on sides
               video.style.objectFit = 'contain';
               video.style.objectPosition = 'center center';
-              video.style.width = '100%';  // Fill container width
-              video.style.height = '100%'; // Fill container height (which is 50% of screen)
+              video.style.width = '100%';
+              video.style.height = '100%';
               video.style.margin = '0';
               video.style.display = 'block';
               video.style.transform = 'none';
 
-              // Container dimensions are: width: 100% × height: 50% (full width, half screen height)
-              // object-fit: contain will scale the full camera picture to fit the container height
-              // Camera 3024×4032 will scale to fit the half-screen height, width will be proportional (~50% of screen width)
+              // Force override any other CSS that might interfere
+              video.style.setProperty('object-fit', 'contain', 'important');
 
-              console.log('Applied side-by-side video styling: full camera picture (3024×4032) scaled to fit half screen height, width proportional');
+              console.log('FORCED side-by-side video styling: object-fit contain with !important');
+              console.log('Current aspect ratio mode:', aspectRatio);
+              console.log('Video element:', video);
+              console.log('Video style object-fit:', video.style.objectFit);
             } else {
               // Stack mode: Fit WIDTH to container, let height adjust by aspect ratio
               video.style.objectFit = 'contain';
@@ -6583,11 +6588,18 @@
             // Calculate visible video dimensions based on object-fit mode
             let visibleVideoWidth, visibleVideoHeight;
 
-            // Both modes now use object-fit: cover - video fills container completely
-            // Cover mode: video fills the entire container, cropping as needed to maintain aspect ratio
-            visibleVideoWidth = containerWidth;
-            visibleVideoHeight = containerHeight;
-            console.log('Using object-fit: cover - video fills entire container with cropping to maintain aspect ratio');
+            // Both modes now use object-fit: contain - video fits within container with black bars
+            // Contain mode: video maintains aspect ratio and fits within container
+            if (actualVideoAspectRatio > containerAspectRatio) {
+              // Video is wider than container - constrained by width
+              visibleVideoWidth = containerWidth;
+              visibleVideoHeight = containerWidth / actualVideoAspectRatio;
+            } else {
+              // Video is taller than container - constrained by height
+              visibleVideoHeight = containerHeight;
+              visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+            }
+            console.log('Using object-fit: contain - video fits within container with black bars if needed');
 
             // Now calculate frame based on desired aspect ratio, not actual video
             let targetAspectRatio;
