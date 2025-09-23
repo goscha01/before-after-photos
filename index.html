@@ -6506,16 +6506,17 @@
 
           videoElements.forEach(video => {
             if (aspectRatio === '3:4') {
-              // Side-by-side mode: Show more height by scaling video to fill container height
-              // Use object-fit: cover to prioritize showing full height of camera stream
+              // Side-by-side mode: Use object-fit cover to show more height
+              // This will fill the container height and crop the sides to show more vertical area
               video.style.objectFit = 'cover';
-              video.style.objectPosition = 'center';
-              video.style.width = '100%';  // Full width of container
-              video.style.height = '133%'; // Taller than container to show more of camera height
+              video.style.objectPosition = 'center center';
+              video.style.width = '100%';
+              video.style.height = '100%';
               video.style.margin = '0';
               video.style.display = 'block';
-              video.style.transform = 'translateY(-16.5%)'; // Center the taller video vertically
-              console.log('Applied side-by-side video styling: taller video (133%) to show more height');
+              video.style.transform = 'none';
+              console.log('Applied side-by-side video styling: object-fit cover to show more height');
+              console.log('Video element after styling:', video.style.cssText);
             } else {
               // Stack mode: Keep normal object-fit: contain for 4:3 frame
               video.style.objectFit = 'contain';
