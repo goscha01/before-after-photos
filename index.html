@@ -491,7 +491,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: row;">
                 <!-- Left half - Active camera -->
                 <div style="position: relative; width: 50%; height: 100%; background: black;">
-                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
                   <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
@@ -535,7 +535,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
                 <!-- Top half - Active camera -->
                 <div style="position: relative; width: 100%; height: 50%; background: black;">
-                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
                   <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
@@ -575,7 +575,7 @@
                 <div style="position: relative; width: 100%; height: calc(100% - 80px); display: flex; flex-direction: row;">
                   <!-- Left half - Camera -->
                   <div id="camera-container" style="position: relative; width: 50%; height: 100%; background: black;">
-                    <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                    <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                     
                     <!-- Photo frame overlay for camera -->
                     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
@@ -626,7 +626,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
                 <!-- Top half - Camera -->
                 <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
-                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
                   <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
@@ -752,7 +752,7 @@
                 
                 <!-- Right half - Camera -->
                 <div id="camera-container" style="position: relative; width: 50%; height: 100%; background: black;">
-                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
                   <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
@@ -803,7 +803,7 @@
                 
                 <!-- Bottom half - Camera -->
                 <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
-                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
                   <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
@@ -6506,8 +6506,8 @@
 
           videoElements.forEach(video => {
             if (aspectRatio === '3:4') {
-              // Side-by-side mode: Keep aspect ratio but modify container to show more height
-              video.style.objectFit = 'contain';
+              // Side-by-side mode: Use cover to fill height like native iPhone camera
+              video.style.objectFit = 'cover';
               video.style.objectPosition = 'center center';
               video.style.width = '100%';
               video.style.height = '100%';
@@ -6515,20 +6515,20 @@
               video.style.display = 'block';
               video.style.transform = 'none';
 
-              // Modify the video container to be taller and narrower
+              // Keep container full width/height for better native camera experience
               const container = video.closest('#camera-container') || video.parentElement;
               if (container) {
-                container.style.width = '75%'; // Narrower container
-                container.style.height = '100%'; // Keep full height
-                container.style.margin = '0 auto'; // Center the narrower container
-                console.log('Applied side-by-side container styling: narrower container for more height');
+                container.style.width = '100%'; // Full width container
+                container.style.height = '100%'; // Full height
+                container.style.margin = '0'; // No margin
+                console.log('Applied side-by-side container styling: full coverage for native camera look');
               }
 
-              console.log('Applied side-by-side video styling: contain with modified container');
+              console.log('Applied side-by-side video styling: cover for taller native camera view');
               console.log('Video element after styling:', video.style.cssText);
             } else {
-              // Stack mode: Keep normal object-fit: contain for 4:3 frame
-              video.style.objectFit = 'contain';
+              // Stack mode: Use cover to fill container and show more of the image
+              video.style.objectFit = 'cover';
               video.style.objectPosition = 'center';
               video.style.width = '100%';
               video.style.height = '100%';
@@ -6536,16 +6536,16 @@
               video.style.display = 'block';
               video.style.transform = 'none'; // Reset any transforms
 
-              // Reset container styling for stack mode
+              // Full container for stack mode too
               const container = video.closest('#camera-container') || video.parentElement;
               if (container) {
                 container.style.width = '100%'; // Full width container
                 container.style.height = '100%'; // Full height
                 container.style.margin = '0'; // No margin
-                console.log('Reset container styling for stack mode');
+                console.log('Applied stack mode container styling: full coverage');
               }
 
-              console.log('Applied stack video styling: normal contain for 4:3 frame');
+              console.log('Applied stack video styling: cover for better height utilization');
             }
           });
         }
@@ -6587,25 +6587,11 @@
             // Calculate visible video dimensions based on object-fit mode
             let visibleVideoWidth, visibleVideoHeight;
 
-            if (aspectRatio === '3:4') {
-              // Side-by-side mode uses object-fit: cover - video fills container completely
-              // Cover mode: video fills the entire container, cropping as needed
-              visibleVideoWidth = containerWidth;
-              visibleVideoHeight = containerHeight;
-              console.log('Using object-fit: fill - video stretches to fill entire container');
-            } else {
-              // Stack mode uses object-fit: contain - video fits within container
-              if (actualVideoAspectRatio > containerAspectRatio) {
-                // Video is width-constrained
-                visibleVideoWidth = containerWidth;
-                visibleVideoHeight = containerWidth / actualVideoAspectRatio;
-              } else {
-                // Video is height-constrained
-                visibleVideoHeight = containerHeight;
-                visibleVideoWidth = containerHeight * actualVideoAspectRatio;
-              }
-              console.log('Using object-fit: contain - video fits within container');
-            }
+            // Both modes now use object-fit: cover - video fills container completely
+            // Cover mode: video fills the entire container, cropping as needed to maintain aspect ratio
+            visibleVideoWidth = containerWidth;
+            visibleVideoHeight = containerHeight;
+            console.log('Using object-fit: cover - video fills entire container with cropping to maintain aspect ratio');
 
             // Now calculate frame based on desired aspect ratio, not actual video
             let targetAspectRatio;
