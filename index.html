@@ -6506,15 +6506,15 @@
 
           videoElements.forEach(video => {
             if (aspectRatio === '3:4') {
-              // Side-by-side mode: Make camera window taller and narrower to fit 3:4 frame
-              // Use object-fit: cover and adjust dimensions to show more height
+              // Side-by-side mode: Make camera window much narrower to show more height like native camera
+              // Calculate proper width to match 3:4 aspect ratio within container
               video.style.objectFit = 'cover';
               video.style.objectPosition = 'center';
-              video.style.width = '75%';  // Narrower to match 3:4 aspect
+              video.style.width = '37.5%';  // Very narrow (3/8 of container) to maximize visible height like native camera
               video.style.height = '100%'; // Full height
               video.style.margin = '0 auto'; // Center horizontally
               video.style.display = 'block';
-              console.log('Applied side-by-side video styling: taller/narrower for 3:4 frame');
+              console.log('Applied side-by-side video styling: very narrow (37.5%) for maximum height like native camera');
             } else {
               // Stack mode: Keep normal object-fit: contain for 4:3 frame
               video.style.objectFit = 'contain';
