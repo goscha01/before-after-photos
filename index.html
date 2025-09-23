@@ -4795,8 +4795,8 @@
 
                 stream = await navigator.mediaDevices.getUserMedia({
                   video: {
-                    facingMode: 'environment',
-                    aspectRatio: targetAspectRatio
+                    facingMode: 'environment'
+                    // Removed aspectRatio constraint to get full native sensor area
                   }
                 });
               }
@@ -5294,8 +5294,8 @@
 
               stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                  facingMode: 'environment',
-                  aspectRatio: targetAspectRatio
+                  facingMode: 'environment'
+                  // Removed aspectRatio constraint to get full native sensor area
                 }
               });
             }
@@ -6194,8 +6194,8 @@
 
               stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                  facingMode: 'environment',
-                  aspectRatio: targetAspectRatio
+                  facingMode: 'environment'
+                  // Removed aspectRatio constraint to get full native sensor area
                 }
               });
             }
@@ -6350,13 +6350,13 @@
 
           console.log(`Camera constraints for ${this.currentAspectRatio}:`, idealWidth, 'x', idealHeight, 'target ratio:', targetAspectRatio);
 
-          // Always request portrait camera stream (phone held vertically)
+          // Request full camera sensor area (no aspect ratio constraint to avoid cropping)
           const constraints = {
             video: {
               facingMode: 'environment',
               width: { ideal: idealWidth },
-              height: { ideal: idealHeight },
-              aspectRatio: { ideal: 3/4 } // Always portrait camera stream (0.75)
+              height: { ideal: idealHeight }
+              // Removed aspectRatio constraint to get full native sensor area like native camera app
             }
           };
 
