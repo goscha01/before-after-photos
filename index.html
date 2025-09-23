@@ -6523,30 +6523,32 @@
 
               // Force override any other CSS that might interfere
               video.style.setProperty('object-fit', 'contain', 'important');
+              video.style.setProperty('width', '100%', 'important');
+              video.style.setProperty('height', '100%', 'important');
 
               console.log('FORCED side-by-side video styling: object-fit contain with !important');
               console.log('Current aspect ratio mode:', aspectRatio);
               console.log('Video element:', video);
               console.log('Video style object-fit:', video.style.objectFit);
             } else {
-              // Stack mode: Fit WIDTH to container, let height adjust by aspect ratio
+              // Stack mode: Use contain to fit properly within container
               video.style.objectFit = 'contain';
               video.style.objectPosition = 'center';
-              video.style.width = '100%';  // Fit full width of container
-              video.style.height = 'auto'; // Let height adjust to maintain aspect ratio
+              video.style.width = '100%';
+              video.style.height = '100%';
               video.style.margin = '0';
               video.style.display = 'block';
               video.style.transform = 'none';
 
-              const container = video.closest('#camera-container') || video.parentElement;
-              if (container) {
-                container.style.width = '100%'; // Full width
-                container.style.height = '50%'; // Stack gets half height
-                container.style.margin = '0';
-                console.log('Applied stack mode styling: fit width, adjust height by aspect ratio');
-              }
+              // Force override any other CSS that might interfere
+              video.style.setProperty('object-fit', 'contain', 'important');
+              video.style.setProperty('width', '100%', 'important');
+              video.style.setProperty('height', '100%', 'important');
 
-              console.log('Applied stack video styling: contain with width priority');
+              console.log('FORCED stack video styling: object-fit contain with !important');
+              console.log('Current aspect ratio mode:', aspectRatio);
+              console.log('Video element:', video);
+              console.log('Video style object-fit:', video.style.objectFit);
             }
           });
         }
