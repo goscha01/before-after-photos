@@ -6339,34 +6339,28 @@
           // iPhone maximum resolutions for different aspect ratios
           let idealWidth, idealHeight;
 
-          if (this.currentAspectRatio === '4:3') {
-            // 4:3 ratio for stack mode - landscape crop from portrait capture
-            idealWidth = 3024;  // iPhone max width
-            idealHeight = 2268; // 3024 × (3/4) for 4:3 crop
-          } else {
-            // 3:4 ratio for side-by-side mode - full portrait
-            idealWidth = 3024;  // iPhone max width
-            idealHeight = 4032; // iPhone max height (natural portrait)
-          }
+          // Both modes use portrait camera orientation (phone held vertically)
+          // The difference is in the crop frame, not the camera stream
+          idealWidth = 3024;   // iPhone max width (always portrait orientation)
+          idealHeight = 4032;  // iPhone max height (always portrait orientation)
+
+          // Note: Camera stream is always portrait, frames will crop differently:
+          // - Stack mode: 4:3 landscape crop from portrait stream
+          // - Side-by-side mode: 3:4 portrait crop (nearly full frame)
 
           console.log(`Camera constraints for ${this.currentAspectRatio}:`, idealWidth, 'x', idealHeight, 'target ratio:', targetAspectRatio);
 
-          // For phone cameras, try different constraint approaches
+          // Always request portrait camera stream (phone held vertically)
           const constraints = {
             video: {
               facingMode: 'environment',
               width: { ideal: idealWidth },
-              height: { ideal: idealHeight }
+              height: { ideal: idealHeight },
+              aspectRatio: { ideal: 3/4 } // Always portrait camera stream (0.75)
             }
           };
 
-          // Only add aspect ratio constraint if it matches the intended target
-          if ((this.currentAspectRatio === '4:3' && targetAspectRatio > 1) ||
-              (this.currentAspectRatio === '3:4' && targetAspectRatio < 1)) {
-            constraints.video.aspectRatio = { ideal: targetAspectRatio };
-          }
-
-          console.log('Final camera constraints:', constraints);
+          console.log('Final camera constraints (always portrait stream):', constraints);
           return constraints;
         }
 
