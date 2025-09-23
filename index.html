@@ -5402,7 +5402,7 @@
             name: afterPhotoName,
             timestamp: Date.now(),
             beforePhotoId: beforePhoto.id, // Link to specific before photo
-            aspectRatio: beforePhoto.aspectRatio || this.currentAspectRatio || '2:3' // Inherit aspect ratio from before photo
+            aspectRatio: beforePhoto.aspectRatio || this.currentAspectRatio || '4:3' // Inherit aspect ratio from before photo
           };
 
           if (existingAfterPhotoIndex !== -1) {
@@ -6319,15 +6319,15 @@
         
         // Helper function to get aspect ratio based on current setting
         getAspectRatio() {
-          // Default to 2:3 ratio if not set
+          // Default to 4:3 ratio if not set (for stack mode)
           if (!this.currentAspectRatio) {
-            this.currentAspectRatio = '2:3';
+            this.currentAspectRatio = '4:3';
           }
 
-          if (this.currentAspectRatio === '2:3') {
-            return { width: 2, height: 3 }; // 2:3 portrait ratio
+          if (this.currentAspectRatio === '4:3') {
+            return { width: 4, height: 3 }; // 4:3 for stack mode (landscape crop from portrait)
           } else {
-            return { width: 4, height: 3 }; // 4:3 landscape ratio
+            return { width: 3, height: 4 }; // 3:4 for side-by-side mode (portrait crop)
           }
         }
 
@@ -6339,14 +6339,14 @@
           // iPhone maximum resolutions for different aspect ratios
           let idealWidth, idealHeight;
 
-          if (this.currentAspectRatio === '2:3') {
-            // 2:3 ratio - use longest dimension as height (portrait)
-            idealWidth = 1920;  // Max iPhone width for 2:3
-            idealHeight = 2880; // Max iPhone height for 2:3
+          if (this.currentAspectRatio === '4:3') {
+            // 4:3 ratio for stack mode - landscape crop from portrait capture
+            idealWidth = 3024;  // iPhone max width
+            idealHeight = 2268; // 3024 × (3/4) for 4:3 crop
           } else {
-            // 4:3 ratio - use longest dimension as width (landscape)
-            idealWidth = 2048;  // Max iPhone width for 4:3
-            idealHeight = 1536; // Max iPhone height for 4:3
+            // 3:4 ratio for side-by-side mode - full portrait
+            idealWidth = 3024;  // iPhone max width
+            idealHeight = 4032; // iPhone max height (natural portrait)
           }
 
           return {
@@ -6362,7 +6362,7 @@
         // Switch between aspect ratios
         switchAspectRatio() {
           const previousRatio = this.currentAspectRatio;
-          this.currentAspectRatio = this.currentAspectRatio === '2:3' ? '4:3' : '2:3';
+          this.currentAspectRatio = this.currentAspectRatio === '4:3' ? '3:4' : '4:3';
           console.log('Switched aspect ratio from', previousRatio, 'to', this.currentAspectRatio);
 
           // Update UI button text
@@ -6427,8 +6427,8 @@
           }
 
           // Set button text to current aspect ratio
-          aspectRatioBtn.textContent = this.currentAspectRatio || '2:3';
-          console.log('Initialized aspect ratio button with:', this.currentAspectRatio || '2:3');
+          aspectRatioBtn.textContent = this.currentAspectRatio || '4:3';
+          console.log('Initialized aspect ratio button with:', this.currentAspectRatio || '4:3');
 
           // Remove any existing event listeners by cloning the button
           const newBtn = aspectRatioBtn.cloneNode(true);
@@ -6501,7 +6501,7 @@
           overlays.forEach(overlay => {
             // Determine if this is before or after mode
             const isAfterMode = document.getElementById('comparison-camera') !== null;
-            const aspectRatio = this.currentAspectRatio || '2:3';
+            const aspectRatio = this.currentAspectRatio || '4:3';
 
             // Calculate frame dimensions based on aspect ratio
             let frameWidth, frameHeight;
@@ -6518,8 +6518,8 @@
               actualVideoHeight = videoElement.videoHeight;
             } else {
               // Fallback dimensions
-              actualVideoWidth = aspectRatio === '2:3' ? 1920 : 2048;
-              actualVideoHeight = aspectRatio === '2:3' ? 2880 : 1536;
+              actualVideoWidth = aspectRatio === '4:3' ? 3024 : 3024;
+              actualVideoHeight = aspectRatio === '4:3' ? 2268 : 4032;
             }
 
             const actualVideoAspectRatio = actualVideoWidth / actualVideoHeight;
@@ -6539,10 +6539,10 @@
 
             // Now calculate frame based on desired aspect ratio, not actual video
             let targetAspectRatio;
-            if (aspectRatio === '2:3') {
-              targetAspectRatio = 2/3; // 0.667
+            if (aspectRatio === '4:3') {
+              targetAspectRatio = 4/3; // 1.333 - Stack mode (landscape crop)
             } else {
-              targetAspectRatio = 4/3; // 1.333
+              targetAspectRatio = 3/4; // 0.75 - Side-by-side mode (portrait crop)
             }
 
             console.log(`Frame Debug - ${aspectRatio} mode:`);
@@ -6735,7 +6735,7 @@
             name: photoName,
             timestamp: Date.now(),
             zoomLevel: this.currentBeforeZoom || 1, // Store the zoom level used
-            aspectRatio: this.currentAspectRatio || '2:3' // Store the aspect ratio used
+            aspectRatio: this.currentAspectRatio || '4:3' // Store the aspect ratio used
           };
           
           console.log('Photo created:', photo);
