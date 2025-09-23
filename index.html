@@ -624,8 +624,8 @@
             // Portrait mode - top (camera) and bottom (existing photos)
             return `
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
-                <!-- Top half - Camera -->
-                <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
+                <!-- Full screen - Camera -->
+                <div id="camera-container" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 1;">
                   <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
@@ -648,21 +648,21 @@
                 </div>
                 
                 <!-- Room Tabs Section -->
-                <div style="width: 100%; background: #f8fafc; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; background: rgba(248,250,252,0.95); padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 10; backdrop-filter: blur(10px);">
                   <div id="modal-room-tabs-container" style="position: relative; width: 100%; height: 60px; overflow: hidden;">
                     <div id="modal-tabs-carousel" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease;">
                       ${this.getRoomTabsCarousel()}
                     </div>
                   </div>
                 </div>
-                
-                <!-- Bottom half - Photo Grid -->
-                <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px; min-height: 200px;">
+
+                <!-- Bottom overlay - Photo Grid -->
+                <div id="before-photo-grid" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: rgba(248,249,250,0.95); overflow-y: auto; padding: 10px; padding-bottom: 15px; z-index: 10; backdrop-filter: blur(10px);">
                   ${this.getBeforePhotosGridHTML()}
                 </div>
-                
+
                 <!-- Close button -->
-                <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer;">
+                <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: transparent; color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 20;">
                   ✕
                 </button>
               </div>
@@ -783,26 +783,8 @@
             // Portrait mode - top (before) and bottom (camera)
             return `
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
-                <!-- Top half - Before photo -->
-                <div style="position: relative; width: 100%; height: 50%; background: black;">
-                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
-                  
-                  <!-- Photo info overlay -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 20px; text-align: center; color: white;">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
-                      ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - BEFORE
-                    </div>
-                    <div style="font-size: 14px; opacity: 0.9;">
-                      ${new Date(photo.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Divider line -->
-                <div style="width: 100%; height: 4px; background: #000;"></div>
-                
-                <!-- Bottom half - Camera -->
-                <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
+                <!-- Full screen - Camera -->
+                <div id="camera-container" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 1;">
                   <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                   
                   <!-- Photo frame overlay for camera -->
@@ -817,11 +799,29 @@
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                   </div>
 
-                  
+
                 </div>
-                
+
+                <!-- Top overlay - Before photo -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 45%; background: black; z-index: 10;">
+                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
+
+                  <!-- Photo info overlay -->
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 20px; text-align: center; color: white;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
+                      ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - BEFORE
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                      ${new Date(photo.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider line -->
+                <div style="position: absolute; top: 45%; left: 0; width: 100%; height: 4px; background: #000; z-index: 15;"></div>
+
                 <!-- Close button -->
-                <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 9999; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
+                <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 20; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
                   ✕
                 </button>
               </div>
