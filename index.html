@@ -491,11 +491,11 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: row;">
                 <!-- Left half - Active camera -->
                 <div style="position: relative; width: 50%; height: 100%; background: black;">
-                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
-                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
+                    <!-- Dynamic overlay will be inserted here -->
                   </div>
                   
                   
@@ -535,11 +535,11 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
                 <!-- Top half - Active camera -->
                 <div style="position: relative; width: 100%; height: 50%; background: black;">
-                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
-                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
+                    <!-- Dynamic overlay will be inserted here -->
                   </div>
                   
                   
@@ -575,7 +575,7 @@
                 <div style="position: relative; width: 100%; height: calc(100% - 80px); display: flex; flex-direction: row;">
                   <!-- Left half - Camera -->
                   <div id="camera-container" style="position: relative; width: 50%; height: 100%; background: black;">
-                    <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                     
                     <!-- Photo frame overlay for camera -->
                     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
@@ -593,6 +593,7 @@
                       <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                       <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                     </div>
+
                     
                     <!-- Close button - positioned within camera view -->
                     <button id="close-before-modal-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 10; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;">
@@ -625,11 +626,11 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
                 <!-- Top half - Camera -->
                 <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
-                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
-                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
+                    <!-- Dynamic overlay will be inserted here -->
                   </div>
                   
                   <!-- Before label -->
@@ -643,6 +644,7 @@
                     <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                   </div>
+
                 </div>
                 
                 <!-- Room Tabs Section -->
@@ -691,7 +693,7 @@
           beforePhotos.forEach(photo => {
             gridItems.push(`
               <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
-                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 
                 <!-- Delete button -->
                 <button class="delete-before-photo-btn" data-photo-id="${photo.id}" style="position: absolute; top: 5px; right: 5px; background: #F2C31B; color: #303030; border: none; padding: 6px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e6b800'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='scale(1)'">
@@ -727,7 +729,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: row;">
                 <!-- Left half - Before photo -->
                 <div style="position: relative; width: 50%; height: 100%; background: black;">
-                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                   
                   <!-- Photo info overlay -->
                   <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 20px; text-align: center; color: white;">
@@ -750,11 +752,11 @@
                 
                 <!-- Right half - Camera -->
                 <div id="camera-container" style="position: relative; width: 50%; height: 100%; background: black;">
-                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
-                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
+                    <!-- Dynamic overlay will be inserted here -->
                   </div>
                   
                   <!-- After label -->
@@ -768,6 +770,7 @@
                     <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                   </div>
+
                   
                   <!-- Close button -->
                   <button id="close-comparison-btn" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #F2C31B; border: none; padding: 8px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 99999; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
@@ -782,7 +785,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
                 <!-- Top half - Before photo -->
                 <div style="position: relative; width: 100%; height: 50%; background: black;">
-                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                   
                   <!-- Photo info overlay -->
                   <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 20px; text-align: center; color: white;">
@@ -800,11 +803,11 @@
                 
                 <!-- Bottom half - Camera -->
                 <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black;">
-                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
-                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 90%; height: 90%; border: 3px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);"></div>
+                  <div class="photo-frame-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
+                    <!-- Dynamic overlay will be inserted here -->
                   </div>
                   
                   <!-- Zoom controls for portrait mode comparison -->
@@ -813,6 +816,7 @@
                     <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
                   </div>
+
                   
                 </div>
                 
@@ -832,7 +836,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: row; background: white;">
                 <!-- Left half - Before photo -->
                 <div style="position: relative; width: 50%; height: 100%; background: black; overflow: hidden;">
-                  <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                   <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                     BEFORE
                   </div>
@@ -843,7 +847,7 @@
                 
                 <!-- Right half - After photo -->
                 <div style="position: relative; width: 50%; height: 100%; background: black; overflow: hidden;">
-                  <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                   <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                     AFTER
                   </div>
@@ -862,7 +866,7 @@
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; background: white;">
                 <!-- Top half - Before photo -->
                 <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
-                  <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                   <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                     BEFORE
                   </div>
@@ -873,7 +877,7 @@
                 
                 <!-- Bottom half - After photo -->
                 <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
-                  <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                   <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                     AFTER
                   </div>
@@ -938,19 +942,21 @@
               
               <!-- Fixed Action Buttons Panel (only for camera modals) -->
               <div id="bottom-panel" style="position: fixed; ${this.isLandscape ? 'right: 0; top: 0; bottom: 0; width: 80px; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding-top: 40px; padding-bottom: 40px;' : 'bottom: 0; left: 0; right: 0; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;'} z-index: 2001; background: white; box-shadow: ${this.isLandscape ? '0 0 8px rgba(0,0,0,0.1)' : '0 -2px 8px rgba(0,0,0,0.1)'};">
-                <!-- Left Section - Retake Button (hidden by default) -->
+                <!-- Left Section - Aspect Ratio Button (always visible during camera) -->
                 <div style="display: flex; justify-content: center;">
+                  <button id="aspect-ratio-btn" style="background: #F2C31B; color: #303030; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">2:3</button>
+                </div>
+
+                <!-- Center Section - Camera Button (main action button) -->
+                <div style="display: flex; justify-content: center;">
+                  <button id="camera-btn" style="background: #F2C31B; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3); display: none;"></button>
+                  <!-- Retake Button (replaces camera button after capture) -->
                   <button id="btn-retake" style="background: #ef4444; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
                     🔄 Retake
                   </button>
                 </div>
 
-                <!-- Center Section - Camera Button (hidden by default for gallery, shown during photo capture) -->
-                <div style="display: flex; justify-content: center;">
-                  <button id="camera-btn" style="background: #F2C31B; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(48,48,48,0.3); display: none;"></button>
-                </div>
-
-                <!-- Right Section - Save Button (hidden by default) -->
+                <!-- Right Section - Save Button (shown after capture) -->
                 <div style="display: flex; justify-content: center;">
                   <button id="btn-save" style="background: #10b981; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
                     💾 Save
@@ -1247,7 +1253,7 @@
                 
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
-                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
@@ -1270,7 +1276,7 @@
                 
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
-                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
@@ -3069,11 +3075,10 @@
           `;
 
           // Use the same template as the regular fullscreen but without camera functionality
-          const orientation = this.detectPhotoOrientation(photo.naturalWidth || 800, photo.naturalHeight || 600);
           const templateType = photo.templateType || 'default';
-          
+
           // Use the same HTML structure as the regular fullscreen
-          modal.innerHTML = this.getEnlargedPhotoHTML(photo, orientation, templateType);
+          modal.innerHTML = this.getEnlargedPhotoHTML(photo, templateType);
           
           document.body.appendChild(modal);
           document.body.style.overflow = 'hidden';
@@ -3082,7 +3087,7 @@
           this.setupEnlargedPhotoListeners(modal, photo);
         }
 
-        getEnlargedPhotoHTML(photo, orientation, templateType) {
+        getEnlargedPhotoHTML(photo, templateType) {
           return `
             <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 120px; box-sizing: border-box;">
               <!-- Scrollable container for actual size viewing -->
@@ -3447,12 +3452,12 @@
           const onImageLoad = () => {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-              // Calculate template dimensions
-              const templateDimensions = this.calculateTemplateDimensions(
-                { width: beforeImg.width, height: beforeImg.height },
-                { width: afterImg.width, height: afterImg.height },
-                templateType
-              );
+              // Simple template dimensions - will implement new flow
+              const templateDimensions = {
+                targetWidth: 800,
+                targetHeight: 600,
+                splitType: 'vertical'
+              };
 
               // Create canvas
               const canvas = document.createElement('canvas');
@@ -3663,7 +3668,7 @@
 
                 gridItems.push(`
                   <div class="photo-item" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
-                    <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: cover; filter: blur(3px);" />
+                    <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: contain; filter: blur(3px);" />
 
                     <!-- Retake button in center -->
                     <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 10;">
@@ -3689,7 +3694,7 @@
 
               gridItems.push(`
                 <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 3px solid #F2C31B; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
-                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
+                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: contain; cursor: pointer;" />
                   <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
                     <div style="font-weight: bold; margin-bottom: 2px; color: #303030; font-family: 'Quicksand', sans-serif;">${displayName}</div>
                     <div style="font-size: 10px; opacity: 0.8; font-family: 'Quicksand', sans-serif;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
@@ -4103,14 +4108,16 @@
         showCameraButton() {
           // Show camera button during photo capture screens
           const cameraBtn = document.getElementById('camera-btn');
+          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
           const bottomPanel = document.getElementById('bottom-panel');
 
           // Show the bottom panel with appropriate layout
           if (bottomPanel) {
             bottomPanel.style.display = this.isLandscape ? 'flex' : 'grid';
           }
-          
+
           if (cameraBtn) cameraBtn.style.display = 'block';
+          if (aspectRatioBtn) aspectRatioBtn.style.display = 'flex';
           
           // Adjust main content padding in landscape mode
           if (this.isLandscape) {
@@ -4158,6 +4165,7 @@
         hideCameraButton() {
           // Hide camera button and reset styling
           const cameraBtn = document.getElementById('camera-btn');
+          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
           const bottomPanel = document.getElementById('bottom-panel');
 
           // Hide the entire bottom panel
@@ -4174,6 +4182,10 @@
             cameraBtn.style.background = '#F2C31B';
             cameraBtn.style.border = 'none';
             cameraBtn.style.boxShadow = '0 4px 12px rgba(48,48,48,0.3)';
+          }
+
+          if (aspectRatioBtn) {
+            aspectRatioBtn.style.display = 'none';
           }
           
           // Keep bottom panel white when hidden (to cover any gallery content)
@@ -4751,7 +4763,13 @@
           if (photo.mode === 'before') {
             // Store the specific before photo that was clicked for later reference
             this.currentBeforePhoto = photo;
-            
+
+            // Restore the aspect ratio from the before photo
+            if (photo.aspectRatio) {
+              this.currentAspectRatio = photo.aspectRatio;
+              console.log('Restored aspect ratio from before photo:', photo.aspectRatio);
+            }
+
             // Split screen: before photo and camera
             modal.innerHTML = this.getComparisonModalHTML(photo);
 
@@ -4768,22 +4786,18 @@
             try {
               let stream;
               try {
+                const constraints = this.getIOSCameraConstraints();
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+              } catch (backCameraError) {
+                console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
                 const aspectRatio = this.getAspectRatio();
                 const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-                
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                  video: { 
-                    facingMode: 'environment', // Default to back camera
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                  video: {
+                    facingMode: 'environment',
                     aspectRatio: targetAspectRatio
                   }
-                });
-              } catch (backCameraError) {
-                console.log('Back camera not available, trying any camera:', backCameraError);
-                const aspectRatio = this.getAspectRatio();
-                const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-                
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                  video: { aspectRatio: targetAspectRatio }
                 });
               }
               
@@ -4795,8 +4809,15 @@
               
               // Initialize zoom controls for comparison camera
               this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
-              
-              
+
+              // Initialize aspect ratio button
+              this.initializeAspectRatioButton();
+
+              // Initialize aspect ratio overlay
+              setTimeout(() => {
+                this.updateAspectRatioOverlay();
+              }, 100);
+
               // Close button
               document.getElementById('close-comparison-btn').addEventListener('click', () => {
                 stream.getTracks().forEach(track => track.stop());
@@ -4846,22 +4867,18 @@
               try {
                 let stream;
                 try {
+                  const constraints = this.getIOSCameraConstraints();
+                  stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (backCameraError) {
+                  console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
                   const aspectRatio = this.getAspectRatio();
                   const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-                  
-                  stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                      facingMode: 'environment', // Default to back camera
+
+                  stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                      facingMode: 'environment',
                       aspectRatio: targetAspectRatio
                     }
-                  });
-                } catch (backCameraError) {
-                  console.log('Back camera not available, trying any camera:', backCameraError);
-                  const aspectRatio = this.getAspectRatio();
-                  const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-                  
-                  stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { aspectRatio: targetAspectRatio }
                   });
                 }
                 
@@ -4873,8 +4890,15 @@
                 
                 // Initialize zoom controls for comparison camera
                 this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
-                
-                
+
+                // Initialize aspect ratio button
+                this.initializeAspectRatioButton();
+
+                // Initialize aspect ratio overlay
+                setTimeout(() => {
+                  this.updateAspectRatioOverlay();
+                }, 100);
+
                 // Close button
                 document.getElementById('close-comparison-btn').addEventListener('click', () => {
                   stream.getTracks().forEach(track => track.stop());
@@ -4901,7 +4925,7 @@
               // Fallback: Regular fullscreen if no linked before photo found
               modal.innerHTML = `
                 <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">
-                  <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: cover;" />
+                  <img src="${photo.dataUrl}" style="width: 100vw; height: 100vh; object-fit: contain;" />
                   
                   <!-- Photo info overlay -->
                   <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 40px 20px 20px; text-align: center; color: white;">
@@ -5101,32 +5125,16 @@
         }
         
         captureComparisonPhoto(video, stream, beforePhoto) {
+          console.log('Capturing comparison photo - original resolution');
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          // Calculate dimensions with correct aspect ratio
-          const { width, height } = this.calculateCanvasDimensions(video.videoWidth, video.videoHeight, 800);
+          // Use the video's original resolution without any transformations
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
 
-          canvas.width = width;
-          canvas.height = height;
-
-          // Calculate source rectangle to maintain aspect ratio
-          const videoAspectRatio = video.videoWidth / video.videoHeight;
-          const targetAspectRatio = width / height;
-          
-          let sourceX = 0, sourceY = 0, sourceWidth = video.videoWidth, sourceHeight = video.videoHeight;
-
-          if (videoAspectRatio > targetAspectRatio) {
-            // Video is wider, crop from sides
-            sourceWidth = video.videoHeight * targetAspectRatio;
-            sourceX = (video.videoWidth - sourceWidth) / 2;
-          } else if (videoAspectRatio < targetAspectRatio) {
-            // Video is taller, crop from top/bottom
-            sourceHeight = video.videoWidth / targetAspectRatio;
-            sourceY = (video.videoHeight - sourceHeight) / 2;
-          }
-
-          ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+          // Draw the entire video frame without cropping or resizing
+          ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
           const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
@@ -5276,23 +5284,19 @@
           try {
             let stream;
             try {
-              // Try to get back camera first
+              // Try iPhone optimized constraints first
+              const constraints = this.getIOSCameraConstraints();
+              stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (backCameraError) {
+              console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
               const aspectRatio = this.getAspectRatio();
               const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-              
-              stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
+
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: {
                   facingMode: 'environment',
                   aspectRatio: targetAspectRatio
-                } 
-              });
-            } catch (backCameraError) {
-              console.log('Back camera not available, trying any camera:', backCameraError);
-              const aspectRatio = this.getAspectRatio();
-              const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-              
-              stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { aspectRatio: targetAspectRatio }
+                }
               });
             }
             
@@ -5304,7 +5308,15 @@
             
             // Initialize zoom controls for comparison camera
             this.initializeZoomControls(stream, 'comparison-camera', currentZoom, 'comparison');
-            
+
+            // Initialize aspect ratio button
+            this.initializeAspectRatioButton();
+
+            // Initialize aspect ratio overlay
+            setTimeout(() => {
+              this.updateAspectRatioOverlay();
+            }, 100);
+
             // Close button
             document.getElementById('close-comparison-btn').addEventListener('click', () => {
               stream.getTracks().forEach(track => track.stop());
@@ -5389,7 +5401,8 @@
             mode: 'after', // Save as after photo for split-screen display
             name: afterPhotoName,
             timestamp: Date.now(),
-            beforePhotoId: beforePhoto.id // Link to specific before photo
+            beforePhotoId: beforePhoto.id, // Link to specific before photo
+            aspectRatio: beforePhoto.aspectRatio || this.currentAspectRatio || '2:3' // Inherit aspect ratio from before photo
           };
 
           if (existingAfterPhotoIndex !== -1) {
@@ -5435,233 +5448,9 @@
           afterImg.src = afterDataUrl;
         }
 
-        processEnhancedCombinedPhoto(beforeImg, afterImg, room, photoName, templateType) {
-          // Calculate template dimensions using enhanced system
-          const templateDimensions = this.calculateTemplateDimensions(
-            { width: beforeImg.width, height: beforeImg.height },
-            { width: afterImg.width, height: afterImg.height },
-            templateType
-          );
 
-          // Create canvas with calculated dimensions
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          canvas.width = templateDimensions.targetWidth;
-          canvas.height = templateDimensions.targetHeight;
-          
-          // Fill white background
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          // Apply cropping and positioning based on split type
-          // Save the context state before clipping
-          ctx.save();
-          
-          // Clip to the exact template dimensions
-          ctx.beginPath();
-          ctx.rect(0, 0, canvas.width, canvas.height);
-          ctx.clip();
-          
-          if (templateDimensions.splitType === 'vertical') {
-            this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
-          } else {
-            this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
-          }
-          
-          // Restore the context state
-          ctx.restore();
-          
-          // Add labels
-          this.addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
-          
-          // Convert to data URL and save
-          const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-          this.saveCombinedPhoto(combinedDataUrl, room, photoName, templateType);
-        }
 
-        drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions) {
-          const { beforeCrop, afterCrop, targetWidth, targetHeight } = templateDimensions;
-          
-          // For vertical split, each photo takes exactly half the height
-          const halfHeight = targetHeight / 2;
-          
-          // Draw before photo (top half) - crop from center and fill the space
-          const beforeAspectRatio = beforeCrop.cropWidth / beforeCrop.cropHeight;
-          const topTargetAspectRatio = targetWidth / halfHeight;
-          
-          let beforeSrcX = beforeCrop.cropX;
-          let beforeSrcY = beforeCrop.cropY;
-          let beforeSrcWidth = beforeCrop.cropWidth;
-          let beforeSrcHeight = beforeCrop.cropHeight;
-          
-          // Adjust source crop to match target aspect ratio
-          if (beforeAspectRatio > topTargetAspectRatio) {
-            // Source is wider, crop from sides
-            const newSrcWidth = beforeCrop.cropHeight * topTargetAspectRatio;
-            beforeSrcX = beforeCrop.cropX + (beforeCrop.cropWidth - newSrcWidth) / 2;
-            beforeSrcWidth = newSrcWidth;
-          } else if (beforeAspectRatio < topTargetAspectRatio) {
-            // Source is taller, crop from top/bottom
-            const newSrcHeight = beforeCrop.cropWidth / topTargetAspectRatio;
-            beforeSrcY = beforeCrop.cropY + (beforeCrop.cropHeight - newSrcHeight) / 2;
-            beforeSrcHeight = newSrcHeight;
-          }
-          
-          // Draw before photo filling the top half exactly
-          ctx.drawImage(
-            beforeImg,
-            beforeSrcX, beforeSrcY, beforeSrcWidth, beforeSrcHeight,
-            0, 0, targetWidth, halfHeight
-          );
-          
-          // Draw divider line
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(0, halfHeight);
-          ctx.lineTo(targetWidth, halfHeight);
-          ctx.stroke();
-          
-          // Draw after photo (bottom half) - crop from center and fill the space
-          const afterAspectRatio = afterCrop.cropWidth / afterCrop.cropHeight;
-          const bottomTargetAspectRatio = targetWidth / halfHeight;
-          
-          let afterSrcX = afterCrop.cropX;
-          let afterSrcY = afterCrop.cropY;
-          let afterSrcWidth = afterCrop.cropWidth;
-          let afterSrcHeight = afterCrop.cropHeight;
-          
-          // Adjust source crop to match target aspect ratio
-          if (afterAspectRatio > bottomTargetAspectRatio) {
-            // Source is wider, crop from sides
-            const newSrcWidth = afterCrop.cropHeight * bottomTargetAspectRatio;
-            afterSrcX = afterCrop.cropX + (afterCrop.cropWidth - newSrcWidth) / 2;
-            afterSrcWidth = newSrcWidth;
-          } else if (afterAspectRatio < bottomTargetAspectRatio) {
-            // Source is taller, crop from top/bottom
-            const newSrcHeight = afterCrop.cropWidth / bottomTargetAspectRatio;
-            afterSrcY = afterCrop.cropY + (afterCrop.cropHeight - newSrcHeight) / 2;
-            afterSrcHeight = newSrcHeight;
-          }
-          
-          // Draw after photo filling the bottom half exactly
-          ctx.drawImage(
-            afterImg,
-            afterSrcX, afterSrcY, afterSrcWidth, afterSrcHeight,
-            0, halfHeight, targetWidth, halfHeight
-          );
-        }
 
-        drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions) {
-          const { beforeCrop, afterCrop, targetWidth, targetHeight } = templateDimensions;
-          
-          // For horizontal split, each photo takes exactly half the width
-          const halfWidth = targetWidth / 2;
-          
-          // Draw before photo (left half) - crop from center and fill the space
-          const beforeAspectRatio = beforeCrop.cropWidth / beforeCrop.cropHeight;
-          const leftTargetAspectRatio = halfWidth / targetHeight;
-          
-          let beforeSrcX = beforeCrop.cropX;
-          let beforeSrcY = beforeCrop.cropY;
-          let beforeSrcWidth = beforeCrop.cropWidth;
-          let beforeSrcHeight = beforeCrop.cropHeight;
-          
-          // Adjust source crop to match target aspect ratio
-          if (beforeAspectRatio > leftTargetAspectRatio) {
-            // Source is wider, crop from sides
-            const newSrcWidth = beforeCrop.cropHeight * leftTargetAspectRatio;
-            beforeSrcX = beforeCrop.cropX + (beforeCrop.cropWidth - newSrcWidth) / 2;
-            beforeSrcWidth = newSrcWidth;
-          } else if (beforeAspectRatio < leftTargetAspectRatio) {
-            // Source is taller, crop from top/bottom
-            const newSrcHeight = beforeCrop.cropWidth / leftTargetAspectRatio;
-            beforeSrcY = beforeCrop.cropY + (beforeCrop.cropHeight - newSrcHeight) / 2;
-            beforeSrcHeight = newSrcHeight;
-          }
-          
-          // Draw before photo filling the left half exactly
-          ctx.drawImage(
-            beforeImg,
-            beforeSrcX, beforeSrcY, beforeSrcWidth, beforeSrcHeight,
-            0, 0, halfWidth, targetHeight
-          );
-          
-          // Draw divider line
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(halfWidth, 0);
-          ctx.lineTo(halfWidth, targetHeight);
-          ctx.stroke();
-          
-          // Draw after photo (right half) - crop from center and fill the space
-          const afterAspectRatio = afterCrop.cropWidth / afterCrop.cropHeight;
-          const rightTargetAspectRatio = halfWidth / targetHeight;
-          
-          let afterSrcX = afterCrop.cropX;
-          let afterSrcY = afterCrop.cropY;
-          let afterSrcWidth = afterCrop.cropWidth;
-          let afterSrcHeight = afterCrop.cropHeight;
-          
-          // Adjust source crop to match target aspect ratio
-          if (afterAspectRatio > rightTargetAspectRatio) {
-            // Source is wider, crop from sides
-            const newSrcWidth = afterCrop.cropHeight * rightTargetAspectRatio;
-            afterSrcX = afterCrop.cropX + (afterCrop.cropWidth - newSrcWidth) / 2;
-            afterSrcWidth = newSrcWidth;
-          } else if (afterAspectRatio < rightTargetAspectRatio) {
-            // Source is taller, crop from top/bottom
-            const newSrcHeight = afterCrop.cropWidth / rightTargetAspectRatio;
-            afterSrcY = afterCrop.cropY + (afterCrop.cropHeight - newSrcHeight) / 2;
-            afterSrcHeight = newSrcHeight;
-          }
-          
-          // Draw after photo filling the right half exactly
-          ctx.drawImage(
-            afterImg,
-            afterSrcX, afterSrcY, afterSrcWidth, afterSrcHeight,
-            halfWidth, 0, halfWidth, targetHeight
-          );
-        }
-
-        addPhotoLabels(ctx, canvasWidth, canvasHeight, splitType) {
-              ctx.fillStyle = 'rgba(0,0,0,0.8)';
-              ctx.font = 'bold 18px Arial';
-              ctx.textAlign = 'center';
-              
-          const labelWidth = 100;
-          const labelHeight = 30;
-          
-          if (splitType === 'vertical') {
-            // Before label (top)
-            const beforeLabelY = 20;
-            ctx.fillRect(canvasWidth/2 - labelWidth/2, beforeLabelY, labelWidth, labelHeight);
-              ctx.fillStyle = '#ffffff';
-            ctx.fillText('BEFORE', canvasWidth/2, beforeLabelY + 20);
-              
-            // After label (bottom)
-            const afterLabelY = canvasHeight/2 + 20;
-              ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(canvasWidth/2 - labelWidth/2, afterLabelY, labelWidth, labelHeight);
-              ctx.fillStyle = '#ffffff';
-            ctx.fillText('AFTER', canvasWidth/2, afterLabelY + 20);
-          } else {
-            // Before label (left)
-            const beforeLabelX = canvasWidth/4 - labelWidth/2;
-            ctx.fillRect(beforeLabelX, 20, labelWidth, labelHeight);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText('BEFORE', beforeLabelX + labelWidth/2, 40);
-            
-            // After label (right)
-            const afterLabelX = (3 * canvasWidth/4) - labelWidth/2;
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(afterLabelX, 20, labelWidth, labelHeight);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText('AFTER', afterLabelX + labelWidth/2, 40);
-          }
-        }
 
         showTemplateSelector(beforePhoto, afterPhoto) {
           // Clean up any existing template selector modals first
@@ -6017,51 +5806,6 @@
           afterImg.src = afterDataUrl;
         }
 
-        processEnhancedCombinedPhotoWithCallback(beforeImg, afterImg, room, photoName, templateType, callback) {
-          // Calculate template dimensions using enhanced system
-          const templateDimensions = this.calculateTemplateDimensions(
-            { width: beforeImg.width, height: beforeImg.height },
-            { width: afterImg.width, height: afterImg.height },
-            templateType
-          );
-
-          // Create canvas with calculated dimensions
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          canvas.width = templateDimensions.targetWidth;
-          canvas.height = templateDimensions.targetHeight;
-          
-          // Fill white background
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          // Apply cropping and positioning based on split type
-          // Save the context state before clipping
-          ctx.save();
-          
-          // Clip to the exact template dimensions
-          ctx.beginPath();
-          ctx.rect(0, 0, canvas.width, canvas.height);
-          ctx.clip();
-          
-          if (templateDimensions.splitType === 'vertical') {
-            this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
-          } else {
-            this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
-          }
-          
-          // Restore the context state
-          ctx.restore();
-          
-          // Add labels
-          this.addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
-          
-          // Convert to data URL and save with callback
-          const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-          const createdPhoto = this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, templateType, callback);
-          return createdPhoto;
-        }
 
         saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, templateType = 'default', callback) {
           console.log('saveCombinedPhoto with callback called with name:', photoName, 'template:', templateType);
@@ -6266,7 +6010,7 @@
             <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;">
               <!-- Before photo (top half) -->
               <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
-                <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                <img src="${beforeDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                   BEFORE
                 </div>
@@ -6277,7 +6021,7 @@
               
               <!-- After photo (bottom half) -->
               <div style="position: relative; width: 100%; height: 50%; background: black; overflow: hidden;">
-                <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+                <img src="${afterDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold;">
                   AFTER
                 </div>
@@ -6438,25 +6182,21 @@
             // Restore scrolling if no camera modals remain
             this.restoreScrollingIfNoCameraModals();
 
-            // Try to use back camera first, fallback to any camera
+            // Try iPhone optimized constraints first, fallback to basic
             let stream;
             try {
+              const constraints = this.getIOSCameraConstraints();
+              stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (backCameraError) {
+              console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
               const aspectRatio = this.getAspectRatio();
               const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-              
+
               stream = await navigator.mediaDevices.getUserMedia({
-                video: { 
-                  facingMode: 'environment', // Back camera
+                video: {
+                  facingMode: 'environment',
                   aspectRatio: targetAspectRatio
                 }
-              });
-            } catch (backCameraError) {
-              console.log('Back camera not available, trying any camera:', backCameraError);
-              const aspectRatio = this.getAspectRatio();
-              const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-              
-              stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { aspectRatio: targetAspectRatio }
               });
             }
 
@@ -6496,7 +6236,15 @@
             
             // Initialize zoom controls
             this.initializeZoomControls(stream, 'camera-video', currentZoom);
-            
+
+            // Initialize aspect ratio button
+            this.initializeAspectRatioButton();
+
+            // Initialize aspect ratio overlay
+            setTimeout(() => {
+              this.updateAspectRatioOverlay();
+            }, 100);
+
             // Capture will be handled by the bottom panel camera button
             
             document.getElementById('close-before-modal-btn').addEventListener('click', () => {
@@ -6569,14 +6317,273 @@
           this.captureComparisonPhoto(video, stream, beforePhoto);
         }
         
-        // Helper function to get aspect ratio based on device orientation
+        // Helper function to get aspect ratio based on current setting
         getAspectRatio() {
-          const isLandscape = window.innerWidth > window.innerHeight;
-          if (isLandscape) {
-            return { width: 8, height: 9 }; // 8:9 for horizontal
-          } else {
-            return { width: 1, height: 1.15 }; // 1:1.15 for vertical
+          // Default to 2:3 ratio if not set
+          if (!this.currentAspectRatio) {
+            this.currentAspectRatio = '2:3';
           }
+
+          if (this.currentAspectRatio === '2:3') {
+            return { width: 2, height: 3 }; // 2:3 portrait ratio
+          } else {
+            return { width: 4, height: 3 }; // 4:3 landscape ratio
+          }
+        }
+
+        // Get iPhone-optimized camera constraints
+        getIOSCameraConstraints() {
+          const aspectRatio = this.getAspectRatio();
+          const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+
+          // iPhone maximum resolutions for different aspect ratios
+          let idealWidth, idealHeight;
+
+          if (this.currentAspectRatio === '2:3') {
+            // 2:3 ratio - use longest dimension as height (portrait)
+            idealWidth = 1920;  // Max iPhone width for 2:3
+            idealHeight = 2880; // Max iPhone height for 2:3
+          } else {
+            // 4:3 ratio - use longest dimension as width (landscape)
+            idealWidth = 2048;  // Max iPhone width for 4:3
+            idealHeight = 1536; // Max iPhone height for 4:3
+          }
+
+          return {
+            video: {
+              facingMode: 'environment',
+              width: { ideal: idealWidth, max: idealWidth },
+              height: { ideal: idealHeight, max: idealHeight },
+              aspectRatio: { ideal: targetAspectRatio }
+            }
+          };
+        }
+
+        // Switch between aspect ratios
+        switchAspectRatio() {
+          const previousRatio = this.currentAspectRatio;
+          this.currentAspectRatio = this.currentAspectRatio === '2:3' ? '4:3' : '2:3';
+          console.log('Switched aspect ratio from', previousRatio, 'to', this.currentAspectRatio);
+
+          // Update UI button text
+          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
+          if (aspectRatioBtn) {
+            aspectRatioBtn.textContent = this.currentAspectRatio;
+            console.log('Updated button text to:', this.currentAspectRatio);
+          } else {
+            console.log('Aspect ratio button not found when trying to update text');
+          }
+
+          // Update the visual overlay immediately
+          this.updateAspectRatioOverlay();
+
+          // Restart camera with new aspect ratio if camera is active
+          this.restartCameraWithNewAspectRatio();
+        }
+
+        // Restart camera with new aspect ratio
+        async restartCameraWithNewAspectRatio() {
+          const videoElement = document.getElementById('camera-video') || document.getElementById('comparison-camera');
+          if (!videoElement || !videoElement.srcObject) {
+            return; // No active camera to restart
+          }
+
+          // Stop current stream
+          const currentStream = videoElement.srcObject;
+          currentStream.getTracks().forEach(track => track.stop());
+
+          try {
+            // Get new stream with updated constraints
+            const constraints = this.getIOSCameraConstraints();
+            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+            videoElement.srcObject = newStream;
+
+            console.log('Camera restarted with new aspect ratio:', this.currentAspectRatio);
+          } catch (error) {
+            console.error('Failed to restart camera with new aspect ratio:', error);
+            // Fallback to basic constraints
+            try {
+              const aspectRatio = this.getAspectRatio();
+              const basicConstraints = {
+                video: {
+                  facingMode: 'environment',
+                  aspectRatio: aspectRatio.width / aspectRatio.height
+                }
+              };
+              const fallbackStream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+              videoElement.srcObject = fallbackStream;
+            } catch (fallbackError) {
+              console.error('Fallback camera restart also failed:', fallbackError);
+            }
+          }
+        }
+
+        // Initialize aspect ratio button
+        initializeAspectRatioButton() {
+          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
+          if (!aspectRatioBtn) {
+            console.log('Aspect ratio button not found');
+            return;
+          }
+
+          // Set button text to current aspect ratio
+          aspectRatioBtn.textContent = this.currentAspectRatio || '2:3';
+          console.log('Initialized aspect ratio button with:', this.currentAspectRatio || '2:3');
+
+          // Remove any existing event listeners by cloning the button
+          const newBtn = aspectRatioBtn.cloneNode(true);
+          aspectRatioBtn.parentNode.replaceChild(newBtn, aspectRatioBtn);
+
+          // Add click event listener to the new button
+          newBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Aspect ratio button clicked');
+            this.switchAspectRatio();
+          });
+        }
+
+        // Get aspect ratio overlay HTML
+        getAspectRatioOverlay() {
+          const aspectRatio = this.getAspectRatio();
+          const ratio = aspectRatio.width / aspectRatio.height;
+
+          let overlayStyle = '';
+          let overlayWidth = '';
+          let overlayHeight = '';
+
+          if (this.currentAspectRatio === '2:3') {
+            // 2:3 ratio (0.667) - portrait orientation
+            overlayWidth = '60%';  // Narrower width
+            overlayHeight = '90%'; // Almost full height
+            overlayStyle = `
+              width: ${overlayWidth};
+              height: ${overlayHeight};
+              aspect-ratio: 2/3;
+            `;
+          } else {
+            // 4:3 ratio (1.333) - landscape orientation
+            overlayWidth = '90%';  // Almost full width
+            overlayHeight = '67.5%'; // Calculated for 4:3 ratio
+            overlayStyle = `
+              width: ${overlayWidth};
+              height: ${overlayHeight};
+              aspect-ratio: 4/3;
+            `;
+          }
+
+          return `
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+              <!-- Semi-transparent overlay covering full area -->
+              <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3);"></div>
+
+              <!-- Clear capture area -->
+              <div style="${overlayStyle} border: 3px solid #F2C31B; border-radius: 8px; box-shadow: 0 0 20px rgba(242, 195, 27, 0.6), inset 0 0 20px rgba(242, 195, 27, 0.1); background: transparent; position: relative; z-index: 1;">
+                <!-- Corner indicators -->
+                <div style="position: absolute; top: -2px; left: -2px; width: 20px; height: 20px; border-top: 4px solid #F2C31B; border-left: 4px solid #F2C31B; border-radius: 4px 0 0 0;"></div>
+                <div style="position: absolute; top: -2px; right: -2px; width: 20px; height: 20px; border-top: 4px solid #F2C31B; border-right: 4px solid #F2C31B; border-radius: 0 4px 0 0;"></div>
+                <div style="position: absolute; bottom: -2px; left: -2px; width: 20px; height: 20px; border-bottom: 4px solid #F2C31B; border-left: 4px solid #F2C31B; border-radius: 0 0 0 4px;"></div>
+                <div style="position: absolute; bottom: -2px; right: -2px; width: 20px; height: 20px; border-bottom: 4px solid #F2C31B; border-right: 4px solid #F2C31B; border-radius: 0 0 4px 0;"></div>
+
+                <!-- Aspect ratio label -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #F2C31B; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold; backdrop-filter: blur(10px);">
+                  ${this.currentAspectRatio || '2:3'}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        // Update aspect ratio overlay with frames and dimming
+        updateAspectRatioOverlay() {
+          // Find all photo frame overlays and update them
+          const overlays = document.querySelectorAll('.photo-frame-overlay');
+          overlays.forEach(overlay => {
+            // Determine if this is before or after mode
+            const isAfterMode = document.getElementById('comparison-camera') !== null;
+            const aspectRatio = this.currentAspectRatio || '2:3';
+
+            // Calculate frame dimensions based on aspect ratio
+            let frameWidth, frameHeight;
+            const containerWidth = overlay.offsetWidth;
+            const containerHeight = overlay.offsetHeight;
+            const border = 10; // 10px border as requested
+
+            // Get actual video stream dimensions
+            const videoElement = document.querySelector('#camera-video, #comparison-camera');
+            let actualVideoWidth, actualVideoHeight;
+
+            if (videoElement && videoElement.videoWidth && videoElement.videoHeight) {
+              actualVideoWidth = videoElement.videoWidth;
+              actualVideoHeight = videoElement.videoHeight;
+            } else {
+              // Fallback dimensions
+              actualVideoWidth = aspectRatio === '2:3' ? 1920 : 2048;
+              actualVideoHeight = aspectRatio === '2:3' ? 2880 : 1536;
+            }
+
+            const actualVideoAspectRatio = actualVideoWidth / actualVideoHeight;
+            const containerAspectRatio = containerWidth / containerHeight;
+
+            // Calculate visible video dimensions (object-fit: contain behavior)
+            let visibleVideoWidth, visibleVideoHeight;
+            if (actualVideoAspectRatio > containerAspectRatio) {
+              // Video is width-constrained
+              visibleVideoWidth = containerWidth;
+              visibleVideoHeight = containerWidth / actualVideoAspectRatio;
+            } else {
+              // Video is height-constrained
+              visibleVideoHeight = containerHeight;
+              visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+            }
+
+            // Now calculate frame based on desired aspect ratio, not actual video
+            let targetAspectRatio;
+            if (aspectRatio === '2:3') {
+              targetAspectRatio = 2/3; // 0.667
+            } else {
+              targetAspectRatio = 4/3; // 1.333
+            }
+
+            console.log(`Frame Debug - ${aspectRatio} mode:`);
+            console.log('Container dimensions:', containerWidth, 'x', containerHeight);
+            console.log('Actual video stream dimensions:', actualVideoWidth, 'x', actualVideoHeight);
+            console.log('Target aspect ratio:', targetAspectRatio);
+            console.log('Visible video dimensions:', visibleVideoWidth, 'x', visibleVideoHeight);
+
+            // Calculate frame size for target aspect ratio within visible video area
+            const availableWidth = visibleVideoWidth - 2*border;
+            const availableHeight = visibleVideoHeight - 2*border;
+
+            if (targetAspectRatio > (availableWidth / availableHeight)) {
+              // Target is wider than available area - width constrained
+              frameWidth = availableWidth;
+              frameHeight = frameWidth / targetAspectRatio;
+            } else {
+              // Target is taller than available area - height constrained
+              frameHeight = availableHeight;
+              frameWidth = frameHeight * targetAspectRatio;
+            }
+
+            console.log('Frame dimensions (with', border, 'px border):', frameWidth, 'x', frameHeight);
+
+            // Ensure frame doesn't go negative
+            if (frameWidth < 0) frameWidth = availableWidth * 0.9;
+            if (frameHeight < 0) frameHeight = availableHeight * 0.9;
+
+            const frameLeft = (containerWidth - frameWidth) / 2;
+            const frameTop = (containerHeight - frameHeight) / 2;
+
+            overlay.innerHTML = `
+              <!-- Frame area -->
+              <div style="position: absolute; top: ${frameTop}px; left: ${frameLeft}px; width: ${frameWidth}px; height: ${frameHeight}px; background: transparent; border: 2px solid white; z-index: 2;"></div>
+
+              <!-- Mode label -->
+              <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; z-index: 10;">
+                ${isAfterMode ? 'AFTER' : 'BEFORE'} (${aspectRatio})
+              </div>
+            `;
+          });
         }
 
         // Initialize zoom controls for camera
@@ -6682,194 +6689,9 @@
 
         // Enhanced photo sizing and cropping system
         // Default sizes for different templates
-        getTemplateSizes() {
-          return {
-            'default': { width: 800, height: 600 }, // 4:3 default
-            'square': { width: 800, height: 800 },   // 1:1 square - Instagram & Facebook
-            'portrait': { width: 800, height: 1000 }, // 4:5 portrait - Instagram & LinkedIn
-            'landscape': { width: 800, height: 450 }, // 16:9 landscape - Facebook & YouTube
-            'blog': { width: 800, height: 533 }      // 3:2 blog - blogs & web articles
-          };
-        }
 
-        // Detect photo orientation based on aspect ratio
-        detectPhotoOrientation(width, height) {
-          const aspectRatio = width / height;
-          
-          // Optimized ratios:
-          // Vertical photos: 1:1.15 (≈0.87) - optimal for minimal crop on 1:1 and 4:5
-          // Horizontal photos: 8:9 (≈0.889) - optimal for 16:9 when combined side-by-side
-          if (aspectRatio <= 0.87) {
-            return 'vertical'; // 1:1.15 ratio (W:H ≈ 0.87)
-          } else {
-            return 'horizontal'; // 8:9 ratio (W:H ≈ 0.889)
-          }
-        }
 
-        // Calculate crop dimensions for individual photos based on template and orientation
-        calculatePhotoCropDimensions(photoWidth, photoHeight, templateType, orientation) {
-          const W = photoWidth;
-          const H = photoHeight;
-          
-          let cropWidth, cropHeight;
-          
-          switch (templateType) {
-            case 'square': // 1:1
-              if (orientation === 'vertical') {
-                // Vertical photos (1:1.15): Crop ~13% vertically for minimal loss
-                cropWidth = W;
-                cropHeight = W; // Square crop using full width
-              } else {
-                // Horizontal photos (8:9): Crop ~10-20% for square
-                const minDimension = Math.min(W, H);
-                cropWidth = minDimension;
-                cropHeight = minDimension;
-              }
-              break;
-              
-            case 'portrait': // 4:5
-              if (orientation === 'vertical') {
-                // Vertical photos (1:1.15): Crop ~7% vertically for minimal loss
-                cropWidth = W;
-                cropHeight = W * 1.25; // 4:5 ratio
-              } else {
-                // Horizontal photos (8:9): Crop ~10-20% for portrait
-                cropHeight = H;
-                cropWidth = cropHeight * 0.8; // 4:5 ratio
-              }
-              break;
-              
-            case 'landscape': // 16:9
-              if (orientation === 'vertical') {
-                // Vertical photos: Use for side-by-side combination
-                cropWidth = W;
-                cropHeight = H;
-              } else {
-                // Horizontal photos (8:9): Perfect for side-by-side → 16:9
-                cropWidth = W;
-                cropHeight = H;
-              }
-              break;
-              
-            case 'blog': // 3:2
-              if (orientation === 'vertical') {
-                // Vertical photos: Crop for 3:2 ratio
-                cropWidth = W;
-                cropHeight = W * 1.5; // 3:2 ratio
-              } else {
-                // Horizontal photos: Use for 3:2 combination
-                cropWidth = W;
-                cropHeight = H;
-              }
-              break;
-              
-            default: // 'default' - preserve original ratios
-              cropWidth = W;
-              cropHeight = H;
-              break;
-          }
-          
-          // Ensure crops don't exceed original dimensions
-          cropWidth = Math.min(cropWidth, W);
-          cropHeight = Math.min(cropHeight, H);
-          
-          return {
-            cropWidth: Math.round(cropWidth),
-            cropHeight: Math.round(cropHeight),
-            cropX: Math.round((W - cropWidth) / 2),
-            cropY: Math.round((H - cropHeight) / 2)
-          };
-        }
 
-        // Calculate final template dimensions after combining photos
-        calculateTemplateDimensions(beforePhoto, afterPhoto, templateType, splitType = null) {
-          const beforeOrientation = this.detectPhotoOrientation(beforePhoto.width, beforePhoto.height);
-          const afterOrientation = this.detectPhotoOrientation(afterPhoto.width, afterPhoto.height);
-          
-          // Smart split type selection based on optimized ratios
-          if (!splitType) {
-            if (templateType === 'landscape') {
-              // 16:9 → always use side-by-side for optimal ratio
-              splitType = 'horizontal';
-            } else if (templateType === 'blog') {
-              // 3:2 → use side-by-side for optimal ratio
-              splitType = 'horizontal';
-            } else if (templateType === 'portrait') {
-              // 4:5 → use stacked for optimal ratio
-              splitType = 'vertical';
-            } else if (templateType === 'square') {
-              // 1:1 → choose based on orientation for minimal crop
-              splitType = beforeOrientation === 'vertical' ? 'vertical' : 'horizontal';
-            } else {
-              // Default → preserve original behavior
-              splitType = 'vertical';
-            }
-          }
-          
-          // Get individual photo crop dimensions
-          const beforeCrop = this.calculatePhotoCropDimensions(
-            beforePhoto.width, beforePhoto.height, templateType, beforeOrientation
-          );
-          const afterCrop = this.calculatePhotoCropDimensions(
-            afterPhoto.width, afterPhoto.height, templateType, afterOrientation
-          );
-          
-          let combinedWidth, combinedHeight;
-          
-          if (splitType === 'vertical') {
-            // Stacked: before on top, after below
-            combinedWidth = Math.max(beforeCrop.cropWidth, afterCrop.cropWidth);
-            combinedHeight = beforeCrop.cropHeight + afterCrop.cropHeight;
-          } else {
-            // Side-by-side: before left, after right
-            combinedWidth = beforeCrop.cropWidth + afterCrop.cropWidth;
-            combinedHeight = Math.max(beforeCrop.cropHeight, afterCrop.cropHeight);
-          }
-          
-          // Get target template dimensions
-          const templateSizes = this.getTemplateSizes();
-          const targetTemplate = templateSizes[templateType] || templateSizes.default;
-          
-          // For proper cropping, we want to fill the entire target canvas
-          // The scale should be calculated to ensure we fill the canvas completely
-          const scaleToFitWidth = targetTemplate.width / combinedWidth;
-          const scaleToFitHeight = targetTemplate.height / combinedHeight;
-          
-          // Use the larger scale to ensure the combined image fills the entire canvas
-          // This means some content might be cropped, but no empty space
-          const scale = Math.max(scaleToFitWidth, scaleToFitHeight);
-          
-          return {
-            combinedWidth,
-            combinedHeight,
-            targetWidth: targetTemplate.width,
-            targetHeight: targetTemplate.height,
-            splitType,
-            beforeCrop,
-            afterCrop,
-            scale
-          };
-        }
-
-        // Helper function to calculate canvas dimensions with correct aspect ratio (enhanced)
-        calculateCanvasDimensions(videoWidth, videoHeight, maxSize = 800, templateType = 'default') {
-          const orientation = this.detectPhotoOrientation(videoWidth, videoHeight);
-          const cropDimensions = this.calculatePhotoCropDimensions(
-            videoWidth, videoHeight, templateType, orientation
-          );
-          
-          // Scale to fit within maxSize while maintaining aspect ratio
-          const scale = Math.min(
-            maxSize / cropDimensions.cropWidth,
-            maxSize / cropDimensions.cropHeight
-          );
-          
-          return {
-            width: Math.round(cropDimensions.cropWidth * scale),
-            height: Math.round(cropDimensions.cropHeight * scale),
-            cropDimensions
-          };
-        }
 
         // Helper function to calculate square size for grids
         calculateSquareSize(columns) {
@@ -6888,33 +6710,16 @@
         }
 
         capturePhoto(video, stream) {
-          console.log('Capturing photo...');
+          console.log('Capturing photo - original resolution');
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
 
-          // Calculate dimensions with correct aspect ratio
-          const { width, height } = this.calculateCanvasDimensions(video.videoWidth, video.videoHeight, 800);
+          // Use the video's original resolution without any transformations
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
 
-          canvas.width = width;
-          canvas.height = height;
-
-          // Calculate source rectangle to maintain aspect ratio
-          const videoAspectRatio = video.videoWidth / video.videoHeight;
-          const targetAspectRatio = width / height;
-          
-          let sourceX = 0, sourceY = 0, sourceWidth = video.videoWidth, sourceHeight = video.videoHeight;
-
-          if (videoAspectRatio > targetAspectRatio) {
-            // Video is wider, crop from sides
-            sourceWidth = video.videoHeight * targetAspectRatio;
-            sourceX = (video.videoWidth - sourceWidth) / 2;
-          } else if (videoAspectRatio < targetAspectRatio) {
-            // Video is taller, crop from top/bottom
-            sourceHeight = video.videoWidth / targetAspectRatio;
-            sourceY = (video.videoHeight - sourceHeight) / 2;
-          }
-
-          context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+          // Draw the entire video frame without cropping or resizing
+          context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
           
           // First photos are always "before" photos
           const photoMode = 'before';
@@ -6929,7 +6734,8 @@
             mode: photoMode,
             name: photoName,
             timestamp: Date.now(),
-            zoomLevel: this.currentBeforeZoom || 1 // Store the zoom level used
+            zoomLevel: this.currentBeforeZoom || 1, // Store the zoom level used
+            aspectRatio: this.currentAspectRatio || '2:3' // Store the aspect ratio used
           };
           
           console.log('Photo created:', photo);
