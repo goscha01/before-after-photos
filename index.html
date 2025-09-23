@@ -6349,14 +6349,25 @@
             idealHeight = 4032; // iPhone max height (natural portrait)
           }
 
-          return {
+          console.log(`Camera constraints for ${this.currentAspectRatio}:`, idealWidth, 'x', idealHeight, 'target ratio:', targetAspectRatio);
+
+          // For phone cameras, try different constraint approaches
+          const constraints = {
             video: {
               facingMode: 'environment',
-              width: { ideal: idealWidth, max: idealWidth },
-              height: { ideal: idealHeight, max: idealHeight },
-              aspectRatio: { ideal: targetAspectRatio }
+              width: { ideal: idealWidth },
+              height: { ideal: idealHeight }
             }
           };
+
+          // Only add aspect ratio constraint if it matches the intended target
+          if ((this.currentAspectRatio === '4:3' && targetAspectRatio > 1) ||
+              (this.currentAspectRatio === '3:4' && targetAspectRatio < 1)) {
+            constraints.video.aspectRatio = { ideal: targetAspectRatio };
+          }
+
+          console.log('Final camera constraints:', constraints);
+          return constraints;
         }
 
         // Switch between aspect ratios
@@ -6545,10 +6556,11 @@
               targetAspectRatio = 3/4; // 0.75 - Side-by-side mode (portrait crop)
             }
 
-            console.log(`Frame Debug - ${aspectRatio} mode:`);
+            console.log(`Frame Debug - ${aspectRatio} mode (${aspectRatio === '4:3' ? 'STACK' : 'SIDE-BY-SIDE'}):`);
             console.log('Container dimensions:', containerWidth, 'x', containerHeight);
             console.log('Actual video stream dimensions:', actualVideoWidth, 'x', actualVideoHeight);
-            console.log('Target aspect ratio:', targetAspectRatio);
+            console.log('Actual stream aspect ratio:', actualVideoAspectRatio.toFixed(3));
+            console.log('Target aspect ratio:', targetAspectRatio.toFixed(3));
             console.log('Visible video dimensions:', visibleVideoWidth, 'x', visibleVideoHeight);
 
             // Calculate frame size for target aspect ratio within visible video area
@@ -6580,7 +6592,7 @@
 
               <!-- Mode label -->
               <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; z-index: 10;">
-                ${isAfterMode ? 'AFTER' : 'BEFORE'} (${aspectRatio})
+                ${isAfterMode ? 'AFTER' : 'BEFORE'} - ${aspectRatio === '4:3' ? 'STACK' : 'SIDE-BY-SIDE'} (${aspectRatio})
               </div>
             `;
           });
