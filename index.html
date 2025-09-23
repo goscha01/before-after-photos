@@ -6526,15 +6526,12 @@
 
                 let videoWidth, videoHeight;
 
-                if (videoRatio > containerRatio) {
-                  // Video is wider than container - fit to width, center vertically
-                  videoWidth = containerWidth;
-                  videoHeight = containerWidth / videoRatio;
-                } else {
-                  // Video is taller than container - fit to height, center horizontally
-                  videoHeight = containerHeight;
-                  videoWidth = containerHeight * videoRatio;
-                }
+                // For side-by-side mode: ALWAYS fit to HEIGHT to show full camera height
+                // This will create black bars on the sides, showing the complete vertical field of view
+                videoHeight = containerHeight;
+                videoWidth = containerHeight * videoRatio;
+
+                console.log(`Forcing HEIGHT fit: video will be ${videoWidth.toFixed(1)}x${videoHeight} in container ${containerWidth}x${containerHeight}`);
 
                 // Apply manual sizing
                 video.style.objectFit = 'fill'; // Let us control the sizing manually
