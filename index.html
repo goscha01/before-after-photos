@@ -695,7 +695,7 @@
           // Add all existing photos
           beforePhotos.forEach(photo => {
             gridItems.push(`
-              <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
+              <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: ${photo.aspectRatio === '3:4' ? '3/4' : '4/3'}; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
                 <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 
                 <!-- Delete button -->
@@ -4637,8 +4637,6 @@
             // Save changes to localStorage
             this.savePhotos();
             
-            // Show success notification for individual photo deletion
-            this.showDeleteSuccessNotification(1);
             
             // Reassign names to maintain proper sequential numbering
             this.reassignPhotoNames();
@@ -4741,10 +4739,6 @@
           this.updateModalPhotoGrid();
 
 
-          // Show success notification
-          setTimeout(() => {
-            this.showDeleteSuccessNotification(deletedCount);
-          }, 100);
         }
 
         async showPhotoFullscreen(photo) {
@@ -4770,7 +4764,10 @@
             // Restore the aspect ratio from the before photo
             if (photo.aspectRatio) {
               this.currentAspectRatio = photo.aspectRatio;
-              console.log('Restored aspect ratio from before photo:', photo.aspectRatio);
+              // Update the aspect ratio overlay immediately to match before photo
+              setTimeout(() => {
+                this.updateAspectRatioOverlay();
+              }, 100);
             }
 
             // Split screen: before photo and camera
