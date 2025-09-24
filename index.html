@@ -6369,13 +6369,9 @@
           // Update the visual overlay immediately
           this.updateAspectRatioOverlay();
 
-          // Skip camera restart for side-by-side mode since we handle it via CSS
-          // Camera restart resets all manual video sizing
-          if (this.currentAspectRatio !== '3:4') {
-            this.restartCameraWithNewAspectRatio();
-          } else {
-            console.log('Skipped camera restart for side-by-side mode to preserve manual sizing');
-          }
+          // Skip camera restart entirely - both modes use same 4:3 camera constraints
+          // Only video styling and frame overlays change between modes
+          console.log('Skipped camera restart - both modes use same 4:3 camera stream');
         }
 
         // Restart camera with new aspect ratio
@@ -6573,9 +6569,11 @@
             // Now calculate frame based on desired aspect ratio, not actual video
             let targetAspectRatio;
             if (aspectRatio === '4:3') {
-              targetAspectRatio = 4/3; // 1.333 - Stack mode (landscape crop)
+              // Stack mode: 4:3 individual → Combined: 4:6 = 2:3 (portrait)
+              targetAspectRatio = 4/3; // 1.333 - Individual frame for stacking
             } else {
-              targetAspectRatio = 3/4; // 0.75 - Side-by-side mode (portrait crop)
+              // Side-by-side mode: 3:4 individual → Combined: 6:4 = 3:2 (landscape)
+              targetAspectRatio = 3/4; // 0.750 - Individual frame for side-by-side
             }
 
             console.log(`Frame Debug - ${aspectRatio} mode (${aspectRatio === '4:3' ? 'STACK' : 'SIDE-BY-SIDE'}):`);
