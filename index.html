@@ -6506,15 +6506,15 @@
             }
 
             if (aspectRatio === '4:3') {
-              // Stack mode: Show full 4:3 camera view to match 4:3 frame
-              video.style.objectFit = 'contain';
-              video.style.objectPosition = 'center center';
-              console.log('Stack mode: Using contain to show full 4:3 camera view');
-            } else {
-              // Side-by-side mode: Crop to show more vertical area to match 3:4 frame
+              // Stack mode: Use cover to remove side bars and fill width with top/bottom black bars
               video.style.objectFit = 'cover';
               video.style.objectPosition = 'center center';
-              console.log('Side-by-side mode: Using cover to crop for 3:4 vertical view');
+              console.log('Stack mode: Using cover to remove side bars and enlarge view');
+            } else {
+              // Side-by-side mode: Use contain to show full camera view (was already perfect)
+              video.style.objectFit = 'contain';
+              video.style.objectPosition = 'center center';
+              console.log('Side-by-side mode: Using contain to show full camera view');
             }
 
             video.style.width = '100%';
