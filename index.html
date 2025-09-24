@@ -6382,8 +6382,13 @@
           // Update the visual overlay immediately
           this.updateAspectRatioOverlay();
 
-          // Restart camera with new aspect ratio if camera is active
-          this.restartCameraWithNewAspectRatio();
+          // Skip camera restart for side-by-side mode since we handle it via CSS
+          // Camera restart resets all manual video sizing
+          if (this.currentAspectRatio !== '3:4') {
+            this.restartCameraWithNewAspectRatio();
+          } else {
+            console.log('Skipped camera restart for side-by-side mode to preserve manual sizing');
+          }
         }
 
         // Restart camera with new aspect ratio
