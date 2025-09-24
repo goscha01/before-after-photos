@@ -6510,11 +6510,9 @@
           console.log('DEBUG: updateVideoStyling called with aspectRatio:', aspectRatio);
           console.log('DEBUG: this.currentAspectRatio:', this.currentAspectRatio);
 
-          // Check if manual sizing is in progress to avoid overrides
-          if (this.manualSizingActive) {
-            console.log('DEBUG: Skipping updateVideoStyling - manual sizing active');
-            return;
-          }
+          // DISABLE ALL VIDEO STYLING FOR ROOT CAUSE TEST
+          console.log('DEBUG: DISABLING ALL VIDEO STYLING TO TEST BASIC BEHAVIOR');
+          return;
 
           const videoElements = document.querySelectorAll('#camera-video, #comparison-camera');
           console.log('DEBUG: Found video elements:', videoElements.length);
