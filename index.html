@@ -6523,7 +6523,19 @@
             video.style.display = 'block';
             video.style.transform = 'none';
 
-            console.log(`Updated video styling for ${aspectRatio} mode`);
+            // Comprehensive debugging
+            console.log(`=== VIDEO STYLING DEBUG (${aspectRatio} mode) ===`);
+            console.log('Video element:', video);
+            console.log('Set object-fit to:', video.style.objectFit);
+            console.log('Computed object-fit:', getComputedStyle(video).objectFit);
+            console.log('All video styles:', video.style.cssText);
+            console.log('Video element classes:', video.className);
+            console.log('Video element attributes:', video.attributes);
+            console.log('Video readyState:', video.readyState);
+            console.log('Video videoWidth x videoHeight:', video.videoWidth, 'x', video.videoHeight);
+            console.log('Video clientWidth x clientHeight:', video.clientWidth, 'x', video.clientHeight);
+            console.log('Video offsetWidth x offsetHeight:', video.offsetWidth, 'x', video.offsetHeight);
+            console.log('=== END VIDEO DEBUG ===');
           });
         }
 
@@ -6569,13 +6581,13 @@
               // Stack mode uses object-fit: cover - video fills container, may crop
               // Cover mode: video fills entire container, cropping if needed
               if (actualVideoAspectRatio > containerAspectRatio) {
-                // Video is wider - constrained by height, crops left/right
+                // Video is wider than container - fill height, crop width (but visible area is still container size)
                 visibleVideoHeight = containerHeight;
-                visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+                visibleVideoWidth = containerWidth; // FIXED: Cover fills the entire container
               } else {
-                // Video is taller - constrained by width, crops top/bottom
+                // Video is taller than container - fill width, crop height (but visible area is still container size)
                 visibleVideoWidth = containerWidth;
-                visibleVideoHeight = containerWidth / actualVideoAspectRatio;
+                visibleVideoHeight = containerHeight; // FIXED: Cover fills the entire container
               }
               console.log('Stack mode: Using object-fit: cover - video fills container, may crop');
             } else {
@@ -6603,12 +6615,15 @@
               targetAspectRatio = 3/4; // 0.750 - Individual frame for side-by-side
             }
 
-            console.log(`Frame Debug - ${aspectRatio} mode (${aspectRatio === '4:3' ? 'STACK' : 'SIDE-BY-SIDE'}):`);
+            console.log(`=== FRAME CALCULATION DEBUG (${aspectRatio} mode) ===`);
             console.log('Container dimensions:', containerWidth, 'x', containerHeight);
+            console.log('Container aspect ratio:', containerAspectRatio.toFixed(3));
             console.log('Actual video stream dimensions:', actualVideoWidth, 'x', actualVideoHeight);
             console.log('Actual stream aspect ratio:', actualVideoAspectRatio.toFixed(3));
-            console.log('Target aspect ratio:', targetAspectRatio.toFixed(3));
-            console.log('Visible video dimensions:', visibleVideoWidth, 'x', visibleVideoHeight);
+            console.log('Target frame aspect ratio:', targetAspectRatio.toFixed(3));
+            console.log('Video element computed object-fit:', getComputedStyle(videoElement).objectFit);
+            console.log('Expected behavior for', aspectRatio, 'mode:', aspectRatio === '4:3' ? 'cover (fill container)' : 'contain (fit with bars)');
+            console.log('Calculated visible video dimensions:', visibleVideoWidth.toFixed(1), 'x', visibleVideoHeight.toFixed(1));
 
             // Calculate frame size for target aspect ratio within visible video area
             const availableWidth = visibleVideoWidth - 2*border;
