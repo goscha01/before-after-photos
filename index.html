@@ -6504,6 +6504,13 @@
           const aspectRatio = this.currentAspectRatio || '4:3';
           console.log('DEBUG: updateVideoStyling called with aspectRatio:', aspectRatio);
           console.log('DEBUG: this.currentAspectRatio:', this.currentAspectRatio);
+
+          // Check if manual sizing is in progress to avoid overrides
+          if (this.manualSizingActive) {
+            console.log('DEBUG: Skipping updateVideoStyling - manual sizing active');
+            return;
+          }
+
           const videoElements = document.querySelectorAll('#camera-video, #comparison-camera');
           console.log('DEBUG: Found video elements:', videoElements.length);
 
@@ -6516,6 +6523,9 @@
               // Get container dimensions
               const container = video.closest('#camera-container') || video.parentElement;
               if (container) {
+                // Set flag to prevent setTimeout overrides
+                this.manualSizingActive = true;
+
                 const containerRect = container.getBoundingClientRect();
                 const containerWidth = containerRect.width;
                 const containerHeight = containerRect.height;
@@ -6533,17 +6543,23 @@
 
                 console.log(`Forcing HEIGHT fit: video will be ${videoWidth.toFixed(1)}x${videoHeight} in container ${containerWidth}x${containerHeight}`);
 
-                // Apply manual sizing
+                // Apply manual sizing with !important to prevent overrides
                 video.style.objectFit = 'fill'; // Let us control the sizing manually
                 video.style.objectPosition = 'center center';
-                video.style.width = `${videoWidth}px`;
-                video.style.height = `${videoHeight}px`;
+                video.style.setProperty('width', `${videoWidth}px`, 'important');
+                video.style.setProperty('height', `${videoHeight}px`, 'important');
                 video.style.margin = '0';
                 video.style.display = 'block';
                 video.style.transform = 'none';
 
                 console.log(`MANUAL side-by-side sizing: container ${containerWidth}x${containerHeight}, video ${videoWidth}x${videoHeight}`);
                 console.log(`Container ratio: ${containerRatio.toFixed(3)}, Video ratio: ${videoRatio.toFixed(3)}`);
+
+                // Clear the flag after a delay to allow future updates
+                setTimeout(() => {
+                  this.manualSizingActive = false;
+                  console.log('DEBUG: Manual sizing flag cleared');
+                }, 500);
               }
             } else {
               // Stack mode: Use contain to fit properly within container
