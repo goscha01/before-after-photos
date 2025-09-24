@@ -3103,17 +3103,50 @@
             flex-direction: column;
           `;
 
-          // Use the same template as the regular fullscreen but without camera functionality
-          const templateType = photo.templateType || 'default';
+          if (photo.mode === 'mix') {
+            // Combined photos get templates
+            const templateType = photo.templateType || 'default';
+            modal.innerHTML = this.getEnlargedPhotoHTML(photo, templateType);
+            this.setupEnlargedPhotoListeners(modal, photo);
+          } else {
+            // Individual photos (before/after) show raw photo only, no templates
+            const orientation = this.detectPhotoOrientation(photo.naturalWidth || 800, photo.naturalHeight || 600);
+            modal.innerHTML = `
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding: 80px 20px; box-sizing: border-box;">
+                <img src="${photo.dataUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
 
-          // Use the same HTML structure as the regular fullscreen
-          modal.innerHTML = this.getEnlargedPhotoHTML(photo, templateType);
-          
+                <!-- Photo info overlay -->
+                <div style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px 20px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
+                  <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                    ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+                  </div>
+                  <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                    ${new Date(photo.timestamp).toLocaleString()}
+                  </div>
+                  <div style="font-size: 12px; opacity: 0.7;">
+                    Orientation: ${orientation} | Raw photo as captured
+                  </div>
+                </div>
+
+                <!-- Close button -->
+                <button id="close-photo-btn" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px); z-index: 10;">
+                  ✕
+                </button>
+              </div>
+            `;
+
+            // Close button functionality
+            const closeBtn = modal.querySelector('#close-photo-btn');
+            if (closeBtn) {
+              closeBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+                document.body.style.overflow = '';
+              });
+            }
+          }
+
           document.body.appendChild(modal);
           document.body.style.overflow = 'hidden';
-
-          // Set up the same functionality as regular fullscreen
-          this.setupEnlargedPhotoListeners(modal, photo);
         }
 
         getEnlargedPhotoHTML(photo, templateType) {
@@ -3698,6 +3731,8 @@
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
 
+                console.log(`🖼️ Main Gallery Combined Photo ${combinedPhoto.id}: aspectRatio=${combinedPhoto.aspectRatio}, objectFit=${objectFit}`);
+
                 gridItems.push(`
                   <div class="photo-item" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
                     <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit}; filter: blur(3px);" />
@@ -3727,9 +3762,11 @@
               // Determine object-fit based on photo's original aspect ratio
               const objectFit = 'contain'; // Keep contain for proper display
 
+              console.log(`🖼️ Main Gallery Before Photo ${beforePhoto.id}: aspectRatio=${beforePhoto.aspectRatio}, objectFit=${objectFit}`);
+
               gridItems.push(`
-                <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 3px solid #F2C31B; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
-                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: ${objectFit}; cursor: pointer;" />
+                <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 3px solid #F2C31B; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
+                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit}; cursor: pointer;" />
                   <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
                     <div style="font-weight: bold; margin-bottom: 2px; color: #303030; font-family: 'Quicksand', sans-serif;">${displayName}</div>
                     <div style="font-size: 10px; opacity: 0.8; font-family: 'Quicksand', sans-serif;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
@@ -5002,17 +5039,16 @@
               });
             }
           } else {
-            // Regular fullscreen for other photo types - show actual dimensions without transformation
+            // Regular fullscreen for individual photos - show raw photo as taken, no templates
             const orientation = this.detectPhotoOrientation(photo.naturalWidth || 800, photo.naturalHeight || 600);
-            const templateType = photo.templateType || 'default';
-            
+
             modal.innerHTML = `
-              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: flex-start; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 200px; box-sizing: border-box;">
+              <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: flex-start; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 80px; box-sizing: border-box;">
                 <!-- Scrollable container for actual size viewing -->
-                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 280px); overflow: auto; margin-top: 20px;">
+                <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 160px); overflow: auto; margin-top: 20px;">
                   <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
                 </div>
-                
+
                 <!-- Photo info overlay -->
                 <div style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px 20px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
                   <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
@@ -5022,7 +5058,7 @@
                     ${new Date(photo.timestamp).toLocaleString()}
                   </div>
                   <div style="font-size: 12px; opacity: 0.7;">
-                    Orientation: ${orientation} | Template: ${templateType}
+                    Orientation: ${orientation} | Raw photo as captured
                   </div>
                 </div>
                 
