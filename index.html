@@ -694,10 +694,15 @@
           
           // Add all existing photos
           beforePhotos.forEach(photo => {
+            // Determine object-fit based on photo's original aspect ratio
+            // 4:3 aspect ratio (horizontal/landscape mode) - image is wider, center it with side gaps
+            // 2:3 aspect ratio (vertical/portrait mode) - image is taller, center it with top/bottom gaps
+            const objectFit = (photo.aspectRatio === '4:3') ? 'contain' : 'contain';
+
             gridItems.push(`
               <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
-                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
-                
+                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit};" />
+
                 <!-- Delete button -->
                 <button class="delete-before-photo-btn" data-photo-id="${photo.id}" style="position: absolute; top: 5px; right: 5px; background: #F2C31B; color: #303030; border: none; padding: 6px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e6b800'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='scale(1)'">
                   ×
@@ -1253,11 +1258,14 @@
               if (photo.mode === 'after') {
                 // After photo - show with blue border
                 const borderColor = '#3B82F6';
-                
+
+                // Determine object-fit based on photo's original aspect ratio
+                const objectFit = 'contain'; // Keep contain for proper display within square
+
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
-                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
-                    
+                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit};" />
+
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
                       <div style="font-weight: bold; font-family: 'Quicksand', sans-serif;">${displayName}</div>
@@ -1268,7 +1276,7 @@
                 // Single photo (before, archived, or mix/combined)
                 let borderColor = '#E1E1E1';
                 let photoLabel = '';
-                
+
                 if (photo.mode === 'before') {
                   borderColor = '#F2C31B';
                 } else if (photo.mode === 'mix') {
@@ -1276,10 +1284,13 @@
                 } else if (photo.mode === 'archived') {
                   borderColor = '#6B7280';
                 }
-                
+
+                // Determine object-fit based on photo's original aspect ratio
+                const objectFit = 'contain'; // Keep contain for proper display within square
+
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
-                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
+                    <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit};" />
                     
                     <!-- Photo info -->
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; font-size: 10px;">
@@ -3669,9 +3680,12 @@
                 // Show stored combined photo
                 const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
+                // Determine object-fit based on photo's original aspect ratio
+                const objectFit = 'contain'; // Keep contain for proper display within square
+
                 gridItems.push(`
                   <div class="photo-item" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
-                    <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: contain; filter: blur(3px);" />
+                    <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit}; filter: blur(3px);" />
 
                     <!-- Retake button in center -->
                     <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 10;">
@@ -3695,9 +3709,12 @@
               // Show only before photo
               const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
+              // Determine object-fit based on photo's original aspect ratio
+              const objectFit = 'contain'; // Keep contain for proper display
+
               gridItems.push(`
                 <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 3px solid #F2C31B; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s;">
-                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: contain; cursor: pointer;" />
+                  <img src="${beforePhoto.dataUrl}" style="width: 100%; height: 120px; object-fit: ${objectFit}; cursor: pointer;" />
                   <div style="padding: 8px; font-size: 11px; color: #B3B3B3;">
                     <div style="font-weight: bold; margin-bottom: 2px; color: #303030; font-family: 'Quicksand', sans-serif;">${displayName}</div>
                     <div style="font-size: 10px; opacity: 0.8; font-family: 'Quicksand', sans-serif;">${new Date(beforePhoto.timestamp).toLocaleString()}</div>
