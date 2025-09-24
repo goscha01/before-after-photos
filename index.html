@@ -638,8 +638,8 @@
                     BEFORE
                   </div>
                   
-                  <!-- Zoom controls for portrait mode -->
-                  <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                  <!-- Zoom controls for portrait mode - HIDDEN FOR TEST -->
+                  <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                     <button class="zoom-btn" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                     <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
@@ -6234,8 +6234,8 @@
             let currentZoom = 1; // Start with 1x zoom
             this.currentBeforeZoom = currentZoom; // Track zoom for before photos
             
-            // Initialize zoom controls
-            this.initializeZoomControls(stream, 'camera-video', currentZoom);
+            // DISABLED zoom controls for testing
+            // this.initializeZoomControls(stream, 'camera-video', currentZoom);
 
             // Initialize aspect ratio button
             this.initializeAspectRatioButton();
