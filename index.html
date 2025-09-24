@@ -6505,11 +6505,17 @@
               wrapper.remove();
             }
 
-            // Both modes use contain for consistent behavior
-            // The frame overlay will handle the visual difference
-            video.style.objectFit = 'contain';
-            video.style.objectPosition = 'center center';
-            console.log(`${aspectRatio} mode: Using contain for consistent video display`);
+            if (aspectRatio === '4:3') {
+              // Stack mode: Fill full width, crop top/bottom (no side black bars)
+              video.style.objectFit = 'cover';
+              video.style.objectPosition = 'center center';
+              console.log('Stack mode: Using cover to fill width and crop top/bottom');
+            } else {
+              // Side-by-side mode: Show full video with side black bars
+              video.style.objectFit = 'contain';
+              video.style.objectPosition = 'center center';
+              console.log('Side-by-side mode: Using contain to show full video with side bars');
+            }
 
             video.style.width = '100%';
             video.style.height = '100%';
