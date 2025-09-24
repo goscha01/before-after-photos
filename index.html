@@ -496,13 +496,74 @@
         }
 
         getTemplateSizes() {
-          // Basic template sizes for fallback
+          // Template sizes based on mode (stack vs side-by-side) and target formats
           return {
-            default: { width: 800, height: 600, ratio: '4:3' },
-            square: { width: 600, height: 600, ratio: '1:1' },
-            landscape: { width: 1200, height: 675, ratio: '16:9' },
-            portrait: { width: 600, height: 750, ratio: '4:5' },
-            blog: { width: 900, height: 600, ratio: '3:2' }
+            // Stack Mode Templates (2:3 combined → portrait formats work best)
+            'stack-portrait': {
+              width: 1080,
+              height: 1350,
+              ratio: '4:5',
+              combinedRatio: '2:3',
+              splitType: 'vertical',
+              description: 'Instagram/LinkedIn Portrait (4:5)',
+              cropInfo: 'Best fit for portrait feeds'
+            },
+            'stack-square': {
+              width: 1080,
+              height: 1080,
+              ratio: '1:1',
+              combinedRatio: '2:3',
+              splitType: 'vertical',
+              description: 'Square (1:1)',
+              cropInfo: '~15% top/bottom crop'
+            },
+            'stack-landscape': {
+              width: 1920,
+              height: 1080,
+              ratio: '16:9',
+              combinedRatio: '2:3',
+              splitType: 'vertical',
+              description: 'Landscape Wide (16:9)',
+              cropInfo: 'Significant crop - less ideal'
+            },
+
+            // Side-by-Side Mode Templates (3:2 combined → landscape formats work best)
+            'sidebyside-landscape': {
+              width: 1200,
+              height: 630,
+              ratio: '1.91:1',
+              combinedRatio: '3:2',
+              splitType: 'horizontal',
+              description: 'Instagram/Facebook Landscape (1.91:1)',
+              cropInfo: 'Best fit for landscape feeds'
+            },
+            'sidebyside-wide': {
+              width: 1920,
+              height: 1080,
+              ratio: '16:9',
+              combinedRatio: '3:2',
+              splitType: 'horizontal',
+              description: 'Wide Landscape (16:9)',
+              cropInfo: 'Great for presentations/websites'
+            },
+            'sidebyside-square': {
+              width: 1080,
+              height: 1080,
+              ratio: '1:1',
+              combinedRatio: '3:2',
+              splitType: 'horizontal',
+              description: 'Square (1:1)',
+              cropInfo: '~15% left/right crop'
+            },
+            'sidebyside-portrait': {
+              width: 1080,
+              height: 1350,
+              ratio: '4:5',
+              combinedRatio: '3:2',
+              splitType: 'horizontal',
+              description: 'Portrait (4:5)',
+              cropInfo: 'Mild crop - still usable'
+            }
           };
         }
 
@@ -516,6 +577,99 @@
             targetWidth: width,
             targetHeight: height
           };
+        }
+
+        drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions) {
+          // Stack mode: before image on top, after image on bottom
+          const halfHeight = templateDimensions.targetHeight / 2;
+
+          // Draw before image (top half)
+          ctx.drawImage(
+            beforeImg,
+            0, 0, beforeImg.width, beforeImg.height,
+            0, 0, templateDimensions.targetWidth, halfHeight
+          );
+
+          // Draw after image (bottom half)
+          ctx.drawImage(
+            afterImg,
+            0, 0, afterImg.width, afterImg.height,
+            0, halfHeight, templateDimensions.targetWidth, halfHeight
+          );
+
+          // Draw divider line
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(0, halfHeight);
+          ctx.lineTo(templateDimensions.targetWidth, halfHeight);
+          ctx.stroke();
+        }
+
+        drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions) {
+          // Side-by-side mode: before image on left, after image on right
+          const halfWidth = templateDimensions.targetWidth / 2;
+
+          // Draw before image (left half)
+          ctx.drawImage(
+            beforeImg,
+            0, 0, beforeImg.width, beforeImg.height,
+            0, 0, halfWidth, templateDimensions.targetHeight
+          );
+
+          // Draw after image (right half)
+          ctx.drawImage(
+            afterImg,
+            0, 0, afterImg.width, afterImg.height,
+            halfWidth, 0, halfWidth, templateDimensions.targetHeight
+          );
+
+          // Draw divider line
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(halfWidth, 0);
+          ctx.lineTo(halfWidth, templateDimensions.targetHeight);
+          ctx.stroke();
+        }
+
+        addPhotoLabels(ctx, canvasWidth, canvasHeight, splitType) {
+          // Add "BEFORE" and "AFTER" labels
+          ctx.font = 'bold 24px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          if (splitType === 'vertical') {
+            // Stack mode: labels at top-center and bottom-center
+            const quarterHeight = canvasHeight / 4;
+
+            // BEFORE label (top quarter)
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(canvasWidth/2 - 60, quarterHeight - 15, 120, 30);
+            ctx.fillStyle = 'white';
+            ctx.fillText('BEFORE', canvasWidth/2, quarterHeight);
+
+            // AFTER label (bottom quarter)
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(canvasWidth/2 - 60, (quarterHeight * 3) - 15, 120, 30);
+            ctx.fillStyle = 'white';
+            ctx.fillText('AFTER', canvasWidth/2, quarterHeight * 3);
+          } else {
+            // Side-by-side mode: labels at left-center and right-center
+            const quarterWidth = canvasWidth / 4;
+
+            // BEFORE label (left quarter)
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(quarterWidth - 60, canvasHeight/2 - 15, 120, 30);
+            ctx.fillStyle = 'white';
+            ctx.fillText('BEFORE', quarterWidth, canvasHeight/2);
+
+            // AFTER label (right quarter)
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect((quarterWidth * 3) - 60, canvasHeight/2 - 15, 120, 30);
+            ctx.fillStyle = 'white';
+            ctx.fillText('AFTER', quarterWidth * 3, canvasHeight/2);
+          }
         }
         
         getCameraModalHTML() {
@@ -3215,68 +3369,132 @@
         }
 
         getTemplateSelector(photo, templateType) {
-          // Show template selector for all photos when in enlarged view, not just combined
-          return `
-            <!-- Template selector for photos (larger icons, 2 rows) -->
-            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-              <!-- First row: Default and Landscape -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
-                <!-- Default 4:3 -->
-                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 12px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="default" style="display: none;" ${templateType === 'default' ? 'checked' : ''}>
-                  <div style="width: 32px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                    <div style="font-size: 8px; color: #303030; font-weight: bold;">4:3</div>
+          // Determine the base mode for template selection
+          // For combined photos, detect original mode from aspect ratio
+          let baseMode = 'stack'; // Default
+          if (photo.mode === 'mix') {
+            // Try to infer the original mode from the photo dimensions or stored metadata
+            // If photo is more horizontal (wide), it was likely side-by-side
+            // If photo is more vertical (tall), it was likely stack
+            const photoAspectRatio = photo.naturalWidth ? (photo.naturalWidth / photo.naturalHeight) : 1;
+            baseMode = photoAspectRatio > 1.5 ? 'sidebyside' : 'stack';
+          }
+
+          // Define template info directly to avoid scope issues
+          const stackTemplates = {
+            portrait: { ratio: '4:5', description: 'Instagram/LinkedIn Portrait ⭐', cropInfo: 'Best fit for portrait feeds' },
+            square: { ratio: '1:1', description: 'Square', cropInfo: '~15% top/bottom crop' },
+            landscape: { ratio: '16:9', description: 'Landscape Wide ⚠️', cropInfo: 'Significant crop - less ideal' }
+          };
+
+          const sideTemplates = {
+            blog: { ratio: '1.91:1', description: 'Instagram/Facebook Landscape ⭐', cropInfo: 'Best fit for landscape feeds' },
+            landscape: { ratio: '16:9', description: 'Wide Landscape', cropInfo: 'Great for presentations/websites' },
+            square: { ratio: '1:1', description: 'Square', cropInfo: '~15% left/right crop' },
+            portrait: { ratio: '4:5', description: 'Portrait', cropInfo: 'Mild crop - still usable' }
+          };
+
+          if (baseMode === 'stack') {
+            // Stack Mode Templates (2:3 combined → portrait formats work best)
+            return `
+              <!-- Template selector for Stack Mode (vertical combined photos) -->
+              <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+                <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Stack Mode Templates</div>
+
+                <!-- Portrait (Best) -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'default' || templateType === 'portrait' ? 'checked' : ''}>
+                  <div style="width: 24px; height: 30px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">4:5</div>
                   </div>
-                  <div style="font-size: 11px; font-weight: bold; text-align: center;">Default</div>
-                  <div style="font-size: 9px; opacity: 0.8; text-align: center;">Standard</div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.portrait.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.portrait.cropInfo}</div>
+                  </div>
                 </label>
 
-                <!-- Landscape 16:9 -->
-                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 12px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
-                  <div style="width: 40px; height: 22px; background: #F2C31B; border-radius: 2px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                    <div style="font-size: 8px; color: #303030; font-weight: bold;">16:9</div>
-                  </div>
-                  <div style="font-size: 11px; font-weight: bold; text-align: center;">Landscape</div>
-                  <div style="font-size: 9px; opacity: 0.8; text-align: center;">YouTube</div>
-                </label>
-              </div>
-
-              <!-- Second row: Square, Portrait, Blog -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <!-- Square 1:1 -->
-                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <!-- Square -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
                   <input type="radio" name="template-selector" value="square" style="display: none;" ${templateType === 'square' ? 'checked' : ''}>
-                  <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                    <div style="font-size: 7px; color: #303030; font-weight: bold;">1:1</div>
+                  <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">1:1</div>
                   </div>
-                  <div style="font-size: 10px; font-weight: bold; text-align: center;">Square</div>
-                  <div style="font-size: 8px; opacity: 0.8; text-align: center;">Instagram</div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.square.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.square.cropInfo}</div>
+                  </div>
                 </label>
 
-                <!-- Portrait 4:5 -->
-                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'portrait' ? 'checked' : ''}>
-                  <div style="width: 19px; height: 24px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                    <div style="font-size: 7px; color: #303030; font-weight: bold;">4:5</div>
+                <!-- Landscape (Less ideal) -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+                  <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
                   </div>
-                  <div style="font-size: 10px; font-weight: bold; text-align: center;">Portrait</div>
-                  <div style="font-size: 8px; opacity: 0.8; text-align: center;">LinkedIn</div>
-                </label>
-
-                <!-- Blog 3:2 -->
-                <label style="display: flex; flex-direction: column; align-items: center; color: white; cursor: pointer; padding: 10px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'blog' ? 'checked' : ''}>
-                  <div style="width: 28px; height: 19px; background: #F2C31B; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                    <div style="font-size: 7px; color: #303030; font-weight: bold;">3:2</div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px; opacity: 0.7;">${stackTemplates.landscape.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.landscape.cropInfo}</div>
                   </div>
-                  <div style="font-size: 10px; font-weight: bold; text-align: center;">Blog</div>
-                  <div style="font-size: 8px; opacity: 0.8; text-align: center;">Articles</div>
                 </label>
               </div>
+            `;
+          } else {
+            // Side-by-Side Mode Templates (3:2 combined → landscape formats work best)
+            return `
+              <!-- Template selector for Side-by-Side Mode (horizontal combined photos) -->
+              <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+                <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Side-by-Side Mode Templates</div>
 
-            </div>
-          `;
+                <!-- Landscape (Best) -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'default' || templateType === 'blog' ? 'checked' : ''}>
+                  <div style="width: 32px; height: 21px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">1.91:1</div>
+                  </div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.blog.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.blog.cropInfo}</div>
+                  </div>
+                </label>
+
+                <!-- Wide Landscape -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+                  <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
+                  </div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.landscape.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.landscape.cropInfo}</div>
+                  </div>
+                </label>
+
+                <!-- Square -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="square" style="display: none;" ${templateType === 'square' ? 'checked' : ''}>
+                  <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">1:1</div>
+                  </div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.square.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.square.cropInfo}</div>
+                  </div>
+                </label>
+
+                <!-- Portrait (Still usable) -->
+                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                  <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'portrait' ? 'checked' : ''}>
+                  <div style="width: 24px; height: 30px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 6px; color: #303030; font-weight: bold;">4:5</div>
+                  </div>
+                  <div>
+                    <div style="font-weight: bold; margin-bottom: 2px; opacity: 0.8;">${sideTemplates.portrait.description}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.portrait.cropInfo}</div>
+                  </div>
+                </label>
+              </div>
+            `;
+          }
         }
 
         setupEnlargedPhotoListeners(modal, photo) {
@@ -3548,17 +3766,48 @@
           const onImageLoad = () => {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-              // Simple template dimensions - will implement new flow
+              // Determine the combined mode based on original photos' aspect ratio
+              const beforeAspectRatio = beforeImg.width / beforeImg.height;
+              const afterAspectRatio = afterImg.width / afterImg.height;
+              const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
+
+              // Detect if original photos are portrait (2:3) or landscape (4:3)
+              const isOriginallyVertical = avgAspectRatio <= 1.0; // Portrait photos (2:3 ≈ 0.67)
+              const baseMode = isOriginallyVertical ? 'stack' : 'sidebyside';
+
+              console.log(`📸 Creating combined photo: avgAspectRatio=${avgAspectRatio.toFixed(2)}, baseMode=${baseMode}, templateType=${templateType}`);
+
+              // Get template definition
+              const templates = this.getTemplateSizes();
+              let templateKey = templateType || 'default';
+
+              // Map legacy template names to new format
+              if (templateType === 'default' || templateType === 'portrait') {
+                templateKey = baseMode === 'stack' ? 'stack-portrait' : 'sidebyside-landscape';
+              } else if (templateType === 'square') {
+                templateKey = baseMode === 'stack' ? 'stack-square' : 'sidebyside-square';
+              } else if (templateType === 'landscape') {
+                templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-wide';
+              } else if (templateType === 'blog') {
+                templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-landscape';
+              }
+
+              const template = templates[templateKey] || templates['stack-portrait'];
+
               const templateDimensions = {
-                targetWidth: 800,
-                targetHeight: 600,
-                splitType: 'vertical'
+                targetWidth: template.width,
+                targetHeight: template.height,
+                splitType: template.splitType,
+                ratio: template.ratio,
+                baseMode: baseMode
               };
+
+              console.log(`📸 Using template: ${templateKey}`, templateDimensions);
 
               // Create canvas
               const canvas = document.createElement('canvas');
               const ctx = canvas.getContext('2d');
-              
+
               canvas.width = templateDimensions.targetWidth;
               canvas.height = templateDimensions.targetHeight;
               
@@ -3754,10 +4003,13 @@
 
             if (afterPhoto) {
               // Check if there's a stored combined photo
-              const combinedPhoto = this.photos.find(p => 
+              const combinedPhoto = this.photos.find(p =>
                 p.mode === 'mix' && p.room === beforePhoto.room && p.name === beforePhoto.name
               );
-              
+
+              console.log(`🔍 Looking for combined photo: room=${beforePhoto.room}, name=${beforePhoto.name}`);
+              console.log(`🔍 Found combined photo:`, combinedPhoto ? 'YES' : 'NO');
+
               if (combinedPhoto) {
                 // Show stored combined photo
                 const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
@@ -5576,27 +5828,12 @@
           // Use current global template if none specified
           const actualTemplateType = templateType || this.currentTemplate;
           console.log('Creating combined photo automatically for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
-          
-          // Create image objects to get dimensions
-          const beforeImg = new Image();
-          const afterImg = new Image();
-          
-          let imagesLoaded = 0;
-          const totalImages = 2;
-          
-          const onImageLoad = () => {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-              // All images loaded, now process them with enhanced sizing
-              this.createCombinedPhoto(beforeImg.src, afterImg.src, room, photoName, templateType);
-            }
-          };
-          
-          // Load images
-          beforeImg.onload = onImageLoad;
-          afterImg.onload = onImageLoad;
-          beforeImg.src = beforeDataUrl;
-          afterImg.src = afterDataUrl;
+
+          // Use createCombinedPhotoInMemory to actually create the photo
+          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, (combinedDataUrl) => {
+            // Save the combined photo
+            this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
+          });
         }
 
 
@@ -5933,27 +6170,12 @@
           // Use current global template if none specified
           const actualTemplateType = templateType || this.currentTemplate;
           console.log('Creating combined photo with callback for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
-          
-          // Create image objects to get dimensions
-          const beforeImg = new Image();
-          const afterImg = new Image();
-          
-          let imagesLoaded = 0;
-          const totalImages = 2;
-          
-          const onImageLoad = () => {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-              // All images loaded, now process them with enhanced sizing
-              this.createCombinedPhotoWithCallback(beforeImg.src, afterImg.src, room, photoName, actualTemplateType, callback);
-            }
-          };
-          
-          // Load images
-          beforeImg.onload = onImageLoad;
-          afterImg.onload = onImageLoad;
-          beforeImg.src = beforeDataUrl;
-          afterImg.src = afterDataUrl;
+
+          // Use createCombinedPhotoInMemory to actually create the photo
+          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, (combinedDataUrl) => {
+            // Save the combined photo with callback
+            this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, actualTemplateType, callback);
+          });
         }
 
 
@@ -6284,14 +6506,24 @@
           };
           
           console.log('Created combined photo:', combinedPhoto);
-          
+
           // Add the combined photo
           this.photos.push(combinedPhoto);
-          
+          console.log('📸 Added combined photo to photos array. Total photos:', this.photos.length);
+          console.log('📸 Photos array now contains:', this.photos.map(p => `${p.mode} - ${p.name} (${p.room})`));
+
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
-          
+
           this.savePhotos();
+
+          // Update UI immediately
+          const photosContainer = document.getElementById('photos-container');
+          if (photosContainer) {
+            console.log('📸 Updating main photos grid after combined photo creation');
+            photosContainer.innerHTML = this.getPhotosHTML();
+            this.attachPhotoListeners();
+          }
 
           // Photo saved successfully - modal closing handled by caller
         }
