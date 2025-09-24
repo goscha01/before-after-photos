@@ -6598,14 +6598,23 @@
             const availableWidth = visibleVideoWidth - 2*border;
             const availableHeight = visibleVideoHeight - 2*border;
 
-            if (targetAspectRatio > (availableWidth / availableHeight)) {
-              // Target is wider than available area - width constrained
+            if (aspectRatio === '4:3') {
+              // Stack mode: Use full width to match object-fit: cover behavior
+              // This creates symmetric top/bottom borders like side bars in side-by-side mode
               frameWidth = availableWidth;
               frameHeight = frameWidth / targetAspectRatio;
+              console.log('Stack mode: Using full width for enlarged frame with top/bottom borders');
             } else {
-              // Target is taller than available area - height constrained
-              frameHeight = availableHeight;
-              frameWidth = frameHeight * targetAspectRatio;
+              // Side-by-side mode: Use existing logic (height constrained)
+              if (targetAspectRatio > (availableWidth / availableHeight)) {
+                // Target is wider than available area - width constrained
+                frameWidth = availableWidth;
+                frameHeight = frameWidth / targetAspectRatio;
+              } else {
+                // Target is taller than available area - height constrained
+                frameHeight = availableHeight;
+                frameWidth = frameHeight * targetAspectRatio;
+              }
             }
 
             console.log('Frame dimensions (with', border, 'px border):', frameWidth, 'x', frameHeight);
