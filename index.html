@@ -625,8 +625,8 @@
             // Portrait mode - top (camera) and bottom (existing photos)
             return `
               <div style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column;">
-                <!-- Full height - Camera TEST -->
-                <div id="camera-container" style="position: relative; width: 100%; height: 100%; background: black; display: flex; align-items: center; justify-content: center;">
+                <!-- Upper half - Camera -->
+                <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black; display: flex; align-items: center; justify-content: center;">
                   <video id="camera-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
@@ -657,9 +657,11 @@
                   </div>
                 </div>
 
-                <!-- Bottom half - Photo Grid - HIDDEN FOR TEST -->
-                <div id="before-photo-grid" style="width: 100%; flex: 1; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px; min-height: 200px; display: none;">
-                  ${this.getBeforePhotosGridHTML()}
+                <!-- Bottom half - Photo Grid with black bars for symmetry -->
+                <div style="width: 100%; height: 50%; background: black; display: flex; align-items: center; justify-content: center;">
+                  <div id="before-photo-grid" style="width: 100%; height: 100%; background: #f8f9fa; overflow-y: auto; padding: 10px; padding-bottom: 15px;">
+                    ${this.getBeforePhotosGridHTML()}
+                  </div>
                 </div>
 
                 <!-- Close button -->
@@ -802,8 +804,8 @@
                 <!-- Divider line -->
                 <div style="width: 100%; height: 4px; background: #000;"></div>
 
-                <!-- Bottom half - Camera -->
-                <div id="camera-container" style="position: relative; width: 100%; height: 100%; background: black; display: flex; align-items: center; justify-content: center;">
+                <!-- Upper half - Camera -->
+                <div id="camera-container" style="position: relative; width: 100%; height: 50%; background: black; display: flex; align-items: center; justify-content: center;">
                   <video id="comparison-camera" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
                   
                   <!-- Photo frame overlay for camera -->
