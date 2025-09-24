@@ -674,6 +674,15 @@
         }
 
         getBeforePhotosGridHTML() {
+          // Device/platform debugging
+          const userAgent = navigator.userAgent;
+          const isIPhone = /iPhone|iPad|iPod/.test(userAgent);
+          const isAndroid = /Android/.test(userAgent);
+          const isMobile = isIPhone || isAndroid;
+
+          console.log(`📱 Device Info: iPhone=${isIPhone}, Android=${isAndroid}, Mobile=${isMobile}`);
+          console.log(`📱 User Agent: ${userAgent}`);
+
           // Room icon for placeholders
           const roomIcons = {
             'kitchen': '🍳',
@@ -698,6 +707,8 @@
             // 4:3 aspect ratio (horizontal/landscape mode) - image is wider, center it with side gaps
             // 2:3 aspect ratio (vertical/portrait mode) - image is taller, center it with top/bottom gaps
             const objectFit = (photo.aspectRatio === '4:3') ? 'contain' : 'contain';
+
+            console.log(`🖼️ Thumbnail for photo ${photo.id}: aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
 
             gridItems.push(`
               <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
@@ -1262,6 +1273,8 @@
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
 
+                console.log(`🖼️ Main Gallery After Photo ${photo.id}: aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
+
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
                     <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit};" />
@@ -1287,6 +1300,8 @@
 
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
+
+                console.log(`🖼️ Main Gallery Single Photo ${photo.id}: mode=${photo.mode}, aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
 
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
@@ -5143,16 +5158,64 @@
         }
         
         captureComparisonPhoto(video, stream, beforePhoto) {
-          console.log('Capturing comparison photo - original resolution');
+          console.log('📸 Capturing comparison photo with aspect ratio:', this.currentAspectRatio || beforePhoto.aspectRatio);
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          // Use the video's original resolution without any transformations
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          // Get the target aspect ratio for cropping
+          const targetAspectRatio = beforePhoto.aspectRatio || this.currentAspectRatio || '4:3';
+          console.log('📸 Target aspect ratio for capture:', targetAspectRatio);
 
-          // Draw the entire video frame without cropping or resizing
-          ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+          // Calculate crop dimensions based on aspect ratio
+          let cropWidth, cropHeight, cropX, cropY;
+          const videoWidth = video.videoWidth;
+          const videoHeight = video.videoHeight;
+          const videoAspectRatio = videoWidth / videoHeight;
+
+          if (targetAspectRatio === '4:3') {
+            // Horizontal mode: 4:3 aspect ratio
+            canvas.width = 800;
+            canvas.height = 600; // 4:3 ratio
+
+            // Crop to fit 4:3 from center of video
+            if (videoAspectRatio > (4/3)) {
+              // Video is wider, crop sides
+              cropHeight = videoHeight;
+              cropWidth = videoHeight * (4/3);
+              cropX = (videoWidth - cropWidth) / 2;
+              cropY = 0;
+            } else {
+              // Video is taller, crop top/bottom
+              cropWidth = videoWidth;
+              cropHeight = videoWidth * (3/4);
+              cropX = 0;
+              cropY = (videoHeight - cropHeight) / 2;
+            }
+          } else {
+            // Vertical mode: 2:3 aspect ratio
+            canvas.width = 600;
+            canvas.height = 900; // 2:3 ratio
+
+            // Crop to fit 2:3 from center of video
+            if (videoAspectRatio > (2/3)) {
+              // Video is wider, crop sides significantly
+              cropHeight = videoHeight;
+              cropWidth = videoHeight * (2/3);
+              cropX = (videoWidth - cropWidth) / 2;
+              cropY = 0;
+            } else {
+              // Video is taller, crop top/bottom
+              cropWidth = videoWidth;
+              cropHeight = videoWidth * (3/2);
+              cropX = 0;
+              cropY = (videoHeight - cropHeight) / 2;
+            }
+          }
+
+          console.log(`📸 Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Canvas: ${canvas.width}x${canvas.height}`);
+
+          // Draw the cropped video frame
+          ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
 
           const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
@@ -6343,8 +6406,10 @@
 
           if (this.currentAspectRatio === '4:3') {
             return { width: 4, height: 3 }; // 4:3 for stack mode (landscape crop from portrait)
+          } else if (this.currentAspectRatio === '2:3' || this.currentAspectRatio === '3:4') {
+            return { width: 2, height: 3 }; // 2:3 for side-by-side mode (portrait crop)
           } else {
-            return { width: 3, height: 4 }; // 3:4 for side-by-side mode (portrait crop)
+            return { width: 2, height: 3 }; // Default fallback to portrait
           }
         }
 
@@ -6370,8 +6435,8 @@
         // Switch between aspect ratios
         switchAspectRatio() {
           const previousRatio = this.currentAspectRatio;
-          this.currentAspectRatio = this.currentAspectRatio === '4:3' ? '3:4' : '4:3';
-          console.log('Switched aspect ratio from', previousRatio, 'to', this.currentAspectRatio);
+          this.currentAspectRatio = this.currentAspectRatio === '4:3' ? '2:3' : '4:3';
+          console.log('🔄 Switched aspect ratio from', previousRatio, 'to', this.currentAspectRatio);
 
           // Update UI button text
           const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
@@ -6775,16 +6840,64 @@
         }
 
         capturePhoto(video, stream) {
-          console.log('Capturing photo - original resolution');
+          console.log('📸 Capturing before photo with aspect ratio:', this.currentAspectRatio);
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
 
-          // Use the video's original resolution without any transformations
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          // Get the target aspect ratio for cropping
+          const targetAspectRatio = this.currentAspectRatio || '4:3';
+          console.log('📸 Target aspect ratio for before capture:', targetAspectRatio);
 
-          // Draw the entire video frame without cropping or resizing
-          context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+          // Calculate crop dimensions based on aspect ratio
+          let cropWidth, cropHeight, cropX, cropY;
+          const videoWidth = video.videoWidth;
+          const videoHeight = video.videoHeight;
+          const videoAspectRatio = videoWidth / videoHeight;
+
+          if (targetAspectRatio === '4:3') {
+            // Horizontal mode: 4:3 aspect ratio
+            canvas.width = 800;
+            canvas.height = 600; // 4:3 ratio
+
+            // Crop to fit 4:3 from center of video
+            if (videoAspectRatio > (4/3)) {
+              // Video is wider, crop sides
+              cropHeight = videoHeight;
+              cropWidth = videoHeight * (4/3);
+              cropX = (videoWidth - cropWidth) / 2;
+              cropY = 0;
+            } else {
+              // Video is taller, crop top/bottom
+              cropWidth = videoWidth;
+              cropHeight = videoWidth * (3/4);
+              cropX = 0;
+              cropY = (videoHeight - cropHeight) / 2;
+            }
+          } else {
+            // Vertical mode: 2:3 aspect ratio
+            canvas.width = 600;
+            canvas.height = 900; // 2:3 ratio
+
+            // Crop to fit 2:3 from center of video
+            if (videoAspectRatio > (2/3)) {
+              // Video is wider, crop sides significantly
+              cropHeight = videoHeight;
+              cropWidth = videoHeight * (2/3);
+              cropX = (videoWidth - cropWidth) / 2;
+              cropY = 0;
+            } else {
+              // Video is taller, crop top/bottom
+              cropWidth = videoWidth;
+              cropHeight = videoWidth * (3/2);
+              cropX = 0;
+              cropY = (videoHeight - cropHeight) / 2;
+            }
+          }
+
+          console.log(`📸 Before Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Canvas: ${canvas.width}x${canvas.height}`);
+
+          // Draw the cropped video frame
+          context.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
           
           // First photos are always "before" photos
           const photoMode = 'before';
@@ -6803,9 +6916,10 @@
             aspectRatio: this.currentAspectRatio || '4:3' // Store the aspect ratio used
           };
           
-          console.log('Photo created:', photo);
+          console.log('📸 Photo created with aspect ratio:', photo.aspectRatio, 'Current mode:', this.currentAspectRatio);
+          console.log('📸 Full photo object:', photo);
           this.photos.push(photo);
-          console.log('Photos array length:', this.photos.length);
+          console.log('📸 Photos array length:', this.photos.length);
           this.savePhotos();
           
           // Update the before photo grid in the modal
