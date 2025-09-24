@@ -483,6 +483,40 @@
         checkOrientation() {
           this.isLandscape = window.innerWidth > window.innerHeight;
         }
+
+        detectPhotoOrientation(width, height) {
+          // Detect if a photo is landscape or portrait based on its dimensions
+          if (width > height) {
+            return 'Landscape';
+          } else if (height > width) {
+            return 'Portrait';
+          } else {
+            return 'Square';
+          }
+        }
+
+        getTemplateSizes() {
+          // Basic template sizes for fallback
+          return {
+            default: { width: 800, height: 600, ratio: '4:3' },
+            square: { width: 600, height: 600, ratio: '1:1' },
+            landscape: { width: 1200, height: 675, ratio: '16:9' },
+            portrait: { width: 600, height: 750, ratio: '4:5' },
+            blog: { width: 900, height: 600, ratio: '3:2' }
+          };
+        }
+
+        calculatePhotoCropDimensions(width, height, templateType, orientation) {
+          // Simple fallback for crop dimensions
+          return {
+            cropX: 0,
+            cropY: 0,
+            cropWidth: width,
+            cropHeight: height,
+            targetWidth: width,
+            targetHeight: height
+          };
+        }
         
         getCameraModalHTML() {
           if (this.isLandscape) {
