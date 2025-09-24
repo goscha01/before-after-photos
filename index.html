@@ -6506,10 +6506,10 @@
             }
 
             if (aspectRatio === '4:3') {
-              // Stack mode: Fill full width, crop top/bottom (no side black bars)
-              video.style.objectFit = 'cover';
+              // Stack mode: Use contain to create symmetric borders like side-by-side mode
+              video.style.objectFit = 'contain';
               video.style.objectPosition = 'center center';
-              console.log('Stack mode: Using cover to fill width and crop top/bottom');
+              console.log('Stack mode: Using contain to create symmetric borders');
             } else {
               // Side-by-side mode: Show full video with side black bars
               video.style.objectFit = 'contain';
@@ -6576,32 +6576,21 @@
             // Calculate visible video dimensions based on object-fit mode
             let visibleVideoWidth, visibleVideoHeight;
 
-            // Calculate visible video dimensions based on aspect ratio mode
-            if (aspectRatio === '4:3') {
-              // Stack mode uses object-fit: cover - video fills container, may crop
-              // Cover mode: video fills entire container, cropping if needed
-              if (actualVideoAspectRatio > containerAspectRatio) {
-                // Video is wider than container - fill height, crop width (but visible area is still container size)
-                visibleVideoHeight = containerHeight;
-                visibleVideoWidth = containerWidth; // FIXED: Cover fills the entire container
-              } else {
-                // Video is taller than container - fill width, crop height (but visible area is still container size)
-                visibleVideoWidth = containerWidth;
-                visibleVideoHeight = containerHeight; // FIXED: Cover fills the entire container
-              }
-              console.log('Stack mode: Using object-fit: cover - video fills container, may crop');
+            // Both modes now use object-fit: contain - video fits with black bars
+            // Contain mode: video maintains aspect ratio and fits within container
+            if (actualVideoAspectRatio > containerAspectRatio) {
+              // Video is wider than container - constrained by width
+              visibleVideoWidth = containerWidth;
+              visibleVideoHeight = containerWidth / actualVideoAspectRatio;
             } else {
-              // Side-by-side mode uses object-fit: contain - video fits with black bars
-              // Contain mode: video maintains aspect ratio and fits within container
-              if (actualVideoAspectRatio > containerAspectRatio) {
-                // Video is wider than container - constrained by width
-                visibleVideoWidth = containerWidth;
-                visibleVideoHeight = containerWidth / actualVideoAspectRatio;
-              } else {
-                // Video is taller than container - constrained by height
-                visibleVideoHeight = containerHeight;
-                visibleVideoWidth = containerHeight * actualVideoAspectRatio;
-              }
+              // Video is taller than container - constrained by height
+              visibleVideoHeight = containerHeight;
+              visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+            }
+
+            if (aspectRatio === '4:3') {
+              console.log('Stack mode: Using object-fit: contain - creates symmetric black bars');
+            } else {
               console.log('Side-by-side mode: Using object-fit: contain - video fits with black bars');
             }
 
