@@ -6564,18 +6564,34 @@
             // Calculate visible video dimensions based on object-fit mode
             let visibleVideoWidth, visibleVideoHeight;
 
-            // Both modes now use object-fit: contain - video fits within container with black bars
-            // Contain mode: video maintains aspect ratio and fits within container
-            if (actualVideoAspectRatio > containerAspectRatio) {
-              // Video is wider than container - constrained by width
-              visibleVideoWidth = containerWidth;
-              visibleVideoHeight = containerWidth / actualVideoAspectRatio;
+            // Calculate visible video dimensions based on aspect ratio mode
+            if (aspectRatio === '4:3') {
+              // Stack mode uses object-fit: cover - video fills container, may crop
+              // Cover mode: video fills entire container, cropping if needed
+              if (actualVideoAspectRatio > containerAspectRatio) {
+                // Video is wider - constrained by height, crops left/right
+                visibleVideoHeight = containerHeight;
+                visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+              } else {
+                // Video is taller - constrained by width, crops top/bottom
+                visibleVideoWidth = containerWidth;
+                visibleVideoHeight = containerWidth / actualVideoAspectRatio;
+              }
+              console.log('Stack mode: Using object-fit: cover - video fills container, may crop');
             } else {
-              // Video is taller than container - constrained by height
-              visibleVideoHeight = containerHeight;
-              visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+              // Side-by-side mode uses object-fit: contain - video fits with black bars
+              // Contain mode: video maintains aspect ratio and fits within container
+              if (actualVideoAspectRatio > containerAspectRatio) {
+                // Video is wider than container - constrained by width
+                visibleVideoWidth = containerWidth;
+                visibleVideoHeight = containerWidth / actualVideoAspectRatio;
+              } else {
+                // Video is taller than container - constrained by height
+                visibleVideoHeight = containerHeight;
+                visibleVideoWidth = containerHeight * actualVideoAspectRatio;
+              }
+              console.log('Side-by-side mode: Using object-fit: contain - video fits with black bars');
             }
-            console.log('Using object-fit: contain - video fits within container with black bars if needed');
 
             // Now calculate frame based on desired aspect ratio, not actual video
             let targetAspectRatio;
