@@ -6331,36 +6331,22 @@
           }
         }
 
-        // Get iPhone-optimized camera constraints
+        // Get camera constraints for maximum sensor area
         getIOSCameraConstraints() {
-          const aspectRatio = this.getAspectRatio();
-          const targetAspectRatio = aspectRatio.width / aspectRatio.height;
+          console.log(`Requesting maximum camera sensor area for ${this.currentAspectRatio}`);
 
-          // iPhone maximum resolutions for different aspect ratios
-          let idealWidth, idealHeight;
-
-          // Both modes use portrait camera orientation (phone held vertically)
-          // The difference is in the crop frame, not the camera stream
-          idealWidth = 3024;   // iPhone max width (always portrait orientation)
-          idealHeight = 4032;  // iPhone max height (always portrait orientation)
-
-          // Note: Camera stream is always portrait, frames will crop differently:
-          // - Stack mode: 4:3 landscape crop from portrait stream
-          // - Side-by-side mode: 3:4 portrait crop (nearly full frame)
-
-          console.log(`Camera constraints for ${this.currentAspectRatio}:`, idealWidth, 'x', idealHeight, 'target ratio:', targetAspectRatio);
-
-          // Request full camera sensor area (no aspect ratio constraint to avoid cropping)
+          // Request 4:3 aspect ratio to match iPhone native camera's full sensor area
+          // iPhone sensor is 4032×3024 (4:3 ratio) - same as native camera app
           const constraints = {
             video: {
               facingMode: 'environment',
-              width: { ideal: idealWidth },
-              height: { ideal: idealHeight }
-              // Removed aspectRatio constraint to get full native sensor area like native camera app
+              aspectRatio: { ideal: 4/3 },
+              width: { ideal: 4032 },
+              height: { ideal: 3024 }
             }
           };
 
-          console.log('Final camera constraints (always portrait stream):', constraints);
+          console.log('Requesting 4:3 camera constraints to match native camera sensor:', constraints);
           return constraints;
         }
 
