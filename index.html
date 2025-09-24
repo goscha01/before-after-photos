@@ -6548,11 +6548,30 @@
 
                 console.log(`Forcing HEIGHT fit: video will be ${videoWidth.toFixed(1)}x${videoHeight} in container ${containerWidth}x${containerHeight}`);
 
-                // Apply manual sizing with !important to prevent overrides
-                video.style.objectFit = 'fill'; // Let us control the sizing manually
+                // Create a constraining wrapper div around the video
+                let wrapper = video.parentElement.querySelector('.video-wrapper');
+                if (!wrapper) {
+                  wrapper = document.createElement('div');
+                  wrapper.className = 'video-wrapper';
+                  video.parentElement.insertBefore(wrapper, video);
+                  wrapper.appendChild(video);
+                }
+
+                // Style the wrapper to constrain the video
+                wrapper.style.position = 'absolute';
+                wrapper.style.top = '50%';
+                wrapper.style.left = '50%';
+                wrapper.style.transform = 'translate(-50%, -50%)';
+                wrapper.style.width = `${videoWidth}px`;
+                wrapper.style.height = `${videoHeight}px`;
+                wrapper.style.overflow = 'hidden';
+                wrapper.style.backgroundColor = 'black';
+
+                // Reset video to fill the wrapper
+                video.style.objectFit = 'cover';
                 video.style.objectPosition = 'center center';
-                video.style.setProperty('width', `${videoWidth}px`, 'important');
-                video.style.setProperty('height', `${videoHeight}px`, 'important');
+                video.style.width = '100%';
+                video.style.height = '100%';
                 video.style.margin = '0';
                 video.style.display = 'block';
                 video.style.transform = 'none';
