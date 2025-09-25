@@ -993,8 +993,8 @@
           // Add all existing photos
           beforePhotos.forEach(photo => {
             // Determine object-fit based on photo's original aspect ratio
-            // 4:3 aspect ratio (horizontal/landscape mode) - image is wider, center it with side gaps
-            // 2:3 aspect ratio (vertical/portrait mode) - image is taller, center it with top/bottom gaps
+            // 4:3 aspect ratio photos need "contain" to show full content within square thumbnail
+            // 2:3 aspect ratio photos use "contain" to fill the square properly
             const objectFit = (photo.aspectRatio === '4:3') ? 'contain' : 'contain';
 
             console.log(`🖼️ Thumbnail for photo ${photo.id}: aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
@@ -1341,21 +1341,24 @@
 
           // Debug: Check all photos first
 
-          // Get all stored photos (before, after, and combined/mix photos)
+          // Get all stored photos (before, after, combined/mix, and thumbnails)
           const allPhotos = this.photos
             .filter(photo => {
               // Include before photos
               if (photo.mode === 'before') return true;
-              
+
               // Include after photos
               if (photo.mode === 'after') return true;
-              
+
               // Include archived photos
               if (photo.mode === 'archived') return true;
-              
+
               // Include mix/combined photos
               if (photo.mode === 'mix') return true;
-              
+
+              // Include thumbnails
+              if (photo.mode === 'thumbnail') return true;
+
               return false;
             });
 
@@ -1406,7 +1409,13 @@
             } else if (photo.mode === 'after') {
               photosByRoomAndName[photo.room][photoKey].after = photo;
             } else if (photo.mode === 'mix') {
+              // Formatted photos take priority over thumbnails
               photosByRoomAndName[photo.room][photoKey].combined = photo;
+            } else if (photo.mode === 'thumbnail') {
+              // Only use thumbnail if no formatted photo exists
+              if (!photosByRoomAndName[photo.room][photoKey].combined) {
+                photosByRoomAndName[photo.room][photoKey].combined = photo;
+              }
             }
           });
 
@@ -1961,21 +1970,39 @@
                     <input type="checkbox" id="format-instagram-facebook" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
                     <span style="font-size: 13px; font-weight: bold; color: #000;">Instagram / Facebook Feed (4:5)</span>
                   </label>
-                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #F2C31B; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #F2C31B;">
-                    <input type="checkbox" id="format-linkedin-business" checked style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #000;">LinkedIn / Google My Business / Yelp (1:1)</span>
-                  </label>
+                  <div id="square-format-card" class="format-card" style="border: 2px solid #F2C31B; border-radius: 8px; padding: 8px 10px; background: #F2C31B; transition: all 0.2s;" onmouseover="this.style.background='#F4C635'" onmouseout="this.updateCardStyle ? this.updateCardStyle() : this.style.background='#F2C31B'">
+                    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                      <span style="font-size: 13px; font-weight: bold; color: #000;">Square - LinkedIn / Yelp (1:1)</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-left: 8px;">
+                      <label style="display: flex; align-items: center; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='transparent'">
+                        <input type="checkbox" id="format-square-sidebyside" checked style="margin-right: 4px; transform: scale(0.9); accent-color: #000;">
+                        <span style="font-size: 11px; color: #000;">Side-by-Side (vertical split)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='transparent'">
+                        <input type="checkbox" id="format-square-stack" checked style="margin-right: 4px; transform: scale(0.9); accent-color: #000;">
+                        <span style="font-size: 11px; color: #000;">Stack (horizontal split)</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div id="landscape-format-card" class="format-card" style="border: 2px solid #999; border-radius: 8px; padding: 8px 10px; background: #f5f5f5; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.updateCardStyle()">
+                    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                      <span style="font-size: 13px; font-weight: bold; color: #999;">Websites / Presentations (16:9)</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-left: 8px;">
+                      <label style="display: flex; align-items: center; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='transparent'">
+                        <input type="checkbox" id="format-landscape-sidebyside" style="margin-right: 4px; transform: scale(0.9); accent-color: #000;">
+                        <span style="font-size: 11px; color: #999;">Side-by-Side (vertical split)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='transparent'">
+                        <input type="checkbox" id="format-landscape-stack" style="margin-right: 4px; transform: scale(0.9); accent-color: #000;">
+                        <span style="font-size: 11px; color: #999;">Stack (horizontal split)</span>
+                      </label>
+                    </div>
+                  </div>
                   <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
-                    <input type="checkbox" id="format-websites-presentations" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #999;">Websites / Presentations (16:9)</span>
-                  </label>
-                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
-                    <input type="checkbox" id="format-blog-marketing" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #999;">Blog Posts / Marketing Materials (3:2)</span>
-                  </label>
-                  <label style="display: flex; align-items: center; padding: 8px 10px; border: 2px solid #999; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #f5f5f5;">
-                    <input type="checkbox" id="format-original" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
-                    <span style="font-size: 13px; font-weight: bold; color: #999;">Original Size / Ratio (4:3)</span>
+                    <input type="checkbox" id="format-instagram-landscape" style="margin-right: 8px; transform: scale(1.2); accent-color: #000;">
+                    <span style="font-size: 13px; font-weight: bold; color: #999;">Instagram / Facebook Landscape (1.91:1)</span>
                   </label>
                 </div>
               </div>
@@ -2032,10 +2059,11 @@
         formatSelectedFormats(formats) {
           const formatNames = {
             'instagram-facebook': 'Instagram / Facebook Feed (4:5)',
-            'linkedin-business': 'LinkedIn / Google My Business / Yelp (1:1)',
-            'websites-presentations': 'Websites / Presentations (16:9)',
-            'blog-marketing': 'Blog Posts / Marketing Materials (3:2)',
-            'original': 'Original Size / Ratio (4:3)'
+            'square-sidebyside': 'Square Side-by-Side (1:1)',
+            'square-stack': 'Square Stack (1:1)',
+            'landscape-sidebyside': 'Landscape Side-by-Side (16:9)',
+            'landscape-stack': 'Landscape Stack (16:9)',
+            'instagram-landscape': 'Instagram / Facebook Landscape (1.91:1)'
           };
           
           const selectedFormats = Object.keys(formats).filter(key => formats[key]);
@@ -2154,8 +2182,8 @@
                         <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Best for vertical feed posts</td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">LinkedIn / Google My Business / Yelp</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">LinkedIn, GMB, Yelp</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Square - LinkedIn / Yelp</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">LinkedIn, Yelp</td>
                         <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">1:1</td>
                         <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Square format for business listings</td>
                       </tr>
@@ -2166,16 +2194,10 @@
                         <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Standard landscape for slides</td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Blog Posts / Marketing Materials</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Blog posts, brochures</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">3:2</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Wide format for articles</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Original Size / Ratio</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Any</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">4:3 (or original)</td>
-                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Keep original dimensions</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-weight: bold; font-size: 12px;">Instagram / Facebook Landscape</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Instagram, Facebook</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">1.91:1</td>
+                        <td style="padding: 8px 6px; border: 1px solid #ddd; font-size: 11px;">Landscape posts for feeds</td>
                       </tr>
                     </tbody>
                   </table>
@@ -2236,6 +2258,47 @@
         }
 
         setupUploadPopupListeners(modal) {
+          // Add updateCardStyle function to format cards
+          const landscapeCard = document.getElementById('landscape-format-card');
+          if (landscapeCard) {
+            landscapeCard.updateCardStyle = function() {
+              const sideBySideChecked = document.getElementById('format-landscape-sidebyside').checked;
+              const stackChecked = document.getElementById('format-landscape-stack').checked;
+
+              if (sideBySideChecked || stackChecked) {
+                this.style.border = '2px solid #F2C31B';
+                this.style.background = '#F2C31B';
+                this.querySelector('span').style.color = '#000';
+                this.querySelectorAll('label span').forEach(span => span.style.color = '#000');
+              } else {
+                this.style.border = '2px solid #999';
+                this.style.background = '#f5f5f5';
+                this.querySelector('span').style.color = '#999';
+                this.querySelectorAll('label span').forEach(span => span.style.color = '#999');
+              }
+            };
+          }
+
+          const squareCard = document.getElementById('square-format-card');
+          if (squareCard) {
+            squareCard.updateCardStyle = function() {
+              const sideBySideChecked = document.getElementById('format-square-sidebyside').checked;
+              const stackChecked = document.getElementById('format-square-stack').checked;
+
+              if (sideBySideChecked || stackChecked) {
+                this.style.border = '2px solid #F2C31B';
+                this.style.background = '#F2C31B';
+                this.querySelector('span').style.color = '#000';
+                this.querySelectorAll('label span').forEach(span => span.style.color = '#000');
+              } else {
+                this.style.border = '2px solid #999';
+                this.style.background = '#f5f5f5';
+                this.querySelector('span').style.color = '#999';
+                this.querySelectorAll('label span').forEach(span => span.style.color = '#999');
+              }
+            };
+          }
+
           // Close button
           document.getElementById('close-upload-popup').addEventListener('click', () => {
             document.body.removeChild(modal);
@@ -2376,35 +2439,50 @@
           });
 
           // Add checkbox change handlers for format selection
-          const formatCheckboxIds = ['format-instagram-facebook', 'format-linkedin-business', 'format-websites-presentations', 'format-blog-marketing', 'format-original'];
+          const formatCheckboxIds = ['format-instagram-facebook', 'format-square-sidebyside', 'format-square-stack', 'format-landscape-sidebyside', 'format-landscape-stack', 'format-instagram-landscape'];
           
           formatCheckboxIds.forEach(id => {
             const checkbox = document.getElementById(id);
-            const label = checkbox.closest('label');
-            
-            checkbox.addEventListener('change', () => {
-              if (checkbox.checked) {
-                // Active state: yellow background, black text, yellow border
-                label.style.background = '#F2C31B';
-                label.style.borderColor = '#F2C31B';
-                
-                // Update text colors to black
-                const spans = label.querySelectorAll('span');
-                spans.forEach(span => {
-                  span.style.color = '#000';
-                });
-              } else {
-                // Inactive state: gray background, gray text, gray border
-                label.style.background = '#f5f5f5';
-                label.style.borderColor = '#999';
-                
-                // Update text colors to gray
-                const spans = label.querySelectorAll('span');
-                spans.forEach(span => {
-                  span.style.color = '#999';
-                });
-              }
-            });
+            if (!checkbox) return; // Skip if checkbox doesn't exist
+
+            // Handle different checkbox types
+            if (id.includes('format-square-') || id.includes('format-landscape-')) {
+              // Square and landscape checkboxes are in cards, not labels
+              checkbox.addEventListener('change', () => {
+                const card = checkbox.closest('.format-card');
+                if (card && card.updateCardStyle) {
+                  card.updateCardStyle();
+                }
+              });
+            } else {
+              // Instagram checkboxes are still in labels
+              const label = checkbox.closest('label');
+              if (!label) return;
+
+              checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                  // Active state: yellow background, black text, yellow border
+                  label.style.background = '#F2C31B';
+                  label.style.borderColor = '#F2C31B';
+
+                  // Update text colors to black
+                  const spans = label.querySelectorAll('span');
+                  spans.forEach(span => {
+                    span.style.color = '#000';
+                  });
+                } else {
+                  // Inactive state: gray background, gray text, gray border
+                  label.style.background = '#f5f5f5';
+                  label.style.borderColor = '#999';
+
+                  // Update text colors to gray
+                  const spans = label.querySelectorAll('span');
+                  spans.forEach(span => {
+                    span.style.color = '#999';
+                  });
+                }
+              });
+            }
           });
 
           // Add info button event listeners
@@ -2433,10 +2511,11 @@
 
           const selectedFormats = {
             'instagram-facebook': document.getElementById('format-instagram-facebook').checked,
-            'linkedin-business': document.getElementById('format-linkedin-business').checked,
-            'websites-presentations': document.getElementById('format-websites-presentations').checked,
-            'blog-marketing': document.getElementById('format-blog-marketing').checked,
-            'original': document.getElementById('format-original').checked
+            'square-sidebyside': document.getElementById('format-square-sidebyside').checked,
+            'square-stack': document.getElementById('format-square-stack').checked,
+            'landscape-sidebyside': document.getElementById('format-landscape-sidebyside').checked,
+            'landscape-stack': document.getElementById('format-landscape-stack').checked,
+            'instagram-landscape': document.getElementById('format-instagram-landscape').checked
           };
 
           // Validation
@@ -3260,25 +3339,22 @@
                     targetWidth = 1080;
                     targetHeight = 1350;
                     break;
-                  case 'linkedin-business':
-                    // 1:1 aspect ratio (square)
+                  case 'square-sidebyside':
+                  case 'square-stack':
+                    // 1:1 aspect ratio (square) - both split types use same dimensions
                     targetWidth = 1080;
                     targetHeight = 1080;
                     break;
-                  case 'websites-presentations':
-                    // 16:9 aspect ratio (landscape)
+                  case 'landscape-sidebyside':
+                  case 'landscape-stack':
+                    // 16:9 aspect ratio (landscape) - both split types use same dimensions
                     targetWidth = 1920;
                     targetHeight = 1080;
                     break;
-                  case 'blog-marketing':
-                    // 3:2 aspect ratio
+                  case 'instagram-landscape':
+                    // 1.91:1 aspect ratio (Instagram landscape)
                     targetWidth = 1200;
-                    targetHeight = 800;
-                    break;
-                  case 'original':
-                    // Keep original dimensions
-                    targetWidth = img.naturalWidth;
-                    targetHeight = img.naturalHeight;
+                    targetHeight = 630;
                     break;
                   default:
                     targetWidth = img.naturalWidth;
@@ -3291,23 +3367,20 @@
                 console.log(`🎯 Target dimensions for ${format}: ${targetWidth}x${targetHeight}`);
                 console.log(`📏 Original image: ${img.naturalWidth}x${img.naturalHeight}`);
                 
-                // Calculate scaling to fit the image within the target dimensions while maintaining aspect ratio
+                // Calculate scaling to fill the target dimensions (crop instead of letterbox)
                 const scaleX = targetWidth / img.naturalWidth;
                 const scaleY = targetHeight / img.naturalHeight;
-                const scale = Math.min(scaleX, scaleY);
-                
+                const scale = Math.max(scaleX, scaleY); // Use max to fill and crop
+
                 const scaledWidth = img.naturalWidth * scale;
                 const scaledHeight = img.naturalHeight * scale;
-                
-                // Center the image
+
+                // Center the scaled image (this will crop excess)
                 const offsetX = (targetWidth - scaledWidth) / 2;
                 const offsetY = (targetHeight - scaledHeight) / 2;
-                
-                // Fill background with white
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, targetWidth, targetHeight);
-                
-                // Draw the scaled image
+
+                // No white background needed - image will fill entire canvas
+                // Draw the scaled image (cropped to fit)
                 ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
                 
                 // Convert to data URL
@@ -3319,8 +3392,9 @@
               img.onerror = () => {
                 reject(new Error('Failed to load image for format conversion'));
               };
-              
-              img.src = photo.dataUrl;
+
+              // Use original photo if available, otherwise fall back to cropped preview
+              img.src = photo.originalDataUrl || photo.dataUrl;
             } catch (error) {
               reject(error);
             }
@@ -3444,9 +3518,11 @@
 
           let displayName;
           switch(templateType) {
-            case 'default':
             case 'portrait':
               displayName = 'Portrait (4:5)';
+              break;
+            case 'default':
+              displayName = 'Default Template';
               break;
             case 'square':
             case 'square_stack':
@@ -3458,8 +3534,11 @@
             case 'landscape':
               displayName = 'Landscape (16:9)';
               break;
+            case 'sidebyside_landscape':
+              displayName = 'Wide Landscape (16:9)';
+              break;
             case 'blog':
-              displayName = 'Landscape (1.91:1)';
+              displayName = 'Instagram Landscape (1.91:1)';
               break;
             default:
               displayName = templateType.charAt(0).toUpperCase() + templateType.slice(1);
@@ -3471,13 +3550,14 @@
         }
 
         getEnlargedPhotoHTML(photo, templateType) {
+          const orientation = this.detectPhotoOrientation(photo.width || 800, photo.height || 600);
           return `
             <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 120px; box-sizing: border-box;">
               <!-- Scrollable container for actual size viewing -->
               <div id="photo-container" style="position: relative; display: flex; align-items: center; justify-content: center; max-width: 95vw; max-height: calc(100vh - 200px); overflow: auto;">
                 <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
               </div>
-              
+
               <!-- Photo info overlay -->
               <div style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px 20px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
                 <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
@@ -3490,9 +3570,9 @@
                   Orientation: ${orientation} | Template: ${this.getTemplateDisplayName(templateType)}
                 </div>
               </div>
-              
+
               ${this.getTemplateSelector(photo, templateType)}
-              
+
               <!-- Close button -->
               <button id="close-photo-btn" style="position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #F2C31B; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; backdrop-filter: blur(10px); z-index: 10;">
                 ✕
@@ -3508,33 +3588,34 @@
           let isHorizontalPhoto = false;
 
           if (photo.mode === 'mix') {
-            // For combined photos, determine the original mode based on the templateType
-            // If it's a stack-specific template (square_stack), it came from horizontal originals
-            // If it's a side-specific template (square_side), it came from vertical originals
+            // For combined photos, find the original before/after photos to determine their orientation
+            const beforePhoto = this.photos.find(p =>
+              p.mode === 'before' && p.room === photo.room && p.name === photo.name
+            );
+            const afterPhoto = this.photos.find(p =>
+              p.mode === 'after' && p.room === photo.room && p.name === photo.name
+            );
 
-            if (templateType === 'square_stack' || templateType === 'landscape') {
-              isHorizontalPhoto = true; // Stack mode templates
-            } else if (templateType === 'square_side' || templateType === 'blog') {
-              isHorizontalPhoto = false; // Side-by-side mode templates
+            if (beforePhoto && afterPhoto) {
+              // Use the stored aspectRatio property (much simpler!)
+              // '4:3' = horizontal/landscape photos → Stack Mode
+              // '2:3' = vertical/portrait photos → Side-by-Side Mode
+              const beforeIsHorizontal = beforePhoto.aspectRatio === '4:3';
+              const afterIsHorizontal = afterPhoto.aspectRatio === '4:3';
+
+              // If either photo was taken in horizontal mode, use Stack Mode
+              isHorizontalPhoto = beforeIsHorizontal || afterIsHorizontal;
+
+              console.log(`🔍 DEBUG Template Selector:`);
+              console.log(`  - Before photo aspectRatio: ${beforePhoto.aspectRatio} (${beforeIsHorizontal ? 'horizontal' : 'vertical'})`);
+              console.log(`  - After photo aspectRatio: ${afterPhoto.aspectRatio} (${afterIsHorizontal ? 'horizontal' : 'vertical'})`);
+              console.log(`  - Result: isHorizontalPhoto = ${isHorizontalPhoto}`);
+              console.log(`  - Will show: ${isHorizontalPhoto ? 'STACK MODE' : 'SIDE-BY-SIDE MODE'} templates`);
             } else {
-              // For default/portrait, try to determine from stored photo aspect ratio
-              // Create a temporary image to get dimensions synchronously
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              const img = new Image();
-
-              img.src = photo.dataUrl;
-              // For data URLs, the image loads immediately when accessed synchronously
-              const photoAspectRatio = img.naturalWidth && img.naturalHeight ?
-                (img.naturalWidth / img.naturalHeight) : 1;
-
-              isHorizontalPhoto = photoAspectRatio > 1.2;
+              console.warn('Could not find original before/after photos for combined photo');
+              console.log(`  - Looking for: room=${photo.room}, name=${photo.name}`);
+              isHorizontalPhoto = true; // Default to horizontal/stack mode
             }
-
-            console.log(`🔍 DEBUG Template Selector:`);
-            console.log(`  - Photo mode: ${photo.mode}`);
-            console.log(`  - Template type: ${templateType}`);
-            console.log(`  - Is horizontal photo (determined): ${isHorizontalPhoto}`);
           }
 
           // Define template info based on the rules:
@@ -3543,18 +3624,8 @@
           // - 1:1 format: Available to both with their respective split types
 
           if (isHorizontalPhoto) {
-            // Horizontal originals → Side-by-Side Mode (placed left-right with vertical split line)
-            console.log(`  ➡️ Using SIDE-BY-SIDE MODE templates (horizontal originals → placed left-right)`);
-            const sideTemplates = {
-              blog: { ratio: '1.91:1', description: 'Instagram/Facebook Landscape ⭐', cropInfo: 'Best fit for landscape feeds', splitType: 'vertical' },
-              landscape: { ratio: '16:9', description: 'Wide Landscape', cropInfo: 'Great for presentations/websites', splitType: 'vertical' },
-              square_side: { ratio: '1:1', description: 'Square (Side-by-Side)', cropInfo: 'Vertical split - before/after side-by-side', splitType: 'vertical' }
-            };
-
-            return this.getSideBySideModeTemplateSelector(sideTemplates, templateType);
-          } else {
-            // Vertical originals → Stack Mode (stacked vertically with horizontal split line)
-            console.log(`  ➡️ Using STACK MODE templates (vertical originals → stacked vertically)`);
+            // Horizontal originals (4:3) → Stack Mode (stacked vertically with horizontal split line)
+            console.log(`  ➡️ Using STACK MODE templates (horizontal originals → stacked vertically)`);
             const stackTemplates = {
               portrait: { ratio: '4:5', description: 'Instagram/LinkedIn Portrait ⭐', cropInfo: 'Best fit for portrait feeds', splitType: 'horizontal' },
               square_stack: { ratio: '1:1', description: 'Square (Stack)', cropInfo: 'Horizontal split - before/after stacked', splitType: 'horizontal' },
@@ -3562,6 +3633,16 @@
             };
 
             return this.getStackModeTemplateSelector(stackTemplates, templateType);
+          } else {
+            // Vertical originals (2:3) → Side-by-Side Mode (placed left-right with vertical split line)
+            console.log(`  ➡️ Using SIDE-BY-SIDE MODE templates (vertical originals → placed left-right)`);
+            const sideTemplates = {
+              blog: { ratio: '1.91:1', description: 'Instagram/Facebook Landscape ⭐', cropInfo: 'Best fit for landscape feeds', splitType: 'vertical' },
+              sidebyside_landscape: { ratio: '16:9', description: 'Wide Landscape', cropInfo: 'Great for presentations/websites', splitType: 'vertical' },
+              square_side: { ratio: '1:1', description: 'Square (Side-by-Side)', cropInfo: 'Vertical split - before/after side-by-side', splitType: 'vertical' }
+            };
+
+            return this.getSideBySideModeTemplateSelector(sideTemplates, templateType);
           }
         }
 
@@ -3634,14 +3715,14 @@
               </label>
 
               <!-- Wide Landscape -->
-              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'sidebyside_landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'sidebyside_landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'sidebyside_landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="sidebyside_landscape" style="display: none;" ${templateType === 'sidebyside_landscape' ? 'checked' : ''}>
                 <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
                   <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.landscape.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.landscape.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.sidebyside_landscape.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.sidebyside_landscape.cropInfo}</div>
                 </div>
               </label>
 
@@ -3890,8 +3971,10 @@
             return;
           }
           
-          // Generate combined photo without storing it
-          this.createCombinedPhotoInMemory(beforePhoto.dataUrl, afterPhoto.dataUrl, templateType, (combinedDataUrl) => {
+          // Generate combined photo without storing it - use original full resolution photos
+          const beforeDataUrl = beforePhoto.originalDataUrl || beforePhoto.dataUrl; // Fallback to cropped if no original
+          const afterDataUrl = afterPhoto.originalDataUrl || afterPhoto.dataUrl; // Fallback to cropped if no original
+          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, (combinedDataUrl) => {
             // Update modal with generated photo
             const imgElement = modal.querySelector('#fullscreen-photo');
             if (imgElement) {
@@ -3923,7 +4006,7 @@
 
         createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, callback) {
           console.log('Creating combined photo in memory for template:', templateType);
-          
+
           // Create image objects to get dimensions
           const beforeImg = new Image();
           const afterImg = new Image();
@@ -3934,13 +4017,13 @@
           const onImageLoad = () => {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-              // Determine the combined mode based on original photos' aspect ratio
+              // Calculate dimensions and determine layout
               const beforeAspectRatio = beforeImg.width / beforeImg.height;
               const afterAspectRatio = afterImg.width / afterImg.height;
               const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
 
-              // Detect if original photos are portrait (2:3) or landscape (4:3)
-              const isOriginallyVertical = avgAspectRatio <= 1.0; // Portrait photos (2:3 ≈ 0.67)
+              // Determine layout based on combined photo aspect ratio
+              const isOriginallyVertical = avgAspectRatio <= 1.0;
               const baseMode = isOriginallyVertical ? 'sidebyside' : 'stack';
 
               console.log(`🔍 DEBUG Combined Photo Creation:`);
@@ -3971,9 +4054,14 @@
               } else if (templateType === 'square_side') {
                 templateKey = 'sidebyside-square';
               } else if (templateType === 'landscape') {
-                templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-wide';
+                // 'landscape' only comes from stack UI, always map to stack-landscape
+                templateKey = 'stack-landscape';
+              } else if (templateType === 'sidebyside_landscape') {
+                // 'sidebyside_landscape' only comes from side-by-side UI, always map to sidebyside-wide
+                templateKey = 'sidebyside-wide';
               } else if (templateType === 'blog') {
-                templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-landscape';
+                // 'blog' only comes from side-by-side UI, always map to sidebyside-landscape
+                templateKey = 'sidebyside-landscape';
               }
 
               console.log(`  - Final templateKey: ${templateKey}`);
@@ -4192,28 +4280,36 @@
             );
 
             if (afterPhoto) {
-              // Check if there's a stored combined photo
-              const combinedPhoto = this.photos.find(p =>
+              // Check if there's a formatted photo first, then fallback to thumbnail
+              let displayPhoto = this.photos.find(p =>
                 p.mode === 'mix' && p.room === beforePhoto.room && p.name === beforePhoto.name
               );
 
-              console.log(`🔍 Looking for combined photo: room=${beforePhoto.room}, name=${beforePhoto.name}`);
-              console.log(`🔍 Found combined photo:`, combinedPhoto ? 'YES' : 'NO');
+              let isFormatted = !!displayPhoto;
 
-              if (combinedPhoto) {
-                // Show stored combined photo
+              if (!displayPhoto) {
+                displayPhoto = this.photos.find(p =>
+                  p.mode === 'thumbnail' && p.room === beforePhoto.room && p.name === beforePhoto.name
+                );
+              }
+
+              console.log(`🔍 Looking for display photo: room=${beforePhoto.room}, name=${beforePhoto.name}`);
+              console.log(`🔍 Found ${isFormatted ? 'formatted photo' : 'thumbnail'}:`, displayPhoto ? 'YES' : 'NO');
+
+              if (displayPhoto) {
+                // Show formatted photo or thumbnail
                 const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
 
-                console.log(`🖼️ Main Gallery Combined Photo ${combinedPhoto.id}: aspectRatio=${combinedPhoto.aspectRatio}, objectFit=${objectFit}`);
+                console.log(`🖼️ Main Gallery Display Photo ${displayPhoto.id}: ${isFormatted ? 'formatted photo' : 'uncropped thumbnail'}, objectFit=${objectFit}`);
 
                 gridItems.push(`
-                  <div class="photo-item" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
-                    <img src="${combinedPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit}; filter: blur(3px);" />
+                  <div class="photo-item" data-photo-index="${this.photos.indexOf(displayPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
+                    <img src="${displayPhoto.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit}; filter: blur(3px);" />
 
-                    <!-- Retake button in center -->
+                    <!-- Retake button in center (original workflow) -->
                     <button class="retake-combined-btn" data-before-photo-id="${beforePhoto.id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 10;">
                       🔄 Retake
                     </button>
@@ -4225,7 +4321,7 @@
                     </div>
 
                     <!-- Delete button -->
-                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(combinedPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                    <button class="delete-photo-btn" data-photo-index="${this.photos.indexOf(displayPhoto)}" style="position: absolute; top: 5px; right: 5px; background: rgba(48,48,48,0.9); color: white; border: none; padding: 5px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
                       🗑️
                     </button>
                   </div>
@@ -4865,7 +4961,7 @@
               // Photo click to view fullscreen
               newItem.addEventListener('click', (e) => {
                 // Don't trigger if clicking delete button or retake button
-                if (e.target.classList.contains('delete-photo-btn') || 
+                if (e.target.classList.contains('delete-photo-btn') ||
                     e.target.classList.contains('retake-combined-btn')) {
                   return;
                 }
@@ -4895,7 +4991,7 @@
               });
             });
 
-            // Retake button functionality for combined photos
+            // Retake button functionality for combined photos (original workflow)
             document.querySelectorAll('.retake-combined-btn').forEach(btn => {
               btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -5671,52 +5767,48 @@
         
         captureComparisonPhoto(video, stream, beforePhoto) {
           console.log('📸 Capturing comparison photo with aspect ratio:', this.currentAspectRatio || beforePhoto.aspectRatio);
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-
-          // Get the target aspect ratio for cropping
-          const targetAspectRatio = beforePhoto.aspectRatio || this.currentAspectRatio || '4:3';
-          console.log('📸 Target aspect ratio for capture:', targetAspectRatio);
-
-          // Calculate crop dimensions based on aspect ratio
-          let cropWidth, cropHeight, cropX, cropY;
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
+
+          // Store the full original photo
+          const originalCanvas = document.createElement('canvas');
+          const originalCtx = originalCanvas.getContext('2d');
+          originalCanvas.width = videoWidth;
+          originalCanvas.height = videoHeight;
+          originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
+          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
+
+          // Create cropped preview to match before photo aspect ratio
+          const previewCanvas = document.createElement('canvas');
+          const previewCtx = previewCanvas.getContext('2d');
+          const targetAspectRatio = beforePhoto.aspectRatio || this.currentAspectRatio || '4:3';
+
+          let cropWidth, cropHeight, cropX, cropY;
           const videoAspectRatio = videoWidth / videoHeight;
 
           if (targetAspectRatio === '4:3') {
-            // Horizontal mode: 4:3 aspect ratio
-            canvas.width = 800;
-            canvas.height = 600; // 4:3 ratio
-
-            // Crop to fit 4:3 from center of video
+            previewCanvas.width = 800;
+            previewCanvas.height = 600;
             if (videoAspectRatio > (4/3)) {
-              // Video is wider, crop sides
               cropHeight = videoHeight;
               cropWidth = videoHeight * (4/3);
               cropX = (videoWidth - cropWidth) / 2;
               cropY = 0;
             } else {
-              // Video is taller, crop top/bottom
               cropWidth = videoWidth;
               cropHeight = videoWidth * (3/4);
               cropX = 0;
               cropY = (videoHeight - cropHeight) / 2;
             }
           } else {
-            // Vertical mode: 2:3 aspect ratio
-            canvas.width = 600;
-            canvas.height = 900; // 2:3 ratio
-
-            // Crop to fit 2:3 from center of video
+            previewCanvas.width = 600;
+            previewCanvas.height = 900;
             if (videoAspectRatio > (2/3)) {
-              // Video is wider, crop sides significantly
               cropHeight = videoHeight;
               cropWidth = videoHeight * (2/3);
               cropX = (videoWidth - cropWidth) / 2;
               cropY = 0;
             } else {
-              // Video is taller, crop top/bottom
               cropWidth = videoWidth;
               cropHeight = videoWidth * (3/2);
               cropX = 0;
@@ -5724,15 +5816,13 @@
             }
           }
 
-          console.log(`📸 Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Canvas: ${canvas.width}x${canvas.height}`);
+          previewCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, previewCanvas.width, previewCanvas.height);
+          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
-          // Draw the cropped video frame
-          ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+          console.log(`📸 After Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Preview: ${previewCanvas.width}x${previewCanvas.height}`);
 
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-
-          // Automatically save the "after" photo
-          this.saveAfterPhotoToAll(dataUrl, beforePhoto);
+          // Automatically save the "after" photo with both preview and original
+          this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, beforePhoto, videoWidth, videoHeight);
 
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
@@ -5978,9 +6068,9 @@
           this.savePhotos();
         }
 
-        saveAfterPhotoToAll(afterPhotoDataUrl, beforePhoto) {
+        saveAfterPhotoToAll(afterPhotoDataUrl, originalDataUrl, beforePhoto, videoWidth, videoHeight) {
           // Check if there's already an after photo linked to this before photo
-          const existingAfterPhotoIndex = this.photos.findIndex(p => 
+          const existingAfterPhotoIndex = this.photos.findIndex(p =>
             p.mode === 'after' && p.beforePhotoId === beforePhoto.id
           );
 
@@ -5989,13 +6079,16 @@
 
           const afterPhoto = {
             id: Date.now(),
-            dataUrl: afterPhotoDataUrl,
+            dataUrl: afterPhotoDataUrl, // Use cropped preview for display (maintains original UI)
+            originalDataUrl: originalDataUrl, // Store full original for combination
             room: beforePhoto.room,
             mode: 'after', // Save as after photo for split-screen display
             name: afterPhotoName,
             timestamp: Date.now(),
             beforePhotoId: beforePhoto.id, // Link to specific before photo
-            aspectRatio: beforePhoto.aspectRatio || this.currentAspectRatio || '4:3' // Inherit aspect ratio from before photo
+            aspectRatio: beforePhoto.aspectRatio || this.currentAspectRatio || '4:3', // Keep original aspect ratio system for UI
+            originalWidth: videoWidth,
+            originalHeight: videoHeight
           };
 
           if (existingAfterPhotoIndex !== -1) {
@@ -6008,8 +6101,11 @@
             console.log('Added new after photo for before photo:', beforePhoto.id);
           }
 
-          // Automatically create combined photo using current template
-          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room, beforePhoto.name, this.currentTemplate);
+          // Create small uncropped combined thumbnail for gallery display
+          this.createCombinedThumbnail(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room, beforePhoto.name);
+
+          // Also create a full combined photo with format selector capability
+          this.createCombinedPhoto(beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           this.savePhotos();
         }
@@ -6026,9 +6122,155 @@
           });
         }
 
+        createCombinedThumbnail(beforeDataUrl, afterDataUrl, room, photoName) {
+          console.log('Creating uncropped combined thumbnail for gallery display:', room, photoName);
 
+          // Create image objects to get dimensions
+          const beforeImg = new Image();
+          const afterImg = new Image();
 
+          let imagesLoaded = 0;
+          const totalImages = 2;
 
+          const onImageLoad = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+              // Determine layout based on original photos' aspect ratio
+              const beforeAspectRatio = beforeImg.width / beforeImg.height;
+              const afterAspectRatio = afterImg.width / afterImg.height;
+              const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
+
+              // For thumbnails, use fixed size for efficiency: 400x400 max
+              const thumbnailSize = 400;
+              let canvasWidth, canvasHeight;
+
+              if (avgAspectRatio <= 1.0) {
+                // Portrait photos - place side by side
+                canvasWidth = thumbnailSize;
+                canvasHeight = Math.round(thumbnailSize / 2); // Make it wider rectangle
+              } else {
+                // Landscape photos - stack vertically
+                canvasWidth = Math.round(thumbnailSize / 2); // Make it taller rectangle
+                canvasHeight = thumbnailSize;
+              }
+
+              console.log(`📸 Creating thumbnail: ${canvasWidth}x${canvasHeight}, layout: ${avgAspectRatio <= 1.0 ? 'side-by-side' : 'stacked'}`);
+
+              // Create canvas
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = canvasWidth;
+              canvas.height = canvasHeight;
+
+              // Fill with white background
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+              if (avgAspectRatio <= 1.0) {
+                // Side by side layout for portrait photos
+                const halfWidth = canvas.width / 2;
+
+                // Draw before image (left half) - no cropping, just fit
+                this.drawImageFitToArea(ctx, beforeImg, 0, 0, halfWidth, canvas.height);
+
+                // Draw after image (right half) - no cropping, just fit
+                this.drawImageFitToArea(ctx, afterImg, halfWidth, 0, halfWidth, canvas.height);
+
+                // Draw vertical divider line
+                ctx.strokeStyle = '#cccccc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(halfWidth, 0);
+                ctx.lineTo(halfWidth, canvas.height);
+                ctx.stroke();
+              } else {
+                // Stacked layout for landscape photos
+                const halfHeight = canvas.height / 2;
+
+                // Draw before image (top half) - no cropping, just fit
+                this.drawImageFitToArea(ctx, beforeImg, 0, 0, canvas.width, halfHeight);
+
+                // Draw after image (bottom half) - no cropping, just fit
+                this.drawImageFitToArea(ctx, afterImg, 0, halfHeight, canvas.width, halfHeight);
+
+                // Draw horizontal divider line
+                ctx.strokeStyle = '#cccccc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, halfHeight);
+                ctx.lineTo(canvas.width, halfHeight);
+                ctx.stroke();
+              }
+
+              // Convert to data URL with lower quality for efficient storage
+              const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              this.saveCombinedThumbnail(thumbnailDataUrl, room, photoName);
+            }
+          };
+
+          // Load images
+          beforeImg.onload = onImageLoad;
+          afterImg.onload = onImageLoad;
+          beforeImg.src = beforeDataUrl;
+          afterImg.src = afterDataUrl;
+        }
+
+        drawImageFitToArea(ctx, img, canvasX, canvasY, canvasWidth, canvasHeight) {
+          // Fit image within area without cropping (letterbox if needed)
+          const imageAspectRatio = img.width / img.height;
+          const targetAspectRatio = canvasWidth / canvasHeight;
+
+          let drawWidth, drawHeight, drawX, drawY;
+
+          if (imageAspectRatio > targetAspectRatio) {
+            // Image is wider - fit to width
+            drawWidth = canvasWidth;
+            drawHeight = canvasWidth / imageAspectRatio;
+            drawX = canvasX;
+            drawY = canvasY + (canvasHeight - drawHeight) / 2;
+          } else {
+            // Image is taller - fit to height
+            drawHeight = canvasHeight;
+            drawWidth = canvasHeight * imageAspectRatio;
+            drawX = canvasX + (canvasWidth - drawWidth) / 2;
+            drawY = canvasY;
+          }
+
+          // Draw the entire image fitted within the area
+          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+          console.log(`🖼️ Thumbnail fit: ${img.width}x${img.height} → (${drawX.toFixed(1)},${drawY.toFixed(1)},${drawWidth.toFixed(1)},${drawHeight.toFixed(1)}) in area (${canvasX},${canvasY},${canvasWidth},${canvasHeight})`);
+        }
+
+        saveCombinedThumbnail(thumbnailDataUrl, room, photoName) {
+          console.log('Saving uncropped combined thumbnail:', photoName);
+
+          // Remove any existing thumbnail for this photo pair
+          const existingThumbnailIndex = this.photos.findIndex(p =>
+            p.mode === 'thumbnail' && p.room === room && p.name === photoName
+          );
+
+          const thumbnailPhoto = {
+            id: Date.now(),
+            dataUrl: thumbnailDataUrl,
+            room: room,
+            mode: 'thumbnail', // Special mode for uncropped thumbnails
+            name: photoName,
+            timestamp: Date.now()
+          };
+
+          if (existingThumbnailIndex !== -1) {
+            // Replace existing thumbnail
+            this.photos[existingThumbnailIndex] = thumbnailPhoto;
+            console.log('Replaced existing thumbnail for:', photoName);
+          } else {
+            // Add new thumbnail
+            this.photos.push(thumbnailPhoto);
+            console.log('Added new thumbnail for:', photoName);
+          }
+
+          this.savePhotos();
+          console.log('📸 Thumbnail saved successfully');
+        }
 
         showTemplateSelector(beforePhoto, afterPhoto) {
           // Clean up any existing template selector modals first
@@ -6175,9 +6417,14 @@
         regenerateCombinedPhoto(beforePhoto, afterPhoto, templateType) {
           console.log('Regenerating combined photo with template:', templateType);
           
-          // Remove existing combined photos for this before/after pair
-          this.photos = this.photos.filter(p => 
+          // Remove existing formatted photos for this before/after pair
+          this.photos = this.photos.filter(p =>
             !(p.mode === 'mix' && p.name === beforePhoto.name && p.room === beforePhoto.room)
+          );
+
+          // Also remove thumbnail since we'll show the formatted result
+          this.photos = this.photos.filter(p =>
+            !(p.mode === 'thumbnail' && p.name === beforePhoto.name && p.room === beforePhoto.room)
           );
 
           // Create new combined photo with selected template
@@ -6343,10 +6590,10 @@
           
           // Create new combined photo with the selected template and store reference
           this.createCombinedPhotoWithCallback(
-            beforePhoto.dataUrl, 
-            afterPhoto.dataUrl, 
-            originalPhotoInfo.room, 
-            originalPhotoInfo.name, 
+            beforePhoto.dataUrl,
+            afterPhoto.dataUrl,
+            originalPhotoInfo.room,
+            originalPhotoInfo.name,
             newTemplate,
             (createdPhoto) => {
               // Callback with the newly created photo
@@ -7333,52 +7580,48 @@
 
         capturePhoto(video, stream) {
           console.log('📸 Capturing before photo with aspect ratio:', this.currentAspectRatio);
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-
-          // Get the target aspect ratio for cropping
-          const targetAspectRatio = this.currentAspectRatio || '4:3';
-          console.log('📸 Target aspect ratio for before capture:', targetAspectRatio);
-
-          // Calculate crop dimensions based on aspect ratio
-          let cropWidth, cropHeight, cropX, cropY;
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
+
+          // Store the full original photo
+          const originalCanvas = document.createElement('canvas');
+          const originalCtx = originalCanvas.getContext('2d');
+          originalCanvas.width = videoWidth;
+          originalCanvas.height = videoHeight;
+          originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
+          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
+
+          // Create cropped preview for current aspect ratio (for display)
+          const previewCanvas = document.createElement('canvas');
+          const previewCtx = previewCanvas.getContext('2d');
+          const targetAspectRatio = this.currentAspectRatio || '4:3';
+
+          let cropWidth, cropHeight, cropX, cropY;
           const videoAspectRatio = videoWidth / videoHeight;
 
           if (targetAspectRatio === '4:3') {
-            // Horizontal mode: 4:3 aspect ratio
-            canvas.width = 800;
-            canvas.height = 600; // 4:3 ratio
-
-            // Crop to fit 4:3 from center of video
+            previewCanvas.width = 800;
+            previewCanvas.height = 600;
             if (videoAspectRatio > (4/3)) {
-              // Video is wider, crop sides
               cropHeight = videoHeight;
               cropWidth = videoHeight * (4/3);
               cropX = (videoWidth - cropWidth) / 2;
               cropY = 0;
             } else {
-              // Video is taller, crop top/bottom
               cropWidth = videoWidth;
               cropHeight = videoWidth * (3/4);
               cropX = 0;
               cropY = (videoHeight - cropHeight) / 2;
             }
           } else {
-            // Vertical mode: 2:3 aspect ratio
-            canvas.width = 600;
-            canvas.height = 900; // 2:3 ratio
-
-            // Crop to fit 2:3 from center of video
+            previewCanvas.width = 600;
+            previewCanvas.height = 900;
             if (videoAspectRatio > (2/3)) {
-              // Video is wider, crop sides significantly
               cropHeight = videoHeight;
               cropWidth = videoHeight * (2/3);
               cropX = (videoWidth - cropWidth) / 2;
               cropY = 0;
             } else {
-              // Video is taller, crop top/bottom
               cropWidth = videoWidth;
               cropHeight = videoWidth * (3/2);
               cropX = 0;
@@ -7386,26 +7629,29 @@
             }
           }
 
-          console.log(`📸 Before Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Canvas: ${canvas.width}x${canvas.height}`);
+          previewCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, previewCanvas.width, previewCanvas.height);
+          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
-          // Draw the cropped video frame
-          context.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+          console.log(`📸 Before Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Preview: ${previewCanvas.width}x${previewCanvas.height}`);
           
           // First photos are always "before" photos
           const photoMode = 'before';
-          
+
           // Create simple position-based name or use pending name from gallery
           const photoName = this.pendingPhotoName || this.generatePhotoName(this.currentRoom, photoMode);
-          
+
           const photo = {
             id: Date.now(),
-            dataUrl: canvas.toDataURL('image/jpeg', 0.6),
+            dataUrl: previewDataUrl, // Use cropped preview for display (maintains original UI)
+            originalDataUrl: originalDataUrl, // Store full original for combination
             room: this.currentRoom,
             mode: photoMode,
             name: photoName,
             timestamp: Date.now(),
-            zoomLevel: this.currentBeforeZoom || 1, // Store the zoom level used
-            aspectRatio: this.currentAspectRatio || '4:3' // Store the aspect ratio used
+            zoomLevel: this.currentBeforeZoom || 1,
+            aspectRatio: this.currentAspectRatio || '4:3', // Keep original aspect ratio system for UI
+            originalWidth: videoWidth,
+            originalHeight: videoHeight
           };
           
           console.log('📸 Photo created with aspect ratio:', photo.aspectRatio, 'Current mode:', this.currentAspectRatio);
