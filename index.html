@@ -498,13 +498,13 @@
         getTemplateSizes() {
           // Template sizes based on mode (stack vs side-by-side) and target formats
           return {
-            // Stack Mode Templates (2:3 combined → portrait formats work best)
+            // Stack Mode Templates (horizontal originals → stacked vertically)
             'stack-portrait': {
               width: 1080,
               height: 1350,
               ratio: '4:5',
               combinedRatio: '2:3',
-              splitType: 'vertical',
+              splitType: 'horizontal-line',
               description: 'Instagram/LinkedIn Portrait (4:5)',
               cropInfo: 'Best fit for portrait feeds'
             },
@@ -513,7 +513,7 @@
               height: 1080,
               ratio: '1:1',
               combinedRatio: '2:3',
-              splitType: 'vertical',
+              splitType: 'horizontal-line',
               description: 'Square (1:1)',
               cropInfo: '~15% top/bottom crop'
             },
@@ -522,18 +522,18 @@
               height: 1080,
               ratio: '16:9',
               combinedRatio: '2:3',
-              splitType: 'vertical',
+              splitType: 'horizontal-line',
               description: 'Landscape Wide (16:9)',
               cropInfo: 'Significant crop - less ideal'
             },
 
-            // Side-by-Side Mode Templates (3:2 combined → landscape formats work best)
+            // Side-by-Side Mode Templates (vertical originals → placed left-right)
             'sidebyside-landscape': {
               width: 1200,
               height: 630,
               ratio: '1.91:1',
               combinedRatio: '3:2',
-              splitType: 'horizontal',
+              splitType: 'vertical-line',
               description: 'Instagram/Facebook Landscape (1.91:1)',
               cropInfo: 'Best fit for landscape feeds'
             },
@@ -542,7 +542,7 @@
               height: 1080,
               ratio: '16:9',
               combinedRatio: '3:2',
-              splitType: 'horizontal',
+              splitType: 'vertical-line',
               description: 'Wide Landscape (16:9)',
               cropInfo: 'Great for presentations/websites'
             },
@@ -551,7 +551,7 @@
               height: 1080,
               ratio: '1:1',
               combinedRatio: '3:2',
-              splitType: 'horizontal',
+              splitType: 'vertical-line',
               description: 'Square (1:1)',
               cropInfo: '~15% left/right crop'
             },
@@ -560,9 +560,9 @@
               height: 1350,
               ratio: '4:5',
               combinedRatio: '3:2',
-              splitType: 'horizontal',
+              splitType: 'vertical-line',
               description: 'Portrait (4:5)',
-              cropInfo: 'Mild crop - still usable'
+              cropInfo: 'Heavy crop - vertical split'
             }
           };
         }
@@ -579,58 +579,159 @@
           };
         }
 
-        drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions) {
-          // Stack mode: before image on top, after image on bottom
+        drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions) {
+          // Horizontal Split: Stack Mode - before image on top, after image on bottom (horizontal line between them)
+          // Used for horizontal originals (4:3) stacked vertically
+          // Combined photo fills the entire template canvas - no white bars
+
           const halfHeight = templateDimensions.targetHeight / 2;
 
-          // Draw before image (top half)
-          ctx.drawImage(
-            beforeImg,
-            0, 0, beforeImg.width, beforeImg.height,
-            0, 0, templateDimensions.targetWidth, halfHeight
-          );
+          console.log(`🎨 EXECUTING drawHorizontalSplit (Stack Mode):`);
+          console.log(`  - Canvas size: ${templateDimensions.targetWidth}x${templateDimensions.targetHeight}`);
+          console.log(`  - Half height: ${halfHeight}`);
+          console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} → placed at top (0,0,${templateDimensions.targetWidth},${halfHeight})`);
+          console.log(`  - After image: ${afterImg.width}x${afterImg.height} → placed at bottom (0,${halfHeight},${templateDimensions.targetWidth},${halfHeight})`);
+          console.log(`  - Horizontal line drawn at y=${halfHeight}`);
 
-          // Draw after image (bottom half)
-          ctx.drawImage(
-            afterImg,
-            0, 0, afterImg.width, afterImg.height,
-            0, halfHeight, templateDimensions.targetWidth, halfHeight
-          );
+          // Draw before image (top half) - crop from original image to fill exactly
+          this.drawImageWithProperCrop(ctx, beforeImg, 0, 0, templateDimensions.targetWidth, halfHeight);
 
-          // Draw divider line
+          // Draw after image (bottom half) - crop from original image to fill exactly
+          this.drawImageWithProperCrop(ctx, afterImg, 0, halfHeight, templateDimensions.targetWidth, halfHeight);
+
+          // Draw horizontal divider line (separating top and bottom)
           ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 4;
+          ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.moveTo(0, halfHeight);
           ctx.lineTo(templateDimensions.targetWidth, halfHeight);
           ctx.stroke();
         }
 
-        drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions) {
-          // Side-by-side mode: before image on left, after image on right
+        drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions) {
+          // Vertical Split: Side-by-Side Mode - before image on left, after image on right (vertical line between them)
+          // Used for vertical originals (2:3) placed side-by-side
+          // Combined photo fills the entire template canvas - no white bars
+
           const halfWidth = templateDimensions.targetWidth / 2;
 
-          // Draw before image (left half)
-          ctx.drawImage(
-            beforeImg,
-            0, 0, beforeImg.width, beforeImg.height,
-            0, 0, halfWidth, templateDimensions.targetHeight
-          );
+          console.log(`🎨 EXECUTING drawVerticalSplit (Side-by-Side Mode):`);
+          console.log(`  - Canvas size: ${templateDimensions.targetWidth}x${templateDimensions.targetHeight}`);
+          console.log(`  - Half width: ${halfWidth}`);
+          console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} → placed at left (0,0,${halfWidth},${templateDimensions.targetHeight})`);
+          console.log(`  - After image: ${afterImg.width}x${afterImg.height} → placed at right (${halfWidth},0,${halfWidth},${templateDimensions.targetHeight})`);
+          console.log(`  - Vertical line drawn at x=${halfWidth}`);
 
-          // Draw after image (right half)
-          ctx.drawImage(
-            afterImg,
-            0, 0, afterImg.width, afterImg.height,
-            halfWidth, 0, halfWidth, templateDimensions.targetHeight
-          );
+          // Draw before image (left half) - crop from original image to fill exactly
+          this.drawImageWithProperCrop(ctx, beforeImg, 0, 0, halfWidth, templateDimensions.targetHeight);
 
-          // Draw divider line
+          // Draw after image (right half) - crop from original image to fill exactly
+          this.drawImageWithProperCrop(ctx, afterImg, halfWidth, 0, halfWidth, templateDimensions.targetHeight);
+
+          // Draw vertical divider line (separating left and right)
           ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 4;
+          ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.moveTo(halfWidth, 0);
           ctx.lineTo(halfWidth, templateDimensions.targetHeight);
           ctx.stroke();
+        }
+
+        drawImageWithProperCrop(ctx, img, canvasX, canvasY, canvasWidth, canvasHeight) {
+          // Calculate the aspect ratios
+          const imageAspectRatio = img.width / img.height;
+          const targetAspectRatio = canvasWidth / canvasHeight;
+
+          let sourceX, sourceY, sourceWidth, sourceHeight;
+
+          if (imageAspectRatio > targetAspectRatio) {
+            // Image is wider than target - crop horizontally (center crop)
+            sourceHeight = img.height;
+            sourceWidth = img.height * targetAspectRatio;
+            sourceX = (img.width - sourceWidth) / 2; // Center horizontally
+            sourceY = 0;
+          } else {
+            // Image is taller than target - crop vertically (center crop)
+            sourceWidth = img.width;
+            sourceHeight = img.width / targetAspectRatio;
+            sourceX = 0;
+            sourceY = (img.height - sourceHeight) / 2; // Center vertically
+          }
+
+          // Draw the cropped portion of the image to fill the target area exactly
+          ctx.drawImage(
+            img,
+            sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle (what to crop from image)
+            canvasX, canvasY, canvasWidth, canvasHeight   // Destination rectangle (where to draw on canvas)
+          );
+
+          console.log(`🖼️ Image crop: source(${sourceX},${sourceY},${sourceWidth.toFixed(1)},${sourceHeight.toFixed(1)}) from ${img.width}x${img.height} → canvas(${canvasX},${canvasY},${canvasWidth},${canvasHeight})`);
+        }
+
+        getStackModeCropInfo(targetRatio) {
+          // Stack Mode (2:3 combined) crop rules from formats.md
+          switch(targetRatio) {
+            case '1:1':
+              return {
+                heightCropPercent: 0.15, // ~15% total height
+                widthCropPercent: 0.0,
+                method: 'Crop top/bottom ~7.5% each'
+              };
+            case '4:5':
+              return {
+                heightCropPercent: 0.07, // ~7% total height
+                widthCropPercent: 0.0,
+                method: 'Crop top/bottom ~3.5% each'
+              };
+            case '16:9':
+              return {
+                heightCropPercent: 0.0,
+                widthCropPercent: 0.50, // ~50% width
+                method: 'Crop sides heavily ~25% each'
+              };
+            default:
+              return {
+                heightCropPercent: 0.07,
+                widthCropPercent: 0.0,
+                method: 'Default: minimal crop'
+              };
+          }
+        }
+
+        getSideBySideModeCropInfo(targetRatio) {
+          // Side-by-Side Mode (3:2 combined) crop rules from formats.md
+          switch(targetRatio) {
+            case '1:1':
+              return {
+                widthCropPercent: 0.15, // ~15% total width
+                heightCropPercent: 0.0,
+                method: 'Crop left/right ~7.5% each'
+              };
+            case '4:5':
+              return {
+                widthCropPercent: 0.125, // ~10-15% width
+                heightCropPercent: 0.03, // <5% height
+                method: 'Crop both axes proportionally'
+              };
+            case '16:9':
+              return {
+                widthCropPercent: 0.0,
+                heightCropPercent: 0.05, // ~5% height or less
+                method: 'Minimal crop - mostly fits'
+              };
+            case '1.91:1':
+              return {
+                widthCropPercent: 0.0,
+                heightCropPercent: 0.02, // ~2% height
+                method: 'Perfect fit - minimal crop'
+              };
+            default:
+              return {
+                widthCropPercent: 0.0,
+                heightCropPercent: 0.05,
+                method: 'Default: minimal crop'
+              };
+          }
         }
 
         addPhotoLabels(ctx, canvasWidth, canvasHeight, splitType) {
@@ -640,7 +741,7 @@
           ctx.textBaseline = 'middle';
 
           if (splitType === 'vertical') {
-            // Stack mode: labels at top-center and bottom-center
+            // Horizontal Split (vertical splitType): Stack Mode - labels at top-center and bottom-center
             const quarterHeight = canvasHeight / 4;
 
             // BEFORE label (top quarter)
@@ -655,7 +756,7 @@
             ctx.fillStyle = 'white';
             ctx.fillText('AFTER', canvasWidth/2, quarterHeight * 3);
           } else {
-            // Side-by-side mode: labels at left-center and right-center
+            // Vertical Split (horizontal splitType): Side-by-Side Mode - labels at left-center and right-center
             const quarterWidth = canvasWidth / 4;
 
             // BEFORE label (left quarter)
@@ -3337,6 +3438,38 @@
           document.body.style.overflow = 'hidden';
         }
 
+        getTemplateDisplayName(templateType) {
+          // Convert internal template keys to user-friendly display names
+          console.log(`🔍 DEBUG Template Display Name: "${templateType}"`);
+
+          let displayName;
+          switch(templateType) {
+            case 'default':
+            case 'portrait':
+              displayName = 'Portrait (4:5)';
+              break;
+            case 'square':
+            case 'square_stack':
+              displayName = 'Square (Stack)';
+              break;
+            case 'square_side':
+              displayName = 'Square (Side-by-Side)';
+              break;
+            case 'landscape':
+              displayName = 'Landscape (16:9)';
+              break;
+            case 'blog':
+              displayName = 'Landscape (1.91:1)';
+              break;
+            default:
+              displayName = templateType.charAt(0).toUpperCase() + templateType.slice(1);
+              break;
+          }
+
+          console.log(`  ➡️ Display name: "${displayName}"`);
+          return displayName;
+        }
+
         getEnlargedPhotoHTML(photo, templateType) {
           return `
             <div style="position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: rgba(0,0,0,0.95); padding-top: 80px; padding-bottom: 120px; box-sizing: border-box;">
@@ -3354,7 +3487,7 @@
                   ${new Date(photo.timestamp).toLocaleString()}
                 </div>
                 <div style="font-size: 12px; opacity: 0.7;">
-                  Orientation: ${orientation} | Template: ${templateType}
+                  Orientation: ${orientation} | Template: ${this.getTemplateDisplayName(templateType)}
                 </div>
               </div>
               
@@ -3370,131 +3503,163 @@
 
         getTemplateSelector(photo, templateType) {
           // Determine the base mode for template selection
-          // For combined photos, detect original mode from aspect ratio
+          // For combined photos, detect original mode from aspect ratio or stored metadata
           let baseMode = 'stack'; // Default
+          let isHorizontalPhoto = false;
+
           if (photo.mode === 'mix') {
-            // Try to infer the original mode from the photo dimensions or stored metadata
-            // If photo is more horizontal (wide), it was likely side-by-side
-            // If photo is more vertical (tall), it was likely stack
-            const photoAspectRatio = photo.naturalWidth ? (photo.naturalWidth / photo.naturalHeight) : 1;
-            baseMode = photoAspectRatio > 1.5 ? 'sidebyside' : 'stack';
+            // For combined photos, determine the original mode based on the templateType
+            // If it's a stack-specific template (square_stack), it came from horizontal originals
+            // If it's a side-specific template (square_side), it came from vertical originals
+
+            if (templateType === 'square_stack' || templateType === 'landscape') {
+              isHorizontalPhoto = true; // Stack mode templates
+            } else if (templateType === 'square_side' || templateType === 'blog') {
+              isHorizontalPhoto = false; // Side-by-side mode templates
+            } else {
+              // For default/portrait, try to determine from stored photo aspect ratio
+              // Create a temporary image to get dimensions synchronously
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              const img = new Image();
+
+              img.src = photo.dataUrl;
+              // For data URLs, the image loads immediately when accessed synchronously
+              const photoAspectRatio = img.naturalWidth && img.naturalHeight ?
+                (img.naturalWidth / img.naturalHeight) : 1;
+
+              isHorizontalPhoto = photoAspectRatio > 1.2;
+            }
+
+            console.log(`🔍 DEBUG Template Selector:`);
+            console.log(`  - Photo mode: ${photo.mode}`);
+            console.log(`  - Template type: ${templateType}`);
+            console.log(`  - Is horizontal photo (determined): ${isHorizontalPhoto}`);
           }
 
-          // Define template info directly to avoid scope issues
-          const stackTemplates = {
-            portrait: { ratio: '4:5', description: 'Instagram/LinkedIn Portrait ⭐', cropInfo: 'Best fit for portrait feeds' },
-            square: { ratio: '1:1', description: 'Square', cropInfo: '~15% top/bottom crop' },
-            landscape: { ratio: '16:9', description: 'Landscape Wide ⚠️', cropInfo: 'Significant crop - less ideal' }
-          };
+          // Define template info based on the rules:
+          // - Horizontal originals (4:3): Stack Mode (horizontal split line, stacked vertically)
+          // - Vertical originals (2:3): Side-by-Side Mode (vertical split line, placed left-right)
+          // - 1:1 format: Available to both with their respective split types
 
-          const sideTemplates = {
-            blog: { ratio: '1.91:1', description: 'Instagram/Facebook Landscape ⭐', cropInfo: 'Best fit for landscape feeds' },
-            landscape: { ratio: '16:9', description: 'Wide Landscape', cropInfo: 'Great for presentations/websites' },
-            square: { ratio: '1:1', description: 'Square', cropInfo: '~15% left/right crop' },
-            portrait: { ratio: '4:5', description: 'Portrait', cropInfo: 'Mild crop - still usable' }
-          };
+          if (isHorizontalPhoto) {
+            // Horizontal originals → Side-by-Side Mode (placed left-right with vertical split line)
+            console.log(`  ➡️ Using SIDE-BY-SIDE MODE templates (horizontal originals → placed left-right)`);
+            const sideTemplates = {
+              blog: { ratio: '1.91:1', description: 'Instagram/Facebook Landscape ⭐', cropInfo: 'Best fit for landscape feeds', splitType: 'vertical' },
+              landscape: { ratio: '16:9', description: 'Wide Landscape', cropInfo: 'Great for presentations/websites', splitType: 'vertical' },
+              square_side: { ratio: '1:1', description: 'Square (Side-by-Side)', cropInfo: 'Vertical split - before/after side-by-side', splitType: 'vertical' }
+            };
 
-          if (baseMode === 'stack') {
-            // Stack Mode Templates (2:3 combined → portrait formats work best)
-            return `
-              <!-- Template selector for Stack Mode (vertical combined photos) -->
-              <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-                <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Stack Mode Templates</div>
-
-                <!-- Portrait (Best) -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'default' || templateType === 'portrait' ? 'checked' : ''}>
-                  <div style="width: 24px; height: 30px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">4:5</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.portrait.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.portrait.cropInfo}</div>
-                  </div>
-                </label>
-
-                <!-- Square -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="square" style="display: none;" ${templateType === 'square' ? 'checked' : ''}>
-                  <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">1:1</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.square.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.square.cropInfo}</div>
-                  </div>
-                </label>
-
-                <!-- Landscape (Less ideal) -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
-                  <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px; opacity: 0.7;">${stackTemplates.landscape.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.landscape.cropInfo}</div>
-                  </div>
-                </label>
-              </div>
-            `;
+            return this.getSideBySideModeTemplateSelector(sideTemplates, templateType);
           } else {
-            // Side-by-Side Mode Templates (3:2 combined → landscape formats work best)
-            return `
-              <!-- Template selector for Side-by-Side Mode (horizontal combined photos) -->
-              <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-                <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Side-by-Side Mode Templates</div>
+            // Vertical originals → Stack Mode (stacked vertically with horizontal split line)
+            console.log(`  ➡️ Using STACK MODE templates (vertical originals → stacked vertically)`);
+            const stackTemplates = {
+              portrait: { ratio: '4:5', description: 'Instagram/LinkedIn Portrait ⭐', cropInfo: 'Best fit for portrait feeds', splitType: 'horizontal' },
+              square_stack: { ratio: '1:1', description: 'Square (Stack)', cropInfo: 'Horizontal split - before/after stacked', splitType: 'horizontal' },
+              landscape: { ratio: '16:9', description: 'Landscape Wide', cropInfo: 'Good for presentations', splitType: 'horizontal' }
+            };
 
-                <!-- Landscape (Best) -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'default' || templateType === 'blog' ? 'checked' : ''}>
-                  <div style="width: 32px; height: 21px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">1.91:1</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.blog.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.blog.cropInfo}</div>
-                  </div>
-                </label>
-
-                <!-- Wide Landscape -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
-                  <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.landscape.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.landscape.cropInfo}</div>
-                  </div>
-                </label>
-
-                <!-- Square -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="square" style="display: none;" ${templateType === 'square' ? 'checked' : ''}>
-                  <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">1:1</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.square.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.square.cropInfo}</div>
-                  </div>
-                </label>
-
-                <!-- Portrait (Still usable) -->
-                <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
-                  <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'portrait' ? 'checked' : ''}>
-                  <div style="width: 24px; height: 30px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
-                    <div style="font-size: 6px; color: #303030; font-weight: bold;">4:5</div>
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; margin-bottom: 2px; opacity: 0.8;">${sideTemplates.portrait.description}</div>
-                    <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.portrait.cropInfo}</div>
-                  </div>
-                </label>
-              </div>
-            `;
+            return this.getStackModeTemplateSelector(stackTemplates, templateType);
           }
+        }
+
+        getStackModeTemplateSelector(stackTemplates, templateType) {
+          // Stack Mode Templates (for horizontal original photos)
+          return `
+            <!-- Template selector for Stack Mode (horizontal original photos) -->
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+              <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Stack Mode Templates</div>
+              <div style="color: #ccc; font-size: 12px; margin-bottom: 15px; text-align: center;">Horizontal split - Before/After stacked vertically</div>
+
+              <!-- Portrait (Best for stack) -->
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'default' || templateType === 'portrait' ? 'checked' : ''}>
+                <div style="width: 24px; height: 30px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-size: 6px; color: #303030; font-weight: bold;">4:5</div>
+                </div>
+                <div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.portrait.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.portrait.cropInfo}</div>
+                </div>
+              </label>
+
+              <!-- Square Stack -->
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' || templateType === 'square_stack' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' || templateType === 'square_stack' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' || templateType === 'square_stack' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="square_stack" style="display: none;" ${templateType === 'square' || templateType === 'square_stack' ? 'checked' : ''}>
+                <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center; position: relative;">
+                  <div style="font-size: 6px; color: #303030; font-weight: bold;">1:1</div>
+                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 18px; height: 1px; background: #303030;"></div>
+                </div>
+                <div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.square_stack.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.square_stack.cropInfo}</div>
+                </div>
+              </label>
+
+              <!-- Landscape -->
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'};" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+                <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
+                </div>
+                <div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.landscape.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.landscape.cropInfo}</div>
+                </div>
+              </label>
+            </div>
+          `;
+        }
+
+        getSideBySideModeTemplateSelector(sideTemplates, templateType) {
+          // Side-by-Side Mode Templates (for vertical original photos)
+          return `
+            <!-- Template selector for Side-by-Side Mode (vertical original photos) -->
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+              <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Side-by-Side Mode Templates</div>
+              <div style="color: #ccc; font-size: 12px; margin-bottom: 15px; text-align: center;">Vertical split - Before/After side-by-side</div>
+
+              <!-- Landscape (Best for side-by-side) -->
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'default' || templateType === 'blog' ? 'checked' : ''}>
+                <div style="width: 32px; height: 21px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-size: 6px; color: #303030; font-weight: bold;">1.91:1</div>
+                </div>
+                <div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.blog.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.blog.cropInfo}</div>
+                </div>
+              </label>
+
+              <!-- Wide Landscape -->
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'landscape' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'landscape' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="landscape" style="display: none;" ${templateType === 'landscape' ? 'checked' : ''}>
+                <div style="width: 32px; height: 18px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
+                </div>
+                <div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.landscape.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.landscape.cropInfo}</div>
+                </div>
+              </label>
+
+              <!-- Square Side-by-Side -->
+              <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'square' || templateType === 'square_side' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'square' || templateType === 'square_side' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'square' || templateType === 'square_side' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
+                <input type="radio" name="template-selector" value="square_side" style="display: none;" ${templateType === 'square' || templateType === 'square_side' ? 'checked' : ''}>
+                <div style="width: 24px; height: 24px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center; position: relative;">
+                  <div style="font-size: 6px; color: #303030; font-weight: bold;">1:1</div>
+                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1px; height: 18px; background: #303030;"></div>
+                </div>
+                <div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.square_side.description}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.square_side.cropInfo}</div>
+                </div>
+              </label>
+
+            </div>
+          `;
         }
 
         setupEnlargedPhotoListeners(modal, photo) {
@@ -3540,15 +3705,18 @@
             });
           });
 
-          document.getElementById('close-photo-btn').addEventListener('click', () => {
-            document.body.removeChild(modal);
-            document.body.style.overflow = '';
-            
-            // Reopen the All Photos modal
-            setTimeout(() => {
-              this.showAllPhotosModal();
-            }, 100);
-          });
+          const closeBtn = modal.querySelector('#close-photo-btn');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              document.body.removeChild(modal);
+              document.body.style.overflow = '';
+
+              // Reopen the All Photos modal
+              setTimeout(() => {
+                this.showAllPhotosModal();
+              }, 100);
+            });
+          }
 
           // Close on background click
           modal.addEventListener('click', (e) => {
@@ -3664,7 +3832,7 @@
                 ${new Date(newPhoto.timestamp).toLocaleString()}
               </div>
               <div style="font-size: 12px; opacity: 0.7;">
-                Orientation: ${orientation} | Template: ${newPhoto.templateType}
+                Orientation: ${orientation} | Template: ${this.getTemplateDisplayName(newPhoto.templateType)}
               </div>
             `;
           }
@@ -3743,7 +3911,7 @@
                   Generated on-demand
                 </div>
                 <div style="font-size: 12px; opacity: 0.7;">
-                  Template: ${templateType} | Not stored locally
+                  Template: ${this.getTemplateDisplayName(templateType)} | Not stored locally
                 </div>
               `;
             }
@@ -3773,24 +3941,42 @@
 
               // Detect if original photos are portrait (2:3) or landscape (4:3)
               const isOriginallyVertical = avgAspectRatio <= 1.0; // Portrait photos (2:3 ≈ 0.67)
-              const baseMode = isOriginallyVertical ? 'stack' : 'sidebyside';
+              const baseMode = isOriginallyVertical ? 'sidebyside' : 'stack';
 
-              console.log(`📸 Creating combined photo: avgAspectRatio=${avgAspectRatio.toFixed(2)}, baseMode=${baseMode}, templateType=${templateType}`);
+              console.log(`🔍 DEBUG Combined Photo Creation:`);
+              console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} (aspect: ${(beforeImg.width/beforeImg.height).toFixed(2)})`);
+              console.log(`  - After image: ${afterImg.width}x${afterImg.height} (aspect: ${(afterImg.width/afterImg.height).toFixed(2)})`);
+              console.log(`  - Average aspect ratio: ${avgAspectRatio.toFixed(2)}`);
+              console.log(`  - Is originally vertical: ${isOriginallyVertical}`);
+              console.log(`  - Base mode determined: ${baseMode}`);
+              console.log(`  - Template type requested: ${templateType}`);
 
               // Get template definition
               const templates = this.getTemplateSizes();
               let templateKey = templateType || 'default';
 
               // Map legacy template names to new format
-              if (templateType === 'default' || templateType === 'portrait') {
+              console.log(`🔍 DEBUG Template Mapping:`);
+              console.log(`  - Input templateType: ${templateType}`);
+              console.log(`  - Base mode: ${baseMode}`);
+
+              if (templateType === 'default') {
                 templateKey = baseMode === 'stack' ? 'stack-portrait' : 'sidebyside-landscape';
+              } else if (templateType === 'portrait') {
+                templateKey = 'stack-portrait'; // Portrait only available in Stack Mode
               } else if (templateType === 'square') {
                 templateKey = baseMode === 'stack' ? 'stack-square' : 'sidebyside-square';
+              } else if (templateType === 'square_stack') {
+                templateKey = 'stack-square';
+              } else if (templateType === 'square_side') {
+                templateKey = 'sidebyside-square';
               } else if (templateType === 'landscape') {
                 templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-wide';
               } else if (templateType === 'blog') {
                 templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-landscape';
               }
+
+              console.log(`  - Final templateKey: ${templateKey}`);
 
               const template = templates[templateKey] || templates['stack-portrait'];
 
@@ -3803,6 +3989,10 @@
               };
 
               console.log(`📸 Using template: ${templateKey}`, templateDimensions);
+              console.log(`🔍 DEBUG Template Execution:`);
+              console.log(`  - Template splitType: "${template.splitType}"`);
+              console.log(`  - Will call: ${template.splitType === 'horizontal-line' ? 'drawHorizontalSplit (Stack Mode)' : 'drawVerticalSplit (Side-by-Side Mode)'}`);
+              console.log(`  - Expected result: ${template.splitType === 'horizontal-line' ? 'Horizontal line between top/bottom' : 'Vertical line between left/right'}`);
 
               // Create canvas
               const canvas = document.createElement('canvas');
@@ -3810,10 +4000,8 @@
 
               canvas.width = templateDimensions.targetWidth;
               canvas.height = templateDimensions.targetHeight;
-              
-              // Fill white background
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+              // No white background - images will fill the entire canvas
               
               // Apply cropping and positioning
               ctx.save();
@@ -3821,10 +4009,12 @@
               ctx.rect(0, 0, canvas.width, canvas.height);
               ctx.clip();
               
-              if (templateDimensions.splitType === 'vertical') {
-                this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
-              } else {
+              if (templateDimensions.splitType === 'horizontal-line') {
+                // Horizontal line split = Stack Mode (horizontal line between top/bottom)
                 this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
+              } else {
+                // Vertical line split = Side-by-Side Mode (vertical line between left/right)
+                this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
               }
               
               ctx.restore();
@@ -3959,7 +4149,7 @@
                   Cropped to ${templateType} format
                 </div>
                 <div style="font-size: 12px; opacity: 0.7;">
-                  Template: ${templateType} | Generated on-demand | Orientation: ${orientation}
+                  Template: ${this.getTemplateDisplayName(templateType)} | Generated on-demand | Orientation: ${orientation}
                 </div>
               `;
             }
@@ -6227,7 +6417,7 @@
                   ${new Date(createdPhoto.timestamp).toLocaleString()}
                 </div>
                 <div style="font-size: 12px; opacity: 0.7;">
-                  Orientation: ${orientation} | Template: ${createdPhoto.templateType}
+                  Orientation: ${orientation} | Template: ${this.getTemplateDisplayName(createdPhoto.templateType)}
                 </div>
               `;
             }
