@@ -3614,7 +3614,15 @@
             } else {
               console.warn('Could not find original before/after photos for combined photo');
               console.log(`  - Looking for: room=${photo.room}, name=${photo.name}`);
-              isHorizontalPhoto = true; // Default to horizontal/stack mode
+              // Fallback: Use the combined photo's own dimensions to determine mode
+              const photoWidth = photo.naturalWidth || photo.width || 800;
+              const photoHeight = photo.naturalHeight || photo.height || 600;
+              const photoAspectRatio = photoWidth / photoHeight;
+              // If combined photo is landscape (aspect ratio > 1), it's likely side-by-side mode
+              // If combined photo is portrait (aspect ratio < 1), it's likely stack mode
+              isHorizontalPhoto = photoAspectRatio < 1; // Portrait combined = stack mode, landscape combined = side-by-side mode
+              console.log(`  - Fallback: Using combined photo dimensions ${photoWidth}x${photoHeight} (aspect: ${photoAspectRatio.toFixed(2)})`);
+              console.log(`  - Fallback result: isHorizontalPhoto = ${isHorizontalPhoto} (${isHorizontalPhoto ? 'STACK MODE' : 'SIDE-BY-SIDE MODE'})`);
             }
           }
 
@@ -3974,7 +3982,7 @@
           // Generate combined photo without storing it - use original full resolution photos
           const beforeDataUrl = beforePhoto.originalDataUrl || beforePhoto.dataUrl; // Fallback to cropped if no original
           const afterDataUrl = afterPhoto.originalDataUrl || afterPhoto.dataUrl; // Fallback to cropped if no original
-          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, (combinedDataUrl) => {
+          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
             // Update modal with generated photo
             const imgElement = modal.querySelector('#fullscreen-photo');
             if (imgElement) {
@@ -4004,7 +4012,7 @@
           });
         }
 
-        createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, callback) {
+        createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, callback) {
           console.log('Creating combined photo in memory for template:', templateType);
 
           // Create image objects to get dimensions
@@ -4017,20 +4025,37 @@
           const onImageLoad = () => {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-              // Calculate dimensions and determine layout
+              // Calculate dimensions and determine layout using the same logic as getTemplateSelector
               const beforeAspectRatio = beforeImg.width / beforeImg.height;
               const afterAspectRatio = afterImg.width / afterImg.height;
               const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
 
-              // Determine layout based on combined photo aspect ratio
-              const isOriginallyVertical = avgAspectRatio <= 1.0;
-              const baseMode = isOriginallyVertical ? 'sidebyside' : 'stack';
+              // Use stored aspect ratios if available (same logic as getTemplateSelector)
+              let isHorizontalPhoto = false;
+              if (beforePhoto && afterPhoto && beforePhoto.aspectRatio && afterPhoto.aspectRatio) {
+                // Use the stored aspectRatio property (same as getTemplateSelector)
+                const beforeIsHorizontal = beforePhoto.aspectRatio === '4:3';
+                const afterIsHorizontal = afterPhoto.aspectRatio === '4:3';
+                isHorizontalPhoto = beforeIsHorizontal || afterIsHorizontal;
+                console.log(`🔍 DEBUG Combined Photo Creation - Using stored aspect ratios:`);
+                console.log(`  - Before photo aspectRatio: ${beforePhoto.aspectRatio} (${beforeIsHorizontal ? 'horizontal' : 'vertical'})`);
+                console.log(`  - After photo aspectRatio: ${afterPhoto.aspectRatio} (${afterIsHorizontal ? 'horizontal' : 'vertical'})`);
+                console.log(`  - Result: isHorizontalPhoto = ${isHorizontalPhoto}`);
+              } else {
+                // Fallback to image dimensions if no stored aspect ratio
+                const isOriginallyVertical = avgAspectRatio <= 1.0;
+                isHorizontalPhoto = !isOriginallyVertical;
+                console.log(`🔍 DEBUG Combined Photo Creation - Using calculated aspect ratios (fallback):`);
+                console.log(`  - Average aspect ratio: ${avgAspectRatio.toFixed(2)}`);
+                console.log(`  - Is originally vertical: ${isOriginallyVertical}`);
+                console.log(`  - Result: isHorizontalPhoto = ${isHorizontalPhoto}`);
+              }
+
+              const baseMode = isHorizontalPhoto ? 'stack' : 'sidebyside';
 
               console.log(`🔍 DEBUG Combined Photo Creation:`);
               console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} (aspect: ${(beforeImg.width/beforeImg.height).toFixed(2)})`);
               console.log(`  - After image: ${afterImg.width}x${afterImg.height} (aspect: ${(afterImg.width/afterImg.height).toFixed(2)})`);
-              console.log(`  - Average aspect ratio: ${avgAspectRatio.toFixed(2)}`);
-              console.log(`  - Is originally vertical: ${isOriginallyVertical}`);
               console.log(`  - Base mode determined: ${baseMode}`);
               console.log(`  - Template type requested: ${templateType}`);
 
@@ -6115,8 +6140,12 @@
           const actualTemplateType = templateType || this.currentTemplate;
           console.log('Creating combined photo automatically for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
 
+          // Find the original before/after photo objects for aspect ratio info
+          const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
+          const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
+
           // Use createCombinedPhotoInMemory to actually create the photo
-          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, (combinedDataUrl) => {
+          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
             // Save the combined photo
             this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
           });
@@ -6608,8 +6637,12 @@
           const actualTemplateType = templateType || this.currentTemplate;
           console.log('Creating combined photo with callback for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
 
+          // Find the original before/after photo objects for aspect ratio info
+          const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
+          const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
+
           // Use createCombinedPhotoInMemory to actually create the photo
-          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, (combinedDataUrl) => {
+          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
             // Save the combined photo with callback
             this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, actualTemplateType, callback);
           });
