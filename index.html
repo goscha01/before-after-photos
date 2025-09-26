@@ -1773,14 +1773,9 @@
                 const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
                 if (photoIndex >= 0 && photoIndex < this.photos.length) {
                   const photo = this.photos[photoIndex];
-                  
-                  // Close the all photos modal first
-                  this.closeAllPhotosModal(modal);
-                  
-                  // Then show the photo with its specific functionality
-                  setTimeout(() => {
-                    this.showPhotoFullscreenFromModal(photo);
-                  }, 100);
+
+                  // Show the photo as overlay on top of All Photos modal
+                  this.showPhotoFullscreenFromModal(photo);
                 } else {
                   console.error('getAllPhotosModal - Invalid photo index:', photoIndex);
                 }
@@ -3446,10 +3441,10 @@
 
         async showPhotoFullscreenFromModal(photo) {
           // For gallery view, always show enlarged photo without camera functionality
-          this.showPhotoEnlarged(photo);
+          this.showPhotoEnlarged(photo, 'allPhotosModal');
         }
 
-        async showPhotoEnlarged(photo) {
+        async showPhotoEnlarged(photo, source = 'mainGrid') {
           // Always show enlarged view regardless of photo mode - no camera functionality
           // Clean up any existing photo fullscreen modals first
           const existingPhotoModals = document.querySelectorAll('[style*="position: fixed"][style*="z-index: 2000"], [style*="position: fixed"][style*="z-index: 2002"]');
@@ -3460,9 +3455,11 @@
           });
 
           const modal = document.createElement('div');
+          // Use higher z-index when opened from All Photos modal to appear on top
+          const zIndex = source === 'allPhotosModal' ? '3000' : '2000';
           modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
+            background: rgba(0,0,0,0.95); z-index: ${zIndex}; display: flex;
             flex-direction: column;
           `;
 
@@ -3470,7 +3467,7 @@
             // Combined photos get templates
             const templateType = photo.templateType || 'default';
             modal.innerHTML = this.getEnlargedPhotoHTML(photo, templateType);
-            this.setupEnlargedPhotoListeners(modal, photo);
+            this.setupEnlargedPhotoListeners(modal, photo, source);
           } else {
             // Individual photos (before/after) show raw photo only, no templates
             const orientation = this.detectPhotoOrientation(photo.naturalWidth || 800, photo.naturalHeight || 600);
@@ -3504,6 +3501,16 @@
               closeBtn.addEventListener('click', () => {
                 document.body.removeChild(modal);
                 document.body.style.overflow = '';
+
+                  // Return to the appropriate view based on source
+                if (source === 'allPhotosModal') {
+                  // Don't reopen All Photos modal - it's still there underneath
+                  // Keep body overflow hidden to maintain All Photos modal scroll state
+                  document.body.style.overflow = 'hidden';
+                } else {
+                  // Default: return to main room tabs
+                  this.showMainRoomTabs();
+                }
               });
             }
           }
@@ -3751,7 +3758,7 @@
           `;
         }
 
-        setupEnlargedPhotoListeners(modal, photo) {
+        setupEnlargedPhotoListeners(modal, photo, source = 'mainGrid') {
           // Set default to fit screen mode
           const imgElement = modal.querySelector('#fullscreen-photo');
           const imgContainer = modal.querySelector('#photo-container');
@@ -3800,10 +3807,15 @@
               document.body.removeChild(modal);
               document.body.style.overflow = '';
 
-              // Reopen the All Photos modal
-              setTimeout(() => {
-                this.showAllPhotosModal();
-              }, 100);
+              // Return to the appropriate view based on source
+              if (source === 'allPhotosModal') {
+                // Don't reopen All Photos modal - it's still there underneath
+                // Keep body overflow hidden to maintain All Photos modal scroll state
+                document.body.style.overflow = 'hidden';
+              } else {
+                // Default: return to main room tabs
+                this.showMainRoomTabs();
+              }
             });
           }
 
@@ -3812,11 +3824,16 @@
             if (e.target === modal) {
               document.body.removeChild(modal);
               document.body.style.overflow = '';
-              
-              // Reopen the All Photos modal
-              setTimeout(() => {
-                this.showAllPhotosModal();
-              }, 100);
+
+              // Return to the appropriate view based on source
+              if (source === 'allPhotosModal') {
+                // Don't reopen All Photos modal - it's still there underneath
+                // Keep body overflow hidden to maintain All Photos modal scroll state
+                document.body.style.overflow = 'hidden';
+              } else {
+                // Default: return to main room tabs
+                this.showMainRoomTabs();
+              }
             }
           });
         }
