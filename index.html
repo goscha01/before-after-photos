@@ -1324,7 +1324,7 @@
 
           // Debug: Check all photos first
 
-          // Get all stored photos (before, after, combined/mix, and thumbnails)
+          // Get all stored photos (before, after, combined/mix, archived - but NOT thumbnails)
           const allPhotos = this.photos
             .filter(photo => {
               // Include before photos
@@ -1339,8 +1339,8 @@
               // Include mix/combined photos
               if (photo.mode === 'mix') return true;
 
-              // Include thumbnails
-              if (photo.mode === 'thumbnail') return true;
+              // Exclude thumbnails - we don't use them anymore
+              // if (photo.mode === 'thumbnail') return true;
 
               return false;
             });
@@ -1392,13 +1392,8 @@
             } else if (photo.mode === 'after') {
               photosByRoomAndName[photo.room][photoKey].after = photo;
             } else if (photo.mode === 'mix') {
-              // Formatted photos take priority over thumbnails
+              // Only use properly formatted combined photos
               photosByRoomAndName[photo.room][photoKey].combined = photo;
-            } else if (photo.mode === 'thumbnail') {
-              // Only use thumbnail if no formatted photo exists
-              if (!photosByRoomAndName[photo.room][photoKey].combined) {
-                photosByRoomAndName[photo.room][photoKey].combined = photo;
-              }
             }
           });
 
@@ -4553,22 +4548,16 @@
             );
 
             if (afterPhoto) {
-              // Check if there's a formatted photo first, then fallback to thumbnail
+              // Check if there's a properly formatted combined photo
               let displayPhoto = this.photos.find(p =>
                 p.mode === 'mix' && p.room === beforePhoto.room && p.name === beforePhoto.name
               );
 
               let isFormatted = !!displayPhoto;
 
-              if (!displayPhoto) {
-                displayPhoto = this.photos.find(p =>
-                  p.mode === 'thumbnail' && p.room === beforePhoto.room && p.name === beforePhoto.name
-                );
-              }
-
 
               if (displayPhoto) {
-                // Show formatted photo or thumbnail
+                // Show formatted combined photo
                 const displayName = beforePhoto.name || `${beforePhoto.room} 1`;
 
                 // Determine object-fit based on photo's original aspect ratio
@@ -5511,12 +5500,72 @@
 
         confirmDeletePhoto(photoIndex) {
           if (photoIndex >= 0 && photoIndex < this.photos.length) {
-            this.photos.splice(photoIndex, 1);
-            
+            const photo = this.photos[photoIndex];
+
+            // Special handling for combined photos (mode === 'mix')
+            if (photo.mode === 'mix') {
+              // First find the corresponding before photo using room and name
+              const beforePhoto = this.photos.find(p =>
+                p.mode === 'before' &&
+                p.room === photo.room &&
+                p.name === photo.name
+              );
+
+              let afterPhotoIndex = -1;
+
+              if (beforePhoto) {
+                // Find the after photo using the beforePhotoId relationship
+                afterPhotoIndex = this.photos.findIndex(p =>
+                  p.mode === 'after' &&
+                  p.beforePhotoId === beforePhoto.id
+                );
+              }
+
+              // If we couldn't find using beforePhotoId, try the old way as fallback
+              if (afterPhotoIndex === -1) {
+                afterPhotoIndex = this.photos.findIndex(p =>
+                  p.mode === 'after' &&
+                  p.room === photo.room &&
+                  p.name === photo.name
+                );
+              }
+
+              // Find and remove any old thumbnails for this photo pair
+              const thumbnailIndices = this.photos
+                .map((p, index) => ({ photo: p, index }))
+                .filter(({ photo: p }) =>
+                  p.mode === 'thumbnail' &&
+                  p.room === photo.room &&
+                  p.name === photo.name
+                )
+                .map(({ index }) => index)
+                .sort((a, b) => b - a); // Sort in descending order for safe removal
+
+              // Remove all found items (thumbnails, after photo, combined photo) in descending index order
+              const indicesToRemove = [...thumbnailIndices];
+
+              if (afterPhotoIndex !== -1) {
+                indicesToRemove.push(afterPhotoIndex);
+              }
+
+              indicesToRemove.push(photoIndex);
+
+              // Sort in descending order and remove
+              indicesToRemove.sort((a, b) => b - a);
+              indicesToRemove.forEach(index => {
+                this.photos.splice(index, 1);
+              });
+
+              // Keep the before photo - it should remain untouched
+            } else {
+              // For non-combined photos, use the original logic
+              this.photos.splice(photoIndex, 1);
+            }
+
             // Save changes to localStorage
             this.savePhotos();
-            
-            
+
+
             // Reassign names to maintain proper sequential numbering
             this.reassignPhotoNames();
 
@@ -5525,6 +5574,13 @@
             if (photosContainer) {
               photosContainer.innerHTML = this.getPhotosHTML();
               this.attachPhotoListeners(); // Re-attach event listeners for updated photo elements
+            }
+
+            // Update gallery modal if it's open (all photos view)
+            const allPhotosContent = document.getElementById('all-photos-content');
+            if (allPhotosContent) {
+              allPhotosContent.innerHTML = this.getAllPhotosHTML();
+              this.attachGalleryPhotoListeners();
             }
 
             // Update before photo grid in modal if it exists
@@ -6326,10 +6382,7 @@
             this.photos.push(afterPhoto);
           }
 
-          // Create small uncropped combined thumbnail for gallery display
-          this.createCombinedThumbnail(beforePhoto.dataUrl, afterPhotoDataUrl, beforePhoto.room, beforePhoto.name);
-
-          // Also create a full combined photo with format selector capability
+          // Create a full combined photo with format selector capability
           this.createCombinedPhoto(beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           this.savePhotos();
@@ -6350,148 +6403,6 @@
           });
         }
 
-        createCombinedThumbnail(beforeDataUrl, afterDataUrl, room, photoName) {
-
-          // Create image objects to get dimensions
-          const beforeImg = new Image();
-          const afterImg = new Image();
-
-          let imagesLoaded = 0;
-          const totalImages = 2;
-
-          const onImageLoad = () => {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-              // Determine layout based on original photos' aspect ratio
-              const beforeAspectRatio = beforeImg.width / beforeImg.height;
-              const afterAspectRatio = afterImg.width / afterImg.height;
-              const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
-
-              // For thumbnails, use fixed size for efficiency: 400x400 max
-              const thumbnailSize = 400;
-              let canvasWidth, canvasHeight;
-
-              if (avgAspectRatio <= 1.0) {
-                // Portrait photos - place side by side
-                canvasWidth = thumbnailSize;
-                canvasHeight = Math.round(thumbnailSize / 2); // Make it wider rectangle
-              } else {
-                // Landscape photos - stack vertically
-                canvasWidth = Math.round(thumbnailSize / 2); // Make it taller rectangle
-                canvasHeight = thumbnailSize;
-              }
-
-
-              // Create canvas
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              canvas.width = canvasWidth;
-              canvas.height = canvasHeight;
-
-              // Fill with white background
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-              if (avgAspectRatio <= 1.0) {
-                // Side by side layout for portrait photos
-                const halfWidth = canvas.width / 2;
-
-                // Draw before image (left half) - no cropping, just fit
-                this.drawImageFitToArea(ctx, beforeImg, 0, 0, halfWidth, canvas.height);
-
-                // Draw after image (right half) - no cropping, just fit
-                this.drawImageFitToArea(ctx, afterImg, halfWidth, 0, halfWidth, canvas.height);
-
-                // Draw vertical divider line
-                ctx.strokeStyle = '#cccccc';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(halfWidth, 0);
-                ctx.lineTo(halfWidth, canvas.height);
-                ctx.stroke();
-              } else {
-                // Stacked layout for landscape photos
-                const halfHeight = canvas.height / 2;
-
-                // Draw before image (top half) - no cropping, just fit
-                this.drawImageFitToArea(ctx, beforeImg, 0, 0, canvas.width, halfHeight);
-
-                // Draw after image (bottom half) - no cropping, just fit
-                this.drawImageFitToArea(ctx, afterImg, 0, halfHeight, canvas.width, halfHeight);
-
-                // Draw horizontal divider line
-                ctx.strokeStyle = '#cccccc';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, halfHeight);
-                ctx.lineTo(canvas.width, halfHeight);
-                ctx.stroke();
-              }
-
-              // Convert to data URL with lower quality for efficient storage
-              const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-              this.saveCombinedThumbnail(thumbnailDataUrl, room, photoName);
-            }
-          };
-
-          // Load images
-          beforeImg.onload = onImageLoad;
-          afterImg.onload = onImageLoad;
-          beforeImg.src = beforeDataUrl;
-          afterImg.src = afterDataUrl;
-        }
-
-        drawImageFitToArea(ctx, img, canvasX, canvasY, canvasWidth, canvasHeight) {
-          // Fit image within area without cropping (letterbox if needed)
-          const imageAspectRatio = img.width / img.height;
-          const targetAspectRatio = canvasWidth / canvasHeight;
-
-          let drawWidth, drawHeight, drawX, drawY;
-
-          if (imageAspectRatio > targetAspectRatio) {
-            // Image is wider - fit to width
-            drawWidth = canvasWidth;
-            drawHeight = canvasWidth / imageAspectRatio;
-            drawX = canvasX;
-            drawY = canvasY + (canvasHeight - drawHeight) / 2;
-          } else {
-            // Image is taller - fit to height
-            drawHeight = canvasHeight;
-            drawWidth = canvasHeight * imageAspectRatio;
-            drawX = canvasX + (canvasWidth - drawWidth) / 2;
-            drawY = canvasY;
-          }
-
-          // Draw the entire image fitted within the area
-          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-        }
-
-        saveCombinedThumbnail(thumbnailDataUrl, room, photoName) {
-
-          // Remove any existing thumbnail for this photo pair
-          const existingThumbnailIndex = this.photos.findIndex(p =>
-            p.mode === 'thumbnail' && p.room === room && p.name === photoName
-          );
-
-          const thumbnailPhoto = {
-            id: Date.now(),
-            dataUrl: thumbnailDataUrl,
-            room: room,
-            mode: 'thumbnail', // Special mode for uncropped thumbnails
-            name: photoName,
-            timestamp: Date.now()
-          };
-
-          if (existingThumbnailIndex !== -1) {
-            // Replace existing thumbnail
-            this.photos[existingThumbnailIndex] = thumbnailPhoto;
-          } else {
-            // Add new thumbnail
-            this.photos.push(thumbnailPhoto);
-          }
-
-          this.savePhotos();
-        }
 
         showTemplateSelector(beforePhoto, afterPhoto) {
           // Clean up any existing template selector modals first
