@@ -863,8 +863,8 @@
                       BEFORE
                     </div>
                     
-                    <!-- Zoom controls -->
-                    <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                    <!-- Zoom controls - HIDDEN - now using bottom panel zoom controls -->
+                    <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                       <button class="zoom-btn" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                       <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                       <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
@@ -914,7 +914,7 @@
                     BEFORE
                   </div>
                   
-                  <!-- Zoom controls for portrait mode - HIDDEN FOR TEST -->
+                  <!-- Zoom controls for portrait mode - HIDDEN - now using bottom panel zoom controls -->
                   <div id="zoom-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                     <button class="zoom-btn" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                     <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
@@ -1055,8 +1055,8 @@
                     AFTER
                   </div>
                   
-                  <!-- Zoom controls -->
-                  <div id="zoom-controls-comparison" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                  <!-- Zoom controls - HIDDEN - now using bottom panel zoom controls -->
+                  <div id="zoom-controls-comparison" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                     <button class="zoom-btn-comparison" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                     <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
@@ -1101,8 +1101,8 @@
                     <!-- Dynamic overlay will be inserted here -->
                   </div>
                   
-                  <!-- Zoom controls for portrait mode comparison -->
-                  <div id="zoom-controls-comparison" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
+                  <!-- Zoom controls for portrait mode comparison - HIDDEN - now using bottom panel zoom controls -->
+                  <div id="zoom-controls-comparison" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 25px; padding: 8px; backdrop-filter: blur(10px);">
                     <button class="zoom-btn-comparison" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">0.5x</button>
                     <button class="zoom-btn-comparison active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1x</button>
                     <button class="zoom-btn-comparison" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 18px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;">2x</button>
@@ -1233,9 +1233,12 @@
               
               <!-- Fixed Action Buttons Panel (only for camera modals) -->
               <div id="bottom-panel" style="position: fixed; ${this.isLandscape ? 'right: 0; top: 0; bottom: 0; width: 80px; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding-top: 40px; padding-bottom: 40px;' : 'bottom: 0; left: 0; right: 0; display: none; grid-template-columns: 1fr 1fr 1fr; height: 80px; align-items: center;'} z-index: 2001; background: white; box-shadow: ${this.isLandscape ? '0 0 8px rgba(0,0,0,0.1)' : '0 -2px 8px rgba(0,0,0,0.1)'};">
-                <!-- Left Section - Aspect Ratio Button (always visible during camera) -->
+                <!-- Left Section - Aspect Ratio Controls (always visible during camera) -->
                 <div style="display: flex; justify-content: center;">
-                  <button id="aspect-ratio-btn" style="background: #F2C31B; color: #303030; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">2:3</button>
+                  <div id="aspect-ratio-controls" style="display: none; gap: 4px; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 4px; backdrop-filter: blur(10px);">
+                    <button class="aspect-ratio-btn" data-ratio="4:3" style="background: #F2C31B; color: #303030; border: none; padding: 6px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; min-width: 35px;">4:3</button>
+                    <button class="aspect-ratio-btn" data-ratio="2:3" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; min-width: 35px;">2:3</button>
+                  </div>
                 </div>
 
                 <!-- Center Section - Camera Button (main action button) -->
@@ -1247,8 +1250,16 @@
                   </button>
                 </div>
 
-                <!-- Right Section - Save Button (shown after capture) -->
-                <div style="display: flex; justify-content: center;">
+                <!-- Right Section - Zoom Controls and Save Button -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+                  <!-- Zoom Controls -->
+                  <div id="zoom-controls-panel" style="display: flex; gap: 4px; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 4px; backdrop-filter: blur(10px);">
+                    <button class="zoom-btn" data-zoom="0.5" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; min-width: 35px;">0.5x</button>
+                    <button class="zoom-btn active" data-zoom="1" style="background: #F2C31B; color: #303030; border: none; padding: 6px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; min-width: 35px;">1x</button>
+                    <button class="zoom-btn" data-zoom="2" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; min-width: 35px;">2x</button>
+                  </div>
+
+                  <!-- Save Button -->
                   <button id="btn-save" style="background: #10b981; color: white; border: none; width: 50px; height: 50px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; display: none; align-items: center; justify-content: center;">
                     💾 Save
                   </button>
@@ -4983,8 +4994,9 @@
         showCameraButton() {
           // Show camera button during photo capture screens
           const cameraBtn = document.getElementById('camera-btn');
-          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
+          const aspectRatioControls = document.getElementById('aspect-ratio-controls');
           const bottomPanel = document.getElementById('bottom-panel');
+          const zoomControlsPanel = document.getElementById('zoom-controls-panel');
 
           // Show the bottom panel with appropriate layout
           if (bottomPanel) {
@@ -4992,7 +5004,20 @@
           }
 
           if (cameraBtn) cameraBtn.style.display = 'block';
-          if (aspectRatioBtn) aspectRatioBtn.style.display = 'flex';
+          if (aspectRatioControls) {
+            aspectRatioControls.style.display = 'flex';
+            // Ensure aspect ratio controls always have proper styling for visibility
+            aspectRatioControls.style.background = 'rgba(0,0,0,0.7)';
+            aspectRatioControls.style.borderRadius = '20px';
+            aspectRatioControls.style.backdropFilter = 'blur(10px)';
+          }
+          if (zoomControlsPanel) {
+            zoomControlsPanel.style.display = 'flex';
+            // Ensure zoom controls always have proper styling for visibility
+            zoomControlsPanel.style.background = 'rgba(0,0,0,0.7)';
+            zoomControlsPanel.style.borderRadius = '20px';
+            zoomControlsPanel.style.backdropFilter = 'blur(10px)';
+          }
           
           // Adjust main content padding in landscape mode
           if (this.isLandscape) {
@@ -5017,10 +5042,13 @@
                 bottomPanel.style.boxShadow = 'none';
               }
 
-              // Make individual sections transparent
+              // Make individual sections transparent, except control panels
               const sections = bottomPanel.querySelectorAll('div');
               sections.forEach(section => {
-                section.style.background = 'transparent';
+                // Don't make control panels transparent - they need dark background for contrast
+                if (section.id !== 'zoom-controls-panel' && section.id !== 'aspect-ratio-controls') {
+                  section.style.background = 'transparent';
+                }
               });
               
               cameraBtn.style.background = '#F2C31B';
@@ -5040,11 +5068,14 @@
         hideCameraButton() {
           // Hide camera button and reset styling
           const cameraBtn = document.getElementById('camera-btn');
-          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
+          const aspectRatioControls = document.getElementById('aspect-ratio-controls');
           const bottomPanel = document.getElementById('bottom-panel');
+          const zoomControlsPanel = document.getElementById('zoom-controls-panel');
 
           // Hide the entire bottom panel
           if (bottomPanel) bottomPanel.style.display = 'none';
+          if (aspectRatioControls) aspectRatioControls.style.display = 'none';
+          if (zoomControlsPanel) zoomControlsPanel.style.display = 'none';
           
           // Restore main content padding in landscape mode
           if (this.isLandscape) {
@@ -7154,8 +7185,8 @@
             let currentZoom = 1; // Start with 1x zoom
             this.currentBeforeZoom = currentZoom; // Track zoom for before photos
             
-            // DISABLED zoom controls for testing
-            // this.initializeZoomControls(stream, 'camera-video', currentZoom);
+            // Initialize zoom controls for before mode camera
+            this.initializeZoomControls(stream, 'camera-video', currentZoom);
 
             // Initialize aspect ratio button
             this.initializeAspectRatioButton();
@@ -7325,25 +7356,59 @@
           }
         }
 
-        // Initialize aspect ratio button
+        // Initialize aspect ratio controls
         initializeAspectRatioButton() {
-          const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
-          if (!aspectRatioBtn) {
+          const aspectRatioControls = document.getElementById('aspect-ratio-controls');
+          if (!aspectRatioControls) {
             return;
           }
 
-          // Set button text to current aspect ratio
-          aspectRatioBtn.textContent = this.currentAspectRatio || '4:3';
+          const aspectRatioButtons = aspectRatioControls.querySelectorAll('.aspect-ratio-btn');
+          if (aspectRatioButtons.length === 0) {
+            return;
+          }
 
-          // Remove any existing event listeners by cloning the button
-          const newBtn = aspectRatioBtn.cloneNode(true);
-          aspectRatioBtn.parentNode.replaceChild(newBtn, aspectRatioBtn);
+          const currentRatio = this.currentAspectRatio || '4:3';
 
-          // Add click event listener to the new button
-          newBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.switchAspectRatio();
+          // Set initial active button based on current aspect ratio
+          aspectRatioButtons.forEach(btn => {
+            const btnRatio = btn.dataset.ratio;
+            if (btnRatio === currentRatio) {
+              btn.classList.add('active');
+              btn.style.background = '#F2C31B';
+              btn.style.color = '#303030';
+            } else {
+              btn.classList.remove('active');
+              btn.style.background = 'rgba(255,255,255,0.2)';
+              btn.style.color = 'white';
+            }
+          });
+
+          // Set up event listeners for aspect ratio buttons
+          aspectRatioButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              const newRatio = button.dataset.ratio;
+
+              // Update active button styling
+              aspectRatioButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'rgba(255,255,255,0.2)';
+                btn.style.color = 'white';
+              });
+
+              button.classList.add('active');
+              button.style.background = '#F2C31B';
+              button.style.color = '#303030';
+
+              // Update aspect ratio if different
+              if (newRatio !== this.currentAspectRatio) {
+                this.currentAspectRatio = newRatio;
+                this.updateAspectRatioOverlay();
+              }
+            });
           });
         }
 
@@ -7550,13 +7615,25 @@
         initializeZoomControls(stream, videoElementId, currentZoom = 1, mode = 'before') {
           const zoomControlsId = mode === 'comparison' ? 'zoom-controls-comparison' : 'zoom-controls';
           const zoomButtonClass = mode === 'comparison' ? 'zoom-btn-comparison' : 'zoom-btn';
-          
+
+          // Get zoom buttons from both old controls (hidden) and new bottom panel controls
+          let zoomButtons = [];
+
+          // Try to get buttons from old controls (for backward compatibility)
           const zoomControls = document.getElementById(zoomControlsId);
-          if (!zoomControls) {
-            return;
+          if (zoomControls) {
+            zoomButtons = [...zoomButtons, ...zoomControls.querySelectorAll(`.${zoomButtonClass}`)];
           }
 
-          const zoomButtons = zoomControls.querySelectorAll(`.${zoomButtonClass}`);
+          // Also get buttons from new bottom panel controls
+          const bottomPanelZoomControls = document.getElementById('zoom-controls-panel');
+          if (bottomPanelZoomControls) {
+            zoomButtons = [...zoomButtons, ...bottomPanelZoomControls.querySelectorAll('.zoom-btn')];
+          }
+
+          if (zoomButtons.length === 0) {
+            return;
+          }
           
           // Set initial active button based on currentZoom
           zoomButtons.forEach(btn => {
