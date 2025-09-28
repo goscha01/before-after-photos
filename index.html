@@ -138,16 +138,16 @@
       }
       
       // Check if React loads
-      let reactLoadTimer = setTimeout(() => {
-        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ React Failed to Load</div>';
+      let loadTimer = setTimeout(() => {
+        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ Page Failed to Load</div>';
       }, 10000);
       
-      // Clear timer when React loads
+      // Clear timer when page loads
       window.addEventListener('load', () => {
-        clearTimeout(reactLoadTimer);
+        clearTimeout(loadTimer);
       });
-      
-      // Check for React errors
+
+      // Check for JavaScript errors
       window.addEventListener('error', (e) => {
         document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ JS Error: ' + e.error.message + '</div>';
       });
@@ -339,7 +339,6 @@
         }
 
         showSignInScreen() {
-          console.log('Showing sign-in screen...');
           
           const rootElement = document.getElementById('root');
           if (rootElement) {
@@ -586,12 +585,6 @@
 
           const halfHeight = templateDimensions.targetHeight / 2;
 
-          console.log(`🎨 EXECUTING drawHorizontalSplit (Stack Mode):`);
-          console.log(`  - Canvas size: ${templateDimensions.targetWidth}x${templateDimensions.targetHeight}`);
-          console.log(`  - Half height: ${halfHeight}`);
-          console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} → placed at top (0,0,${templateDimensions.targetWidth},${halfHeight})`);
-          console.log(`  - After image: ${afterImg.width}x${afterImg.height} → placed at bottom (0,${halfHeight},${templateDimensions.targetWidth},${halfHeight})`);
-          console.log(`  - Horizontal line drawn at y=${halfHeight}`);
 
           // Draw before image (top half) - crop from original image to fill exactly
           this.drawImageWithProperCrop(ctx, beforeImg, 0, 0, templateDimensions.targetWidth, halfHeight);
@@ -615,12 +608,6 @@
 
           const halfWidth = templateDimensions.targetWidth / 2;
 
-          console.log(`🎨 EXECUTING drawVerticalSplit (Side-by-Side Mode):`);
-          console.log(`  - Canvas size: ${templateDimensions.targetWidth}x${templateDimensions.targetHeight}`);
-          console.log(`  - Half width: ${halfWidth}`);
-          console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} → placed at left (0,0,${halfWidth},${templateDimensions.targetHeight})`);
-          console.log(`  - After image: ${afterImg.width}x${afterImg.height} → placed at right (${halfWidth},0,${halfWidth},${templateDimensions.targetHeight})`);
-          console.log(`  - Vertical line drawn at x=${halfWidth}`);
 
           // Draw before image (left half) - crop from original image to fill exactly
           this.drawImageWithProperCrop(ctx, beforeImg, 0, 0, halfWidth, templateDimensions.targetHeight);
@@ -665,7 +652,6 @@
             canvasX, canvasY, canvasWidth, canvasHeight   // Destination rectangle (where to draw on canvas)
           );
 
-          console.log(`🖼️ Image crop: source(${sourceX},${sourceY},${sourceWidth.toFixed(1)},${sourceHeight.toFixed(1)}) from ${img.width}x${img.height} → canvas(${canvasX},${canvasY},${canvasWidth},${canvasHeight})`);
         }
 
         getStackModeCropInfo(targetRatio) {
@@ -969,8 +955,6 @@
           const isAndroid = /Android/.test(userAgent);
           const isMobile = isIPhone || isAndroid;
 
-          console.log(`📱 Device Info: iPhone=${isIPhone}, Android=${isAndroid}, Mobile=${isMobile}`);
-          console.log(`📱 User Agent: ${userAgent}`);
 
           // Room icon for placeholders
           const roomIcons = {
@@ -997,7 +981,6 @@
             // 2:3 aspect ratio photos use "contain" to fill the square properly
             const objectFit = (photo.aspectRatio === '4:3') ? 'contain' : 'contain';
 
-            console.log(`🖼️ Thumbnail for photo ${photo.id}: aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
 
             gridItems.push(`
               <div class="before-photo-item" data-photo-id="${photo.id}" style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid #e1e5e9; transition: all 0.2s;" onmouseover="this.style.borderColor='#F2C31B'; this.style.transform='scale(1.02)'" onmouseout="this.style.borderColor='#e1e5e9'; this.style.transform='scale(1)'">
@@ -1571,7 +1554,6 @@
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
 
-                console.log(`🖼️ Main Gallery After Photo ${photo.id}: aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
 
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
@@ -1599,7 +1581,6 @@
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
 
-                console.log(`🖼️ Main Gallery Single Photo ${photo.id}: mode=${photo.mode}, aspectRatio=${photo.aspectRatio}, objectFit=${objectFit}`);
 
                 html += `
                   <div class="photo-item" data-photo-index="${photoIndex}" style="border: 2px solid ${borderColor}; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1; cursor: pointer;">
@@ -1794,7 +1775,6 @@
                 const name = e.currentTarget.dataset.name;
                 const mode = e.currentTarget.dataset.mode;
                 
-                console.log('Dummy card clicked:', { room, name, mode });
                 
                 // Close the all photos modal first
                 this.closeAllPhotosModal(modal);
@@ -2057,10 +2037,10 @@
         formatSelectedFormats(formats) {
           const formatNames = {
             'instagram-facebook': 'Instagram / Facebook Feed (4:5)',
-            'square-sidebyside': 'Square Side-by-Side (1:1)',
-            'square-stack': 'Square Stack (1:1)',
-            'landscape-sidebyside': 'Landscape Side-by-Side (16:9)',
-            'landscape-stack': 'Landscape Stack (16:9)',
+            'square-sidebyside': 'Square - LinkedIn / Yelp (1:1) - Side-by-Side (vertical split)',
+            'square-stack': 'Square - LinkedIn / Yelp (1:1) - Stack (horizontal split)',
+            'landscape-sidebyside': 'Websites / Presentations (16:9) - Side-by-Side (vertical split)',
+            'landscape-stack': 'Websites / Presentations (16:9) - Stack (horizontal split)',
             'instagram-landscape': 'Instagram / Facebook Landscape (1.91:1)'
           };
           
@@ -2360,7 +2340,6 @@
               
               // Update the header to reflect the new city (if needed)
               // Since the header shows cleaner name, no change needed there
-              console.log('Updated URL to:', newUrl);
             }
           });
 
@@ -2634,7 +2613,9 @@
 
           // Add preview for each selected format
           activeFormats.forEach(format => {
-            const formatName = this.getFormatDisplayName(format);
+            // Map format to templateType and get display name (same as actual processing)
+            const templateType = this.mapFormatToTemplateType(format);
+            const formatName = this.getTemplateDisplayName(templateType);
             previewContent += `
               <div style="border: 2px solid #e1e5e9; border-radius: 12px; padding: 20px; background: #fafbfc;">
                 <h3 style="margin: 0 0 16px 0; color: #303030; font-size: 20px; font-weight: bold; border-bottom: 1px solid #e1e5e9; padding-bottom: 8px;">
@@ -2689,12 +2670,13 @@
         }
 
         getFormatDisplayName(format) {
+          // Use the exact same names as shown in the upload modal
           const formatNames = {
             'instagram-facebook': 'Instagram / Facebook Feed (4:5)',
-            'square-sidebyside': 'Square Side-by-Side (1:1)',
-            'square-stack': 'Square Stack (1:1)',
-            'landscape-sidebyside': 'Landscape Side-by-Side (16:9)',
-            'landscape-stack': 'Landscape Stack (16:9)',
+            'square-sidebyside': 'Square - LinkedIn / Yelp (1:1) - Side-by-Side (vertical split)',
+            'square-stack': 'Square - LinkedIn / Yelp (1:1) - Stack (horizontal split)',
+            'landscape-sidebyside': 'Websites / Presentations (16:9) - Side-by-Side (vertical split)',
+            'landscape-stack': 'Websites / Presentations (16:9) - Stack (horizontal split)',
             'instagram-landscape': 'Instagram / Facebook Landscape (1.91:1)'
           };
           return formatNames[format] || format;
@@ -2809,9 +2791,6 @@
         }
 
         processUpload(options) {
-          console.log('Starting upload with options:', options);
-          console.log('Total photos in app:', this.photos.length);
-          console.log('All photos:', this.photos.map(p => ({ name: p.name, mode: p.mode, room: p.room })));
           
           // Filter photos based on selected types
           let photosToUpload = this.photos.filter(photo => {
@@ -2820,12 +2799,9 @@
               (photo.mode === 'after' && options.photoTypes.after) ||
               (photo.mode === 'mix' && options.photoTypes.combined)
             );
-            console.log(`Photo ${photo.name} (${photo.mode}): ${shouldInclude ? 'INCLUDED' : 'EXCLUDED'}`);
             return shouldInclude;
           });
 
-          console.log('Photos to upload:', photosToUpload.length);
-          console.log('Filtered photos:', photosToUpload.map(p => ({ name: p.name, mode: p.mode, room: p.room })));
 
           if (photosToUpload.length === 0) {
             alert('No photos found matching the selected criteria');
@@ -2911,13 +2887,6 @@
           const locationKey = this.getLocationKey(options.city);
           const SCRIPT_URL = window[`VITE_${locationKey}_SCRIPT_URL`] || window.GOOGLE_SCRIPT_URL;
           const FOLDER_ID = window[`VITE_${locationKey}_FOLDER_ID`] || window.GOOGLE_FOLDER_ID;
-          
-          console.log('Upload configuration:', {
-            city: options.city,
-            locationKey: locationKey,
-            scriptUrl: SCRIPT_URL,
-            folderId: FOLDER_ID ? FOLDER_ID.substring(0, 10) + '...' : 'undefined'
-          });
 
           if (!SCRIPT_URL || !FOLDER_ID) {
             statusDiv.textContent = 'Configuration error: Missing script URL or folder ID';
@@ -2953,7 +2922,6 @@
           });
 
           const uploadPhoto = async (photo, format = 'default') => {
-            console.log(`Starting upload for ${photo.name} (${photo.mode}) in ${format} format`);
             
             try {
               let photoData = photo.dataUrl;
@@ -2961,7 +2929,6 @@
               
               // Generate different formats if needed
               if (format !== 'default') {
-                console.log(`Generating ${format} format for ${photo.name} (${photo.mode})`);
                 // Generate the specific format on-the-fly
                 photoData = await this.generatePhotoFormat(photo, format);
                 filename = `${photo.name}_${photo.mode}_${format}`;
@@ -2969,7 +2936,6 @@
               
               // Apply compression based on quality setting
               const compressionSettings = this.getCompressionSettings(options.quality);
-              console.log(`Compressing ${filename} with ${options.quality} quality`);
               
               const originalSize = photoData.length;
               const compressionStart = performance.now();
@@ -2985,11 +2951,9 @@
               const compressedSize = photoData.length;
               const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
               
-              console.log(`🗜️ ${filename} compressed: ${reduction}% reduction (${Math.round(originalSize/1024)}KB → ${Math.round(compressedSize/1024)}KB) in ${Math.round(compressionTime)}ms`);
               
               // Add file extension
               filename += '.jpg';
-              console.log(`Uploading compressed file: ${filename}`);
               
               // Prepare form data
               const formData = new FormData();
@@ -3004,7 +2968,6 @@
               formData.append('cleanerName', new URLSearchParams(window.location.search).get('cleaner') || 'Kate');
               formData.append('image', photoData);
 
-              console.log(`📤 Making fetch request to: ${SCRIPT_URL}`);
               const uploadStart = performance.now();
               
               const response = await fetch(SCRIPT_URL, {
@@ -3013,17 +2976,14 @@
               });
 
               const uploadTime = performance.now() - uploadStart;
-              console.log(`📥 Response received for ${filename}: ${response.status} ${response.statusText} in ${Math.round(uploadTime)}ms`);
               
               if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
               }
 
               const result = await response.json();
-              console.log(`Upload result for ${filename}:`, result);
               
               if (result.success) {
-                console.log(`✅ Successfully uploaded ${filename}`);
                 uploadedFiles.push({
                   ...result,
                   originalPhoto: photo,
@@ -3045,15 +3005,12 @@
           };
 
           const uploadNext = async () => {
-            console.log(`uploadNext called - currentIndex: ${currentIndex}, photos.length: ${photos.length}, cancelled: ${cancelled}`);
             
             if (cancelled) {
-              console.log('Upload cancelled, stopping');
               return;
             }
 
             if (currentIndex >= photos.length) {
-              console.log('All photos processed, showing results');
               // All photos processed, show results
               const successCount = uploadedFiles.length;
               const errorCount = errors.length;
@@ -3076,28 +3033,19 @@
                     `${successCount} photos uploaded successfully, ${errorCount} failed. Check console for details.`,
                     '⚠️'
                   );
-                  console.log('Upload errors:', errors);
                 }, 2000);
               }
               return;
             }
 
             const photo = photos[currentIndex];
-            console.log(`Processing photo ${currentIndex + 1}/${photos.length}:`, {
-              name: photo.name,
-              mode: photo.mode,
-              room: photo.room,
-              id: photo.id
-            });
-            
+
             try {
               // Get all selected formats
               const selectedFormats = Object.keys(options.formats).filter(key => options.formats[key]);
-              console.log(`Formats to upload for ${photo.name}:`, selectedFormats);
               
               for (let formatIndex = 0; formatIndex < selectedFormats.length; formatIndex++) {
                 if (cancelled) {
-                  console.log('Upload cancelled during format processing');
                   return;
                 }
                 
@@ -3110,7 +3058,6 @@
                   await uploadPhoto(photo, format);
                 } catch (error) {
                   if (cancelled) {
-                    console.log('Upload cancelled during photo upload');
                     return;
                   }
                   // Error already handled in uploadPhoto function
@@ -3118,7 +3065,6 @@
                 
                 // Check cancellation again after upload
                 if (cancelled) {
-                  console.log('Upload cancelled after photo upload');
                   return;
                 }
                 
@@ -3133,7 +3079,6 @@
                 await new Promise(resolve => {
                   setTimeout(() => {
                     if (cancelled) {
-                      console.log('Upload cancelled during delay');
                     }
                     resolve();
                   }, 500);
@@ -3146,7 +3091,6 @@
               console.error(`Failed to upload ${photo.mode} photo ${photo.name}:`, error);
             }
 
-            console.log(`Finished processing photo ${photo.name}, moving to next. currentIndex: ${currentIndex} -> ${currentIndex + 1}`);
             currentIndex++;
             
             // Add small delay before processing next photo
@@ -3173,13 +3117,6 @@
           const locationKey = this.getLocationKey(options.city);
           const SCRIPT_URL = window[`VITE_${locationKey}_SCRIPT_URL`] || window.GOOGLE_SCRIPT_URL;
           const FOLDER_ID = window[`VITE_${locationKey}_FOLDER_ID`] || window.GOOGLE_FOLDER_ID;
-          
-          console.log('Upload configuration:', {
-            city: options.city,
-            locationKey: locationKey,
-            scriptUrl: SCRIPT_URL,
-            folderId: FOLDER_ID ? FOLDER_ID.substring(0, 10) + '...' : 'undefined'
-          });
 
           if (!SCRIPT_URL || !FOLDER_ID) {
             statusDiv.textContent = 'Configuration error: Missing script URL or folder ID';
@@ -3218,21 +3155,17 @@
           photos.forEach(photo => {
             // Get all selected formats
             const selectedFormats = Object.keys(options.formats).filter(key => options.formats[key]);
-            console.log(`📋 Selected formats for ${photo.name}:`, selectedFormats);
             
             selectedFormats.forEach(format => {
               uploadTasks.push({ photo, format });
-              console.log(`➕ Added upload task: ${photo.name} - ${format}`);
             });
           });
 
           const totalTasks = uploadTasks.length;
-          console.log(`🚀 Starting parallel upload of ${totalTasks} tasks (${photos.length} photos)`);
 
           const uploadPhoto = async (photo, format = 'default') => {
             if (cancelled) return null;
             
-            console.log(`Starting upload for ${photo.name} (${photo.mode}) in ${format} format`);
             
             try {
               let photoData = photo.dataUrl;
@@ -3240,7 +3173,6 @@
               
               // Generate different formats if needed
               if (format !== 'default') {
-                console.log(`Generating ${format} format for ${photo.name} (${photo.mode})`);
                 photoData = await this.generatePhotoFormat(photo, format);
                 filename = `${photo.name}_${photo.mode}_${format}`;
               }
@@ -3262,7 +3194,6 @@
               const compressedSize = photoData.length;
               const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
               
-              console.log(`🗜️ ${filename} compressed: ${reduction}% reduction (${Math.round(originalSize/1024)}KB → ${Math.round(compressedSize/1024)}KB) in ${Math.round(compressionTime)}ms`);
               
               filename += '.jpg';
               
@@ -3279,7 +3210,6 @@
               formData.append('cleanerName', new URLSearchParams(window.location.search).get('cleaner') || 'Kate');
               formData.append('image', photoData);
 
-              console.log(`📤 Making fetch request to: ${SCRIPT_URL}`);
               const uploadStart = performance.now();
               
               const response = await fetch(SCRIPT_URL, {
@@ -3288,7 +3218,6 @@
               });
 
               const uploadTime = performance.now() - uploadStart;
-              console.log(`📥 Response received for ${filename}: ${response.status} ${response.statusText} in ${Math.round(uploadTime)}ms`);
               
               if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -3297,7 +3226,6 @@
               const result = await response.json();
               
               if (result.success) {
-                console.log(`✅ Successfully uploaded ${filename} in ${Math.round(uploadTime)}ms`);
                 return {
                   ...result,
                   originalPhoto: photo,
@@ -3320,7 +3248,6 @@
             batches.push(uploadTasks.slice(i, i + BATCH_SIZE));
           }
 
-          console.log(`📦 Processing ${batches.length} batches of up to ${BATCH_SIZE} concurrent uploads`);
 
           for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
             if (cancelled) break;
@@ -3328,7 +3255,6 @@
             const batch = batches[batchIndex];
             statusDiv.textContent = `Processing batch ${batchIndex + 1}/${batches.length}...`;
             
-            console.log(`🔄 Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} uploads`);
             
             // Process all uploads in this batch simultaneously
             const batchPromises = batch.map(task => uploadPhoto(task.photo, task.format));
@@ -3384,7 +3310,6 @@
                 `${successCount} photos uploaded successfully, ${errorCount} failed. Check console for details.`,
                 '⚠️'
               );
-              console.log('Upload errors:', errors);
             }, 2000);
           }
         }
@@ -3529,7 +3454,6 @@
             
             // Skip compression for already small photos (less than 200KB)
             if (originalSize < 200000) {
-              console.log(`Skipping compression for small photo (${Math.round(originalSize/1024)}KB)`);
               resolve(dataUrl);
               return;
             }
@@ -3566,10 +3490,8 @@
               const compressedSize = compressedDataUrl.length;
               if (compressedSize < originalSize) {
                 const compressionRatio = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
-                console.log(`Photo compressed: ${compressionRatio}% reduction (${originalSize} → ${compressedSize} bytes)`);
                 resolve(compressedDataUrl);
               } else {
-                console.log(`Compression would increase size, using original (${Math.round(originalSize/1024)}KB)`);
                 resolve(dataUrl);
               }
             };
@@ -3578,7 +3500,6 @@
         }
 
         async generatePhotoFormat(photo, format, mode = 'download') {
-          console.log(`🔄 generatePhotoFormat called with format: ${format}, mode: ${mode}`);
 
           // For combined photos, generate the proper layout for the specific format
           if (photo.mode === 'mix') {
@@ -3587,14 +3508,12 @@
 
           // For regular photos (before/after), don't apply format transformations
           // These should be uploaded in their original form only
-          console.log(`📸 Before/After photo should not be format-transformed, returning original`);
 
           // Return the original photo data without any transformations
           return Promise.resolve(photo.originalDataUrl || photo.dataUrl);
         }
 
         async generateCombinedPhotoForUpload(combinedPhoto, format, mode = 'download') {
-          console.log(`🔄 generateCombinedPhotoForUpload called with format: ${format}, mode: ${mode}`);
 
           // Find the original before/after photos for this combined photo
           const beforePhoto = this.photos.find(p =>
@@ -3700,7 +3619,6 @@
 
 
         openCameraFromGallery(room, name, mode) {
-          console.log('Opening camera from gallery:', { room, name, mode });
           
           // Set up context for gallery return
           this.galleryReturnContext = {
@@ -3823,40 +3741,100 @@
         }
 
         getTemplateDisplayName(templateType) {
-          // Convert internal template keys to user-friendly display names
-          console.log(`🔍 DEBUG Template Display Name: "${templateType}"`);
-
+          // Convert internal template keys to user-friendly display names that match upload modal
           let displayName;
           switch(templateType) {
             case 'portrait':
-              displayName = 'Portrait (4:5)';
+              displayName = 'Instagram / Facebook Feed (4:5)';
               break;
             case 'default':
-              displayName = 'Default Template';
+              displayName = 'Square - LinkedIn / Yelp (1:1) - Stack (horizontal split)';
               break;
             case 'square':
             case 'square_stack':
-              displayName = 'Square (Stack)';
+              displayName = 'Square - LinkedIn / Yelp (1:1) - Stack (horizontal split)';
               break;
             case 'square_side':
-              displayName = 'Square (Side-by-Side)';
+              displayName = 'Square - LinkedIn / Yelp (1:1) - Side-by-Side (vertical split)';
               break;
             case 'landscape':
-              displayName = 'Landscape (16:9)';
+              displayName = 'Websites / Presentations (16:9) - Stack (horizontal split)';
               break;
             case 'sidebyside_landscape':
-              displayName = 'Wide Landscape (16:9)';
+              displayName = 'Websites / Presentations (16:9) - Side-by-Side (vertical split)';
               break;
             case 'blog':
-              displayName = 'Instagram Landscape (1.91:1)';
+              displayName = 'Instagram / Facebook Landscape (1.91:1)';
               break;
             default:
               displayName = templateType.charAt(0).toUpperCase() + templateType.slice(1);
               break;
           }
-
-          console.log(`  ➡️ Display name: "${displayName}"`);
           return displayName;
+        }
+
+        getTemplateLayoutType(templateType) {
+          // Extract just the layout type part (Stack/Side-by-Side)
+          switch(templateType) {
+            case 'portrait':
+              return 'Stack (horizontal split)';
+            case 'default':
+            case 'square':
+            case 'square_stack':
+            case 'landscape':
+              return 'Stack (horizontal split)';
+            case 'square_side':
+            case 'sidebyside_landscape':
+              return 'Side-by-Side (vertical split)';
+            case 'blog':
+              return 'Side-by-Side (vertical split)';
+            default:
+              return 'Stack (horizontal split)';
+          }
+        }
+
+        getTemplatePurpose(templateType) {
+          // Extract the purpose/platform part
+          switch(templateType) {
+            case 'portrait':
+              return 'Perfect for Instagram and Facebook feeds';
+            case 'default':
+            case 'square':
+            case 'square_stack':
+              return 'Ideal for LinkedIn posts and Yelp reviews';
+            case 'square_side':
+              return 'Great for LinkedIn posts and Yelp reviews with side comparison';
+            case 'blog':
+              return 'Perfect for Instagram landscape posts';
+            case 'sidebyside_landscape':
+              return 'Ideal for websites and presentations with side comparison';
+            case 'landscape':
+              return 'Perfect for websites and presentations';
+            default:
+              return 'Ideal for LinkedIn posts and Yelp reviews';
+          }
+        }
+
+        getTemplateMainTitle(templateType) {
+          // Extract just the main platform/ratio title for selectors
+          switch(templateType) {
+            case 'portrait':
+              return 'Instagram / Facebook Feed (4:5)';
+            case 'default':
+            case 'square':
+            case 'square_stack':
+              return 'LinkedIn / Yelp (1:1)';
+            case 'square_side':
+              return 'LinkedIn / Yelp (1:1)';
+            case 'blog':
+              return 'Instagram Landscape (1.91:1)';
+            case 'sidebyside_landscape':
+              return 'Websites / Presentations (16:9)';
+            case 'landscape':
+              return 'Websites / Presentations (16:9)';
+            default:
+              return 'LinkedIn / Yelp (1:1)';
+          }
         }
 
         getEnlargedPhotoHTML(photo, templateType) {
@@ -3868,16 +3846,16 @@
                 <img id="fullscreen-photo" src="${photo.dataUrl}" style="display: block; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
               </div>
 
-              <!-- Photo info overlay -->
-              <div style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px 20px; border-radius: 8px; backdrop-filter: blur(10px); z-index: 10;">
-                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
-                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+              <!-- Layout type and purpose info at top -->
+              <div style="position: fixed; top: 20px; left: 20px; right: 80px; background: rgba(0,0,0,0.9); color: white; padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; border: 2px solid #F2C31B;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #F2C31B; text-align: center;">
+                  ${this.getTemplateLayoutType(templateType)}
                 </div>
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
-                  ${new Date(photo.timestamp).toLocaleString()}
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 12px; text-align: center;">
+                  ${this.getTemplatePurpose(templateType)}
                 </div>
-                <div style="font-size: 12px; opacity: 0.7;">
-                  Orientation: ${orientation} | Template: ${this.getTemplateDisplayName(templateType)}
+                <div style="font-size: 14px; opacity: 0.9; text-align: center;">
+                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)} | ${new Date(photo.timestamp).toLocaleString()}
                 </div>
               </div>
 
@@ -3916,14 +3894,8 @@
               // If either photo was taken in horizontal mode, use Stack Mode
               isHorizontalPhoto = beforeIsHorizontal || afterIsHorizontal;
 
-              console.log(`🔍 DEBUG Template Selector:`);
-              console.log(`  - Before photo aspectRatio: ${beforePhoto.aspectRatio} (${beforeIsHorizontal ? 'horizontal' : 'vertical'})`);
-              console.log(`  - After photo aspectRatio: ${afterPhoto.aspectRatio} (${afterIsHorizontal ? 'horizontal' : 'vertical'})`);
-              console.log(`  - Result: isHorizontalPhoto = ${isHorizontalPhoto}`);
-              console.log(`  - Will show: ${isHorizontalPhoto ? 'STACK MODE' : 'SIDE-BY-SIDE MODE'} templates`);
             } else {
               console.warn('Could not find original before/after photos for combined photo');
-              console.log(`  - Looking for: room=${photo.room}, name=${photo.name}`);
               // Fallback: Use the combined photo's own dimensions to determine mode
               const photoWidth = photo.naturalWidth || photo.width || 800;
               const photoHeight = photo.naturalHeight || photo.height || 600;
@@ -3931,8 +3903,6 @@
               // If combined photo is landscape (aspect ratio > 1), it's likely side-by-side mode
               // If combined photo is portrait (aspect ratio < 1), it's likely stack mode
               isHorizontalPhoto = photoAspectRatio < 1; // Portrait combined = stack mode, landscape combined = side-by-side mode
-              console.log(`  - Fallback: Using combined photo dimensions ${photoWidth}x${photoHeight} (aspect: ${photoAspectRatio.toFixed(2)})`);
-              console.log(`  - Fallback result: isHorizontalPhoto = ${isHorizontalPhoto} (${isHorizontalPhoto ? 'STACK MODE' : 'SIDE-BY-SIDE MODE'})`);
             }
           }
 
@@ -3943,21 +3913,19 @@
 
           if (isHorizontalPhoto) {
             // Horizontal originals (4:3) → Stack Mode (stacked vertically with horizontal split line)
-            console.log(`  ➡️ Using STACK MODE templates (horizontal originals → stacked vertically)`);
             const stackTemplates = {
-              portrait: { ratio: '4:5', description: 'Instagram/LinkedIn Portrait ⭐', cropInfo: 'Best fit for portrait feeds', splitType: 'horizontal' },
-              square_stack: { ratio: '1:1', description: 'Square (Stack)', cropInfo: 'Horizontal split - before/after stacked', splitType: 'horizontal' },
-              landscape: { ratio: '16:9', description: 'Landscape Wide', cropInfo: 'Good for presentations', splitType: 'horizontal' }
+              portrait: { ratio: '4:5', description: 'Instagram / Facebook Feed (4:5) ⭐', cropInfo: 'Best fit for portrait feeds', splitType: 'horizontal' },
+              square_stack: { ratio: '1:1', description: 'Square - LinkedIn / Yelp (1:1) - Stack', cropInfo: 'Horizontal split - before/after stacked', splitType: 'horizontal' },
+              landscape: { ratio: '16:9', description: 'Websites / Presentations (16:9) - Stack', cropInfo: 'Good for presentations', splitType: 'horizontal' }
             };
 
             return this.getStackModeTemplateSelector(stackTemplates, templateType);
           } else {
             // Vertical originals (2:3) → Side-by-Side Mode (placed left-right with vertical split line)
-            console.log(`  ➡️ Using SIDE-BY-SIDE MODE templates (vertical originals → placed left-right)`);
             const sideTemplates = {
-              blog: { ratio: '1.91:1', description: 'Instagram/Facebook Landscape ⭐', cropInfo: 'Best fit for landscape feeds', splitType: 'vertical' },
-              sidebyside_landscape: { ratio: '16:9', description: 'Wide Landscape', cropInfo: 'Great for presentations/websites', splitType: 'vertical' },
-              square_side: { ratio: '1:1', description: 'Square (Side-by-Side)', cropInfo: 'Vertical split - before/after side-by-side', splitType: 'vertical' }
+              blog: { ratio: '1.91:1', description: 'Instagram / Facebook Landscape (1.91:1) ⭐', cropInfo: 'Best fit for landscape feeds', splitType: 'vertical' },
+              sidebyside_landscape: { ratio: '16:9', description: 'Websites / Presentations (16:9) - Side-by-Side', cropInfo: 'Great for presentations/websites', splitType: 'vertical' },
+              square_side: { ratio: '1:1', description: 'Square - LinkedIn / Yelp (1:1) - Side-by-Side', cropInfo: 'Vertical split - before/after side-by-side', splitType: 'vertical' }
             };
 
             return this.getSideBySideModeTemplateSelector(sideTemplates, templateType);
@@ -3968,19 +3936,16 @@
           // Stack Mode Templates (for horizontal original photos)
           return `
             <!-- Template selector for Stack Mode (horizontal original photos) -->
-            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-              <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Stack Mode Templates</div>
-              <div style="color: #ccc; font-size: 12px; margin-bottom: 15px; text-align: center;">Horizontal split - Before/After stacked vertically</div>
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
 
-              <!-- Portrait (Best for stack) -->
+              <!-- Portrait -->
               <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'portrait' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'portrait' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
                 <input type="radio" name="template-selector" value="portrait" style="display: none;" ${templateType === 'default' || templateType === 'portrait' ? 'checked' : ''}>
                 <div style="width: 24px; height: 30px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
                   <div style="font-size: 6px; color: #303030; font-weight: bold;">4:5</div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.portrait.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.portrait.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${this.getTemplateMainTitle('portrait')}</div>
                 </div>
               </label>
 
@@ -3992,8 +3957,7 @@
                   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 18px; height: 1px; background: #303030;"></div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.square_stack.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.square_stack.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${this.getTemplateMainTitle('square_stack')}</div>
                 </div>
               </label>
 
@@ -4004,8 +3968,7 @@
                   <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${stackTemplates.landscape.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${stackTemplates.landscape.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${this.getTemplateMainTitle('landscape')}</div>
                 </div>
               </label>
             </div>
@@ -4016,19 +3979,16 @@
           // Side-by-Side Mode Templates (for vertical original photos)
           return `
             <!-- Template selector for Side-by-Side Mode (vertical original photos) -->
-            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-              <div style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;">Side-by-Side Mode Templates</div>
-              <div style="color: #ccc; font-size: 12px; margin-bottom: 15px; text-align: center;">Vertical split - Before/After side-by-side</div>
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 16px; border-radius: 12px; backdrop-filter: blur(10px); z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
 
-              <!-- Landscape (Best for side-by-side) -->
+              <!-- Landscape -->
               <label style="display: flex; align-items: center; color: white; cursor: pointer; padding: 8px; border-radius: 6px; transition: all 0.2s; border: 2px solid ${templateType === 'default' || templateType === 'blog' ? '#F2C31B' : 'transparent'}; background: ${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}; margin-bottom: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${templateType === 'default' || templateType === 'blog' ? 'rgba(242, 195, 27, 0.2)' : 'transparent'}'">
                 <input type="radio" name="template-selector" value="blog" style="display: none;" ${templateType === 'default' || templateType === 'blog' ? 'checked' : ''}>
                 <div style="width: 32px; height: 21px; background: #F2C31B; border-radius: 2px; margin-right: 12px; display: flex; align-items: center; justify-content: center;">
                   <div style="font-size: 6px; color: #303030; font-weight: bold;">1.91:1</div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.blog.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.blog.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${this.getTemplateMainTitle('blog')}</div>
                 </div>
               </label>
 
@@ -4039,8 +3999,7 @@
                   <div style="font-size: 6px; color: #303030; font-weight: bold;">16:9</div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.sidebyside_landscape.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.sidebyside_landscape.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${this.getTemplateMainTitle('sidebyside_landscape')}</div>
                 </div>
               </label>
 
@@ -4052,8 +4011,7 @@
                   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1px; height: 18px; background: #303030;"></div>
                 </div>
                 <div>
-                  <div style="font-weight: bold; margin-bottom: 2px;">${sideTemplates.square_side.description}</div>
-                  <div style="font-size: 12px; opacity: 0.8;">${sideTemplates.square_side.cropInfo}</div>
+                  <div style="font-weight: bold; margin-bottom: 2px;">${this.getTemplateMainTitle('square_side')}</div>
                 </div>
               </label>
 
@@ -4081,7 +4039,6 @@
             radio.addEventListener('change', (e) => {
               if (e.target.checked) {
                 const newTemplate = e.target.value;
-                console.log('Generating template on-demand:', newTemplate);
                 
                 // Update visual selection state
                 this.updateTemplateVisualSelection(modal, newTemplate);
@@ -4142,7 +4099,6 @@
         }
 
         regenerateFromIndividualPhoto(photo, newTemplate, modal) {
-          console.log('Regenerating from individual photo:', photo.mode, 'with template:', newTemplate);
           
           if (photo.mode === 'before') {
             // Find the corresponding after photo
@@ -4263,11 +4219,9 @@
           // Save updated photos
           this.savePhotos();
           
-          console.log('Modal updated with new photo:', newPhoto.templateType);
         }
 
         generateCombinedPhotoOnDemand(photo, templateType, modal) {
-          console.log('Generating combined photo on-demand:', templateType);
           
           // Find the before and after photos
           let beforePhoto, afterPhoto;
@@ -4310,19 +4264,18 @@
               imgElement.style.opacity = '1';
             }
             
-            // Update photo info to show it's a generated combined photo
+            // Update photo info with consistent 3-line format
             const infoDiv = modal.querySelector('[style*="position: fixed; top: 20px; left: 20px"]');
             if (infoDiv) {
-              const orientation = this.detectPhotoOrientation(beforePhoto.width || 800, beforePhoto.height || 600);
               infoDiv.innerHTML = `
-                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
-                  ${beforePhoto.room.charAt(0).toUpperCase() + beforePhoto.room.slice(1).replace('-', ' ')} - Combined (${templateType})
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #F2C31B; text-align: center;">
+                  ${this.getTemplateLayoutType(templateType)}
                 </div>
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
-                  Generated on-demand
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 12px; text-align: center;">
+                  ${this.getTemplatePurpose(templateType)}
                 </div>
-                <div style="font-size: 12px; opacity: 0.7;">
-                  Template: ${this.getTemplateDisplayName(templateType)} | Not stored locally
+                <div style="font-size: 14px; opacity: 0.9; text-align: center;">
+                  ${beforePhoto.room.charAt(0).toUpperCase() + beforePhoto.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)} | ${new Date(photo.timestamp || beforePhoto.timestamp).toLocaleString()}
                 </div>
               `;
             }
@@ -4333,7 +4286,6 @@
         }
 
         createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, callback) {
-          console.log('Creating combined photo in memory for template:', templateType);
 
           // Create image objects to get dimensions
           const beforeImg = new Image();
@@ -4357,36 +4309,20 @@
                 const beforeIsHorizontal = beforePhoto.aspectRatio === '4:3';
                 const afterIsHorizontal = afterPhoto.aspectRatio === '4:3';
                 isHorizontalPhoto = beforeIsHorizontal || afterIsHorizontal;
-                console.log(`🔍 DEBUG Combined Photo Creation - Using stored aspect ratios:`);
-                console.log(`  - Before photo aspectRatio: ${beforePhoto.aspectRatio} (${beforeIsHorizontal ? 'horizontal' : 'vertical'})`);
-                console.log(`  - After photo aspectRatio: ${afterPhoto.aspectRatio} (${afterIsHorizontal ? 'horizontal' : 'vertical'})`);
-                console.log(`  - Result: isHorizontalPhoto = ${isHorizontalPhoto}`);
               } else {
                 // Fallback to image dimensions if no stored aspect ratio
                 const isOriginallyVertical = avgAspectRatio <= 1.0;
                 isHorizontalPhoto = !isOriginallyVertical;
-                console.log(`🔍 DEBUG Combined Photo Creation - Using calculated aspect ratios (fallback):`);
-                console.log(`  - Average aspect ratio: ${avgAspectRatio.toFixed(2)}`);
-                console.log(`  - Is originally vertical: ${isOriginallyVertical}`);
-                console.log(`  - Result: isHorizontalPhoto = ${isHorizontalPhoto}`);
               }
 
               const baseMode = isHorizontalPhoto ? 'stack' : 'sidebyside';
 
-              console.log(`🔍 DEBUG Combined Photo Creation:`);
-              console.log(`  - Before image: ${beforeImg.width}x${beforeImg.height} (aspect: ${(beforeImg.width/beforeImg.height).toFixed(2)})`);
-              console.log(`  - After image: ${afterImg.width}x${afterImg.height} (aspect: ${(afterImg.width/afterImg.height).toFixed(2)})`);
-              console.log(`  - Base mode determined: ${baseMode}`);
-              console.log(`  - Template type requested: ${templateType}`);
 
               // Get template definition
               const templates = this.getTemplateSizes();
               let templateKey = templateType || 'default';
 
               // Map legacy template names to new format
-              console.log(`🔍 DEBUG Template Mapping:`);
-              console.log(`  - Input templateType: ${templateType}`);
-              console.log(`  - Base mode: ${baseMode}`);
 
               if (templateType === 'default') {
                 templateKey = baseMode === 'stack' ? 'stack-portrait' : 'sidebyside-landscape';
@@ -4409,7 +4345,6 @@
                 templateKey = 'sidebyside-landscape';
               }
 
-              console.log(`  - Final templateKey: ${templateKey}`);
 
               const template = templates[templateKey] || templates['stack-portrait'];
 
@@ -4421,11 +4356,6 @@
                 baseMode: baseMode
               };
 
-              console.log(`📸 Using template: ${templateKey}`, templateDimensions);
-              console.log(`🔍 DEBUG Template Execution:`);
-              console.log(`  - Template splitType: "${template.splitType}"`);
-              console.log(`  - Will call: ${template.splitType === 'horizontal-line' ? 'drawHorizontalSplit (Stack Mode)' : 'drawVerticalSplit (Side-by-Side Mode)'}`);
-              console.log(`  - Expected result: ${template.splitType === 'horizontal-line' ? 'Horizontal line between top/bottom' : 'Vertical line between left/right'}`);
 
               // Create canvas
               const canvas = document.createElement('canvas');
@@ -4490,7 +4420,6 @@
         }
 
         cropIndividualPhotoOnDemand(photo, templateType, modal) {
-          console.log('Cropping individual photo on-demand:', photo.mode, 'to template:', templateType);
           
           // Create image object to get dimensions and crop
           const img = new Image();
@@ -4571,23 +4500,22 @@
               imgElement.style.opacity = '1';
             }
             
-            // Update photo info
+            // Update photo info with consistent 3-line format
             const infoDiv = modal.querySelector('[style*="position: fixed; top: 20px; left: 20px"]');
             if (infoDiv) {
               infoDiv.innerHTML = `
-                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
-                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)}
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #F2C31B; text-align: center;">
+                  ${this.getTemplateLayoutType(templateType)}
                 </div>
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
-                  Cropped to ${templateType} format
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 12px; text-align: center;">
+                  ${this.getTemplatePurpose(templateType)}
                 </div>
-                <div style="font-size: 12px; opacity: 0.7;">
-                  Template: ${this.getTemplateDisplayName(templateType)} | Generated on-demand | Orientation: ${orientation}
+                <div style="font-size: 14px; opacity: 0.9; text-align: center;">
+                  ${photo.room.charAt(0).toUpperCase() + photo.room.slice(1).replace('-', ' ')} - ${photo.mode.charAt(0).toUpperCase() + photo.mode.slice(1)} | ${new Date(photo.timestamp).toLocaleString()}
                 </div>
               `;
             }
             
-            console.log('Individual photo cropped to template:', templateType);
           };
           
           img.src = photo.dataUrl;
@@ -4638,8 +4566,6 @@
                 );
               }
 
-              console.log(`🔍 Looking for display photo: room=${beforePhoto.room}, name=${beforePhoto.name}`);
-              console.log(`🔍 Found ${isFormatted ? 'formatted photo' : 'thumbnail'}:`, displayPhoto ? 'YES' : 'NO');
 
               if (displayPhoto) {
                 // Show formatted photo or thumbnail
@@ -4648,7 +4574,6 @@
                 // Determine object-fit based on photo's original aspect ratio
                 const objectFit = 'contain'; // Keep contain for proper display within square
 
-                console.log(`🖼️ Main Gallery Display Photo ${displayPhoto.id}: ${isFormatted ? 'formatted photo' : 'uncropped thumbnail'}, objectFit=${objectFit}`);
 
                 gridItems.push(`
                   <div class="photo-item" data-photo-index="${this.photos.indexOf(displayPhoto)}" style="border: 1px solid #E1E1E1; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
@@ -4679,7 +4604,6 @@
               // Determine object-fit based on photo's original aspect ratio
               const objectFit = 'contain'; // Keep contain for proper display
 
-              console.log(`🖼️ Main Gallery Before Photo ${beforePhoto.id}: aspectRatio=${beforePhoto.aspectRatio}, objectFit=${objectFit}`);
 
               gridItems.push(`
                 <div class="photo-item" data-photo-index="${this.photos.indexOf(beforePhoto)}" style="border: 3px solid #F2C31B; border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; aspect-ratio: 1;">
@@ -4709,20 +4633,15 @@
         
         getRoomPhotosByType(type) {
           const roomPhotos = this.photos.filter(photo => photo.room === this.currentRoom);
-          console.log('getRoomPhotosByType - Type:', type, 'Current room:', this.currentRoom);
-          console.log('getRoomPhotosByType - Room photos:', roomPhotos);
           
           if (type === 'photo') {
             const result = roomPhotos.filter(photo => photo.mode === 'before' || photo.mode === 'after');
-            console.log('getRoomPhotosByType - Photo result:', result);
             return result;
           } else if (type === 'combined') {
             const result = roomPhotos.filter(photo => photo.mode === 'mix');
-            console.log('getRoomPhotosByType - Combined result:', result);
             return result;
           } else if (type === 'all') {
             const result = roomPhotos.filter(photo => photo.mode === 'archived' || photo.mode === 'mix');
-            console.log('getRoomPhotosByType - All result:', result);
             return result;
           }
           return roomPhotos;
@@ -4758,18 +4677,15 @@
             // Only trigger swipe if horizontal movement is greater than vertical
             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
               const currentIndex = rooms.indexOf(this.currentRoom);
-              console.log('Swipe - Current room:', this.currentRoom, 'Index:', currentIndex);
               
               if (diffX > 0) {
                 // Swipe left - next room (following tab order)
                 const nextIndex = (currentIndex + 1) % rooms.length;
                 this.currentRoom = rooms[nextIndex];
-                console.log('Swipe left - Next room:', this.currentRoom, 'Index:', nextIndex);
               } else {
                 // Swipe right - previous room (following tab order)
                 const prevIndex = (currentIndex - 1 + rooms.length) % rooms.length;
                 this.currentRoom = rooms[prevIndex];
-                console.log('Swipe right - Previous room:', this.currentRoom, 'Index:', prevIndex);
               }
               
               this.currentTab = 'photo';
@@ -4865,16 +4781,13 @@
 
             // Add new listener
             btn.addEventListener('click', (e) => {
-              console.log('🔥 ROOM TAB CLICKED!', e.currentTarget.dataset.room);
               e.preventDefault();
               e.stopPropagation();
 
               // Get room from current target (the button) instead of target (might be inner element)
               const room = e.currentTarget.dataset.room;
-              console.log('Room clicked:', room, 'Current room:', this.currentRoom);
 
               if (room && room !== this.currentRoom) {
-                console.log('Switching from', this.currentRoom, 'to', room);
                 this.currentRoom = room;
                 this.currentTab = 'photo'; // Reset to photo tab when switching rooms
 
@@ -4891,7 +4804,6 @@
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }, 100);
               } else {
-                console.log('Same room clicked or invalid room');
               }
             });
 
@@ -4902,7 +4814,6 @@
 
             // Add hover effect for testing
             btn.addEventListener('mouseenter', () => {
-              console.log('🖱️ Mouse entered room tab:', btn.dataset.room);
               btn.style.opacity = '0.8';
             });
 
@@ -4912,16 +4823,13 @@
 
             // Add mousedown and mouseup for more testing
             btn.addEventListener('mousedown', () => {
-              console.log('🖱️ Mouse DOWN on room tab:', btn.dataset.room);
             });
 
             btn.addEventListener('mouseup', () => {
-              console.log('🖱️ Mouse UP on room tab:', btn.dataset.room);
             });
 
             // Check if element is being blocked
             btn.addEventListener('pointerdown', () => {
-              console.log('👆 Pointer DOWN on room tab:', btn.dataset.room);
             });
 
           });
@@ -4931,31 +4839,22 @@
         // Test function to manually check room tab functionality
         testRoomTabs() {
           const carousel = document.getElementById('tabs-carousel');
-          console.log('Carousel found:', !!carousel);
 
           if (carousel) {
             const tabs = carousel.querySelectorAll('.room-tab');
-            console.log('Tabs found:', tabs.length);
 
             tabs.forEach((tab, i) => {
               const rect = tab.getBoundingClientRect();
               const style = window.getComputedStyle(tab);
-              console.log(`Tab ${i}:`, tab.dataset.room);
-              console.log(`  Position:`, rect.x, rect.y, rect.width, rect.height);
-              console.log(`  Z-index:`, style.zIndex);
-              console.log(`  Pointer events:`, style.pointerEvents);
 
               // Check what element is actually at the center of the button
               const centerX = rect.x + rect.width / 2;
               const centerY = rect.y + rect.height / 2;
               const elementAtPoint = document.elementFromPoint(centerX, centerY);
-              console.log(`  Element at center:`, elementAtPoint);
-              console.log(`  Is the tab itself?`, elementAtPoint === tab);
             });
 
             // Try to click the first tab
             if (tabs.length > 0) {
-              console.log('Simulating click on first tab...');
               tabs[0].click();
             }
           }
@@ -4966,7 +4865,6 @@
           const modalTabsCarousel = document.getElementById('modal-tabs-carousel');
           if (modalTabsCarousel) {
             modalTabsCarousel.innerHTML = this.getRoomTabsCarousel();
-            console.log('Modal carousel updated for room:', this.currentRoom);
 
             // Reattach modal room tab listeners
             this.attachModalRoomTabListeners();
@@ -5017,7 +4915,6 @@
                 const newScrollTop = Math.min(previousScrollTop + heightDifference, maxVisibleScroll);
 
                 beforePhotoGrid.scrollTop = Math.max(0, newScrollTop);
-                console.log('📸 Auto-scrolled up to accommodate new photos');
               }
             }, 100);
           }
@@ -5395,11 +5292,9 @@
                 // We're in a camera modal, capture photo
                 if (cameraModal.innerHTML.includes('camera-video')) {
                   // Before mode - regular camera
-                  console.log('Capturing from regular camera modal');
                   this.captureFromCameraModal();
                 } else if (cameraModal.innerHTML.includes('comparison-camera')) {
                   // After mode - comparison camera
-                  console.log('Capturing from comparison camera modal');
                   this.captureFromComparisonModal();
                 }
               }
@@ -5434,7 +5329,6 @@
           const locationSelect = document.getElementById('location-select');
           if (locationSelect) {
             locationSelect.addEventListener('change', (e) => {
-              console.log('Location changed to:', e.target.value);
               // You can add location-specific functionality here
             });
           }
@@ -5466,7 +5360,6 @@
                       }
                     }
                   } catch (error) {
-                    console.log('Modal already removed:', error);
                   }
                 });
 
@@ -5706,7 +5599,6 @@
         }
 
         deleteAllPhotos() {
-          console.log(`🗑️ Deleting all ${this.photos.length} photos...`);
 
           // Clear the photos array
           this.photos = [];
@@ -5776,7 +5668,6 @@
                 const constraints = this.getIOSCameraConstraints();
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
               } catch (backCameraError) {
-                console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
                 const aspectRatio = this.getAspectRatio();
                 const targetAspectRatio = aspectRatio.width / aspectRatio.height;
 
@@ -5857,7 +5748,6 @@
                   const constraints = this.getIOSCameraConstraints();
                   stream = await navigator.mediaDevices.getUserMedia(constraints);
                 } catch (backCameraError) {
-                  console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
                   const aspectRatio = this.getAspectRatio();
                   const targetAspectRatio = aspectRatio.width / aspectRatio.height;
 
@@ -6074,7 +5964,6 @@
                 radio.addEventListener('change', (e) => {
                   if (e.target.checked) {
                     const newTemplate = e.target.value;
-                    console.log('Changing template for this photo to:', newTemplate);
                     
                     // Show loading state
                     const imgElement = modal.querySelector('#fullscreen-photo');
@@ -6111,7 +6000,6 @@
         }
         
         captureComparisonPhoto(video, stream, beforePhoto) {
-          console.log('📸 Capturing comparison photo with aspect ratio:', this.currentAspectRatio || beforePhoto.aspectRatio);
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
@@ -6164,7 +6052,6 @@
           previewCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, previewCanvas.width, previewCanvas.height);
           const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
-          console.log(`📸 After Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Preview: ${previewCanvas.width}x${previewCanvas.height}`);
 
           // Automatically save the "after" photo with both preview and original
           this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, beforePhoto, videoWidth, videoHeight);
@@ -6188,7 +6075,6 @@
                 }
               }
             } catch (error) {
-              console.log('Modal already removed:', error);
             }
           });
 
@@ -6199,7 +6085,6 @@
           setTimeout(() => {
             // Check if photo was taken from gallery dummy card
             if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery) {
-              console.log('Returning to gallery after photo from dummy card');
               
               // Clear the gallery return context
               this.galleryReturnContext = null;
@@ -6260,12 +6145,10 @@
             unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
             const nextBeforePhoto = unpairedBeforePhotos[0];
             
-            console.log('Auto-cycling to next before photo:', nextBeforePhoto);
             
             // Open comparison modal with the next before photo
             this.showPhotoFullscreen(nextBeforePhoto);
           } else {
-            console.log('All before photos in room', room, 'have been paired with after photos');
 
             // Restore UI when all photos are paired - return to gallery
             this.showMainRoomTabs();
@@ -6316,7 +6199,6 @@
               const constraints = this.getIOSCameraConstraints();
               stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (backCameraError) {
-              console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
               const aspectRatio = this.getAspectRatio();
               const targetAspectRatio = aspectRatio.width / aspectRatio.height;
 
@@ -6439,11 +6321,9 @@
           if (existingAfterPhotoIndex !== -1) {
             // Replace existing after photo
             this.photos[existingAfterPhotoIndex] = afterPhoto;
-            console.log('Replaced existing after photo for before photo:', beforePhoto.id);
           } else {
             // Add new after photo
             this.photos.push(afterPhoto);
-            console.log('Added new after photo for before photo:', beforePhoto.id);
           }
 
           // Create small uncropped combined thumbnail for gallery display
@@ -6458,7 +6338,6 @@
         createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
           // Use current global template if none specified
           const actualTemplateType = templateType || this.currentTemplate;
-          console.log('Creating combined photo automatically for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
 
           // Find the original before/after photo objects for aspect ratio info
           const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
@@ -6472,7 +6351,6 @@
         }
 
         createCombinedThumbnail(beforeDataUrl, afterDataUrl, room, photoName) {
-          console.log('Creating uncropped combined thumbnail for gallery display:', room, photoName);
 
           // Create image objects to get dimensions
           const beforeImg = new Image();
@@ -6503,7 +6381,6 @@
                 canvasHeight = thumbnailSize;
               }
 
-              console.log(`📸 Creating thumbnail: ${canvasWidth}x${canvasHeight}, layout: ${avgAspectRatio <= 1.0 ? 'side-by-side' : 'stacked'}`);
 
               // Create canvas
               const canvas = document.createElement('canvas');
@@ -6587,11 +6464,9 @@
 
           // Draw the entire image fitted within the area
           ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-          console.log(`🖼️ Thumbnail fit: ${img.width}x${img.height} → (${drawX.toFixed(1)},${drawY.toFixed(1)},${drawWidth.toFixed(1)},${drawHeight.toFixed(1)}) in area (${canvasX},${canvasY},${canvasWidth},${canvasHeight})`);
         }
 
         saveCombinedThumbnail(thumbnailDataUrl, room, photoName) {
-          console.log('Saving uncropped combined thumbnail:', photoName);
 
           // Remove any existing thumbnail for this photo pair
           const existingThumbnailIndex = this.photos.findIndex(p =>
@@ -6610,15 +6485,12 @@
           if (existingThumbnailIndex !== -1) {
             // Replace existing thumbnail
             this.photos[existingThumbnailIndex] = thumbnailPhoto;
-            console.log('Replaced existing thumbnail for:', photoName);
           } else {
             // Add new thumbnail
             this.photos.push(thumbnailPhoto);
-            console.log('Added new thumbnail for:', photoName);
           }
 
           this.savePhotos();
-          console.log('📸 Thumbnail saved successfully');
         }
 
         showTemplateSelector(beforePhoto, afterPhoto) {
@@ -6764,7 +6636,6 @@
         }
 
         regenerateCombinedPhoto(beforePhoto, afterPhoto, templateType) {
-          console.log('Regenerating combined photo with template:', templateType);
           
           // Remove existing formatted photos for this before/after pair
           this.photos = this.photos.filter(p =>
@@ -6790,7 +6661,6 @@
         }
 
         changeGlobalTemplate(newTemplate) {
-          console.log('Changing global template from', this.currentTemplate, 'to', newTemplate);
           
           this.currentTemplate = newTemplate;
           
@@ -6816,7 +6686,6 @@
             }
           });
           
-          console.log('Found', beforeAfterPairs.length, 'photo pairs to regenerate');
           
           // Remove all existing combined photos
           this.photos = this.photos.filter(p => p.mode !== 'mix');
@@ -6876,8 +6745,6 @@
                     }
                   }, 1000);
                   
-                  console.log('Template change complete:', newTemplate);
-                  console.log('Total photos after regeneration:', this.photos.length);
                 }, 500);
               }
             }, index * 100); // Stagger the regeneration to avoid overwhelming the browser
@@ -6893,10 +6760,6 @@
         }
 
         regenerateSpecificPhoto(photo, newTemplate, modal) {
-          console.log('Photo:', photo);
-          console.log('New template:', newTemplate);
-          console.log('Modal:', modal);
-          console.log('Current photos count:', this.photos.length);
           
           // Find the before and after photos that created this combined photo
           const beforePhoto = this.photos.find(p => 
@@ -6906,8 +6769,6 @@
             p.mode === 'after' && p.room === photo.room && p.name === photo.name
           );
           
-          console.log('Found before photo:', beforePhoto);
-          console.log('Found after photo:', afterPhoto);
           
           if (!beforePhoto || !afterPhoto) {
             console.error('Could not find before/after photos for regeneration');
@@ -6933,7 +6794,6 @@
           // Remove the old combined photo from the array
           const photoIndex = this.photos.findIndex(p => p.id === photo.id);
           if (photoIndex !== -1) {
-            console.log('Removing old photo at index:', photoIndex);
             this.photos.splice(photoIndex, 1);
           }
           
@@ -6955,7 +6815,6 @@
         createCombinedPhotoWithCallback(beforeDataUrl, afterDataUrl, room, photoName, templateType = null, callback) {
           // Use current global template if none specified
           const actualTemplateType = templateType || this.currentTemplate;
-          console.log('Creating combined photo with callback for room:', room, 'with name:', photoName, 'template:', actualTemplateType);
 
           // Find the original before/after photo objects for aspect ratio info
           const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
@@ -6970,7 +6829,6 @@
 
 
         saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, templateType = 'default', callback) {
-          console.log('saveCombinedPhoto with callback called with name:', photoName, 'template:', templateType);
           
           // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
@@ -6983,7 +6841,6 @@
             timestamp: Date.now()
           };
           
-          console.log('Created combined photo with callback:', combinedPhoto);
           
           // Add the combined photo
           this.photos.push(combinedPhoto);
@@ -6997,7 +6854,6 @@
         }
 
         handlePhotoRegenerated(createdPhoto, modal, originalPhotoInfo) {
-          console.log('Handling photo regeneration with created photo:', createdPhoto);
           
           // Update the image in the modal
           const imgElement = modal.querySelector('#fullscreen-photo');
@@ -7043,20 +6899,16 @@
           // Reattach template selector listeners to the modal
           this.reattachTemplateListeners(modal, createdPhoto);
           
-          console.log('Photo regeneration complete with template:', createdPhoto.templateType);
         }
 
         reattachTemplateListeners(modal, photo) {
-          console.log('Reattaching template listeners for photo:', photo);
           
           if (!modal || !photo || photo.mode !== 'mix') {
-            console.log('Skipping template listener reattachment - not a combined photo');
             return;
           }
           
           // Reattach radio button listeners (always visible now)
           const templateRadios = modal.querySelectorAll('input[name="template-selector"]');
-          console.log('Found template radios:', templateRadios.length);
           
           templateRadios.forEach(radio => {
             // Remove existing listeners by cloning
@@ -7067,7 +6919,6 @@
             newRadio.addEventListener('change', (e) => {
               if (e.target.checked) {
                 const newTemplate = e.target.value;
-                console.log('Template changed to:', newTemplate);
                 
                 // Show loading state
                 const imgElement = modal.querySelector('#fullscreen-photo');
@@ -7081,7 +6932,6 @@
             });
           });
           
-          console.log('Template listeners reattached successfully');
         }
         
         
@@ -7133,7 +6983,6 @@
                 }
               }
             } catch (error) {
-              console.log('Split screen modal already removed:', error);
             }
           }
 
@@ -7149,7 +6998,6 @@
                 }
               }
             } catch (error) {
-              console.log('Modal already removed:', error);
             }
           });
 
@@ -7282,7 +7130,6 @@
         }
         
         saveCombinedPhoto(combinedDataUrl, room, photoName, templateType = 'default') {
-          console.log('saveCombinedPhoto called with name:', photoName, 'template:', templateType);
           
           // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
@@ -7295,12 +7142,9 @@
             timestamp: Date.now()
           };
           
-          console.log('Created combined photo:', combinedPhoto);
 
           // Add the combined photo
           this.photos.push(combinedPhoto);
-          console.log('📸 Added combined photo to photos array. Total photos:', this.photos.length);
-          console.log('📸 Photos array now contains:', this.photos.map(p => `${p.mode} - ${p.name} (${p.room})`));
 
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
@@ -7310,7 +7154,6 @@
           // Update UI immediately
           const photosContainer = document.getElementById('photos-container');
           if (photosContainer) {
-            console.log('📸 Updating main photos grid after combined photo creation');
             photosContainer.innerHTML = this.getPhotosHTML();
             this.attachPhotoListeners();
           }
@@ -7327,11 +7170,9 @@
         }
         
         async openCamera() {
-          console.log('Opening camera...');
 
           // Prevent multiple camera modals from opening simultaneously
           if (this.isOpeningCamera) {
-            console.log('Camera already opening, ignoring request');
             return;
           }
           this.isOpeningCamera = true;
@@ -7360,7 +7201,6 @@
               const constraints = this.getIOSCameraConstraints();
               stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (backCameraError) {
-              console.log('iPhone optimized camera not available, trying fallback:', backCameraError);
               const aspectRatio = this.getAspectRatio();
               const targetAspectRatio = aspectRatio.width / aspectRatio.height;
 
@@ -7383,7 +7223,6 @@
             modal.innerHTML = this.getBeforePhotoModalHTML();
             
             document.body.appendChild(modal);
-            console.log('Before photo modal created and added to DOM');
 
             // Prevent background scrolling when modal is open
             document.body.style.overflow = 'hidden';
@@ -7393,10 +7232,8 @@
             this.showCameraButton();
             
             const video = document.getElementById('camera-video');
-            console.log('Video element found:', video);
             if (video) {
               video.srcObject = stream;
-              console.log('Stream assigned to video');
             } else {
               console.error('Video element not found!');
             }
@@ -7507,7 +7344,6 @@
 
         // Get camera constraints for maximum sensor area
         getIOSCameraConstraints() {
-          console.log(`Requesting maximum camera sensor area for ${this.currentAspectRatio}`);
 
           // Request 4:3 aspect ratio to match iPhone native camera's full sensor area
           // iPhone sensor is 4032×3024 (4:3 ratio) - same as native camera app
@@ -7520,7 +7356,6 @@
             }
           };
 
-          console.log('Requesting 4:3 camera constraints to match native camera sensor:', constraints);
           return constraints;
         }
 
@@ -7528,15 +7363,12 @@
         switchAspectRatio() {
           const previousRatio = this.currentAspectRatio;
           this.currentAspectRatio = this.currentAspectRatio === '4:3' ? '2:3' : '4:3';
-          console.log('🔄 Switched aspect ratio from', previousRatio, 'to', this.currentAspectRatio);
 
           // Update UI button text
           const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
           if (aspectRatioBtn) {
             aspectRatioBtn.textContent = this.currentAspectRatio;
-            console.log('Updated button text to:', this.currentAspectRatio);
           } else {
-            console.log('Aspect ratio button not found when trying to update text');
           }
 
           // Update the visual overlay immediately
@@ -7544,7 +7376,6 @@
 
           // Skip camera restart entirely - both modes use same 4:3 camera constraints
           // Only video styling and frame overlays change between modes
-          console.log('Skipped camera restart - both modes use same 4:3 camera stream');
         }
 
         // Restart camera with new aspect ratio
@@ -7564,7 +7395,6 @@
             const newStream = await navigator.mediaDevices.getUserMedia(constraints);
             videoElement.srcObject = newStream;
 
-            console.log('Camera restarted with new aspect ratio:', this.currentAspectRatio);
           } catch (error) {
             console.error('Failed to restart camera with new aspect ratio:', error);
             // Fallback to basic constraints
@@ -7588,13 +7418,11 @@
         initializeAspectRatioButton() {
           const aspectRatioBtn = document.getElementById('aspect-ratio-btn');
           if (!aspectRatioBtn) {
-            console.log('Aspect ratio button not found');
             return;
           }
 
           // Set button text to current aspect ratio
           aspectRatioBtn.textContent = this.currentAspectRatio || '4:3';
-          console.log('Initialized aspect ratio button with:', this.currentAspectRatio || '4:3');
 
           // Remove any existing event listeners by cloning the button
           const newBtn = aspectRatioBtn.cloneNode(true);
@@ -7604,7 +7432,6 @@
           newBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Aspect ratio button clicked');
             this.switchAspectRatio();
           });
         }
@@ -7815,7 +7642,6 @@
           
           const zoomControls = document.getElementById(zoomControlsId);
           if (!zoomControls) {
-            console.log('Zoom controls not found for mode:', mode);
             return;
           }
 
@@ -7872,7 +7698,6 @@
           try {
             const videoTracks = stream.getVideoTracks();
             if (videoTracks.length === 0) {
-              console.log('No video tracks found');
               return;
             }
 
@@ -7888,13 +7713,11 @@
               };
               
               await track.applyConstraints(constraints);
-              console.log(`Applied zoom: ${zoomLevel}x`);
             } else {
               // Fallback: use CSS transform for devices that don't support zoom constraints
               const video = document.getElementById(videoElementId);
               if (video) {
                 video.style.transform = `scale(${zoomLevel})`;
-                console.log(`Applied CSS zoom fallback: ${zoomLevel}x`);
               }
             }
           } catch (error) {
@@ -7904,7 +7727,6 @@
             const video = document.getElementById(videoElementId);
             if (video) {
               video.style.transform = `scale(${zoomLevel})`;
-              console.log(`Applied CSS zoom fallback after error: ${zoomLevel}x`);
             }
           }
         }
@@ -7932,7 +7754,6 @@
         }
 
         capturePhoto(video, stream) {
-          console.log('📸 Capturing before photo with aspect ratio:', this.currentAspectRatio);
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
@@ -7985,7 +7806,6 @@
           previewCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, previewCanvas.width, previewCanvas.height);
           const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
-          console.log(`📸 Before Video: ${videoWidth}x${videoHeight}, Crop: ${cropWidth}x${cropHeight} at (${cropX},${cropY}), Preview: ${previewCanvas.width}x${previewCanvas.height}`);
           
           // First photos are always "before" photos
           const photoMode = 'before';
@@ -8007,10 +7827,7 @@
             originalHeight: videoHeight
           };
           
-          console.log('📸 Photo created with aspect ratio:', photo.aspectRatio, 'Current mode:', this.currentAspectRatio);
-          console.log('📸 Full photo object:', photo);
           this.photos.push(photo);
-          console.log('📸 Photos array length:', this.photos.length);
           this.savePhotos();
           
           // Update the before photo grid in the modal
@@ -8039,7 +7856,6 @@
                 const newScrollTop = Math.min(previousScrollTop + heightDifference, maxVisibleScroll);
 
                 beforePhotoGrid.scrollTop = Math.max(0, newScrollTop);
-                console.log('📸 Auto-scrolled up after capturing new photo');
               }
             }, 100);
           }
@@ -8053,7 +7869,6 @@
 
           // Check if photo was taken from gallery dummy card (before photo)
           if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery && this.galleryReturnContext.mode === 'before') {
-            console.log('Before photo taken from gallery dummy card - closing camera and returning to gallery');
             
             // Close the before photo modal
             setTimeout(() => {
@@ -8080,7 +7895,6 @@
                     }
                   }
                 } catch (error) {
-                  console.log('Modal already removed:', error);
                 }
               });
               
@@ -8100,7 +7914,6 @@
             }, 500); // Small delay to let user see the photo was captured
           }
 
-          console.log('Photo capture completed');
         }
 
         attachBeforePhotoListeners() {
@@ -8150,7 +7963,6 @@
               dummy.addEventListener('click', (e) => {
                 // Dummy squares don't do anything special - camera button is already available
                 // They just provide visual feedback that more photos can be taken
-                console.log('Dummy square clicked - camera button should be used for taking photos');
               });
             });
           }, 100);
@@ -8183,7 +7995,6 @@
             const removedCount = this.photos.length - maxPhotos;
             this.photos = this.photos.slice(0, maxPhotos);
 
-            console.log(`🧹 Removed ${removedCount} oldest photos to free up storage`);
 
             // Try saving again
             try {
@@ -8205,7 +8016,6 @@
         }
 
         compressPhotosAndSave() {
-          console.log('🗜️ Attempting to compress photos...');
 
           // Compress images by reducing quality
           const compressedPhotos = this.photos.map(photo => {
@@ -8282,12 +8092,10 @@
             savedAt: Date.now()
           };
           localStorage.setItem('user-preferences', JSON.stringify(userData));
-          console.log('User preferences saved:', userData);
         }
 
         clearUserData() {
           localStorage.removeItem('user-preferences');
-          console.log('User preferences cleared');
         }
 
         showChangeUserWarning() {
