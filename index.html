@@ -2007,6 +2007,9 @@
                 <button id="cancel-upload" style="background: #f5f5f5; color: #666; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f5f5f5'">
                   Cancel
                 </button>
+                <button id="preview-formats" style="background: #303030; color: #F2C31B; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#404040'" onmouseout="this.style.background='#303030'">
+                  👁️ Preview
+                </button>
                 <button id="start-upload" style="background: #F2C31B; color: #303030; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#E6B800'" onmouseout="this.style.background='#F2C31B'">
                   📤 Start Upload
                 </button>
@@ -2329,6 +2332,11 @@
             this.handleUploadStart(modal);
           });
 
+          // Preview formats button
+          document.getElementById('preview-formats').addEventListener('click', () => {
+            this.showFormatPreview(modal);
+          });
+
           // Update album name and URL when city changes
           document.getElementById('upload-city-select').addEventListener('change', (e) => {
             const albumNameInput = document.getElementById('album-name-input');
@@ -2544,6 +2552,260 @@
             formats: selectedFormats,
             photoTypes
           });
+        }
+
+        showFormatPreview(uploadModal) {
+          // Get the selected formats from the upload modal
+          const selectedFormats = {
+            'instagram-facebook': document.getElementById('format-instagram-facebook').checked,
+            'square-sidebyside': document.getElementById('format-square-sidebyside').checked,
+            'square-stack': document.getElementById('format-square-stack').checked,
+            'landscape-sidebyside': document.getElementById('format-landscape-sidebyside').checked,
+            'landscape-stack': document.getElementById('format-landscape-stack').checked,
+            'instagram-landscape': document.getElementById('format-instagram-landscape').checked
+          };
+
+          // Filter only selected formats
+          const activeFormats = Object.keys(selectedFormats).filter(key => selectedFormats[key]);
+
+          if (activeFormats.length === 0) {
+            alert('Please select at least one format to preview');
+            return;
+          }
+
+          // Find any before/after photo pair to use for preview generation
+          const beforePhotos = this.photos.filter(photo => photo.mode === 'before');
+          if (beforePhotos.length === 0) {
+            alert('No before photos available for preview. Please take some before/after photos first.');
+            return;
+          }
+
+          // Use the first before photo and try to find its corresponding after photo
+          const sampleBefore = beforePhotos[0];
+          const sampleAfter = this.photos.find(photo =>
+            photo.mode === 'after' &&
+            photo.room === sampleBefore.room &&
+            photo.name === sampleBefore.name
+          );
+
+          if (!sampleAfter) {
+            alert('No matching before/after photo pairs available for preview.');
+            return;
+          }
+
+          // Create preview modal
+          const previewModal = document.createElement('div');
+          previewModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 3001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+          `;
+
+          // Generate preview content
+          let previewContent = `
+            <div style="background: white; border-radius: 16px; padding: 24px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+              <!-- Header -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #F2C31B; padding-bottom: 16px;">
+                <h2 style="margin: 0; color: #303030; font-size: 28px; font-weight: bold;">👁️ Format Preview</h2>
+                <button id="close-preview-modal" style="background: none; border: none; font-size: 28px; color: #666; cursor: pointer; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='#F2C31B'" onmouseout="this.style.color='#666'">✕</button>
+              </div>
+
+              <!-- Preview explanation -->
+              <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #F2C31B;">
+                <p style="margin: 0; color: #303030; font-size: 16px; line-height: 1.5;">
+                  <strong>Preview Mode:</strong> Shows how your selected formats will appear for download vs. display.<br>
+                  <strong>Sample Photo:</strong> ${sampleBefore.name} - ${sampleBefore.room}
+                </p>
+              </div>
+
+              <!-- Format previews -->
+              <div style="display: grid; gap: 32px;">
+          `;
+
+          // Add preview for each selected format
+          activeFormats.forEach(format => {
+            const formatName = this.getFormatDisplayName(format);
+            previewContent += `
+              <div style="border: 2px solid #e1e5e9; border-radius: 12px; padding: 20px; background: #fafbfc;">
+                <h3 style="margin: 0 0 16px 0; color: #303030; font-size: 20px; font-weight: bold; border-bottom: 1px solid #e1e5e9; padding-bottom: 8px;">
+                  ${formatName}
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                  <!-- Preview Mode -->
+                  <div style="text-align: center;">
+                    <h4 style="margin: 0 0 12px 0; color: #666; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Preview Mode</h4>
+                    <div style="border: 2px dashed #F2C31B; border-radius: 8px; padding: 16px; background: #fff9e6; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                      <img id="preview-${format}" src="" style="max-width: 100%; max-height: 180px; object-fit: contain; border-radius: 4px;" />
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; font-style: italic;">Optimized for quick preview</p>
+                  </div>
+
+                  <!-- Download Mode -->
+                  <div style="text-align: center;">
+                    <h4 style="margin: 0 0 12px 0; color: #666; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Download Ready</h4>
+                    <div style="border: 2px solid #303030; border-radius: 8px; padding: 16px; background: #f8f9fa; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                      <img id="download-${format}" src="" style="max-width: 100%; max-height: 180px; object-fit: contain; border-radius: 4px;" />
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; font-style: italic;">High quality for final use</p>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+
+          previewContent += `
+              </div>
+
+              <!-- Action buttons -->
+              <div style="margin-top: 32px; display: flex; gap: 12px; justify-content: flex-end; border-top: 2px solid #e1e5e9; padding-top: 20px;">
+                <button id="close-preview-btn" style="background: #f5f5f5; color: #666; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background='#f5f5f5'">
+                  Close Preview
+                </button>
+                <button id="back-to-upload" style="background: #F2C31B; color: #303030; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#E6B800'" onmouseout="this.style.background='#F2C31B'">
+                  Back to Upload
+                </button>
+              </div>
+            </div>
+          `;
+
+          previewModal.innerHTML = previewContent;
+          document.body.appendChild(previewModal);
+
+          // Generate the actual format variations
+          this.generateFormatPreviews(sampleBefore, sampleAfter, activeFormats);
+
+          // Add event listeners
+          this.setupPreviewModalListeners(previewModal);
+        }
+
+        getFormatDisplayName(format) {
+          const formatNames = {
+            'instagram-facebook': 'Instagram / Facebook Feed (4:5)',
+            'square-sidebyside': 'Square Side-by-Side (1:1)',
+            'square-stack': 'Square Stack (1:1)',
+            'landscape-sidebyside': 'Landscape Side-by-Side (16:9)',
+            'landscape-stack': 'Landscape Stack (16:9)',
+            'instagram-landscape': 'Instagram / Facebook Landscape (1.91:1)'
+          };
+          return formatNames[format] || format;
+        }
+
+        async generateFormatPreviews(beforePhoto, afterPhoto, formats) {
+          for (const format of formats) {
+            try {
+              // Map format to templateType for the existing logic
+              const templateType = this.mapFormatToTemplateType(format);
+
+              // Generate preview version (lower quality, optimized for quick display)
+              const previewData = await this.createCombinedPhotoForFormat(
+                beforePhoto, afterPhoto, templateType, 'preview'
+              );
+              const previewImg = document.getElementById(`preview-${format}`);
+              if (previewImg && previewData) {
+                previewImg.src = previewData;
+              }
+
+              // Generate download version (high quality, ready for final use)
+              const downloadData = await this.createCombinedPhotoForFormat(
+                beforePhoto, afterPhoto, templateType, 'download'
+              );
+              const downloadImg = document.getElementById(`download-${format}`);
+              if (downloadImg && downloadData) {
+                downloadImg.src = downloadData;
+              }
+            } catch (error) {
+              console.error(`Error generating preview for format ${format}:`, error);
+            }
+          }
+        }
+
+        mapFormatToTemplateType(format) {
+          const formatMapping = {
+            'instagram-facebook': 'portrait',
+            'square-sidebyside': 'square_side',
+            'square-stack': 'square_stack',
+            'landscape-sidebyside': 'sidebyside_landscape',
+            'landscape-stack': 'landscape',
+            'instagram-landscape': 'blog'
+          };
+          return formatMapping[format] || 'default';
+        }
+
+        async createCombinedPhotoForFormat(beforePhoto, afterPhoto, templateType, mode = 'download') {
+          return new Promise((resolve) => {
+            // Use the existing createCombinedPhotoInMemory logic but apply quality mode
+            this.createCombinedPhotoInMemory(
+              beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+              afterPhoto.originalDataUrl || afterPhoto.dataUrl,
+              templateType,
+              beforePhoto,
+              afterPhoto,
+              (combinedDataUrl) => {
+                if (mode === 'preview') {
+                  // For preview mode, compress/scale down the result
+                  this.compressImageForPreview(combinedDataUrl).then(resolve);
+                } else {
+                  // For download mode, use the full quality result
+                  resolve(combinedDataUrl);
+                }
+              }
+            );
+          });
+        }
+
+        async compressImageForPreview(dataUrl) {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+
+              // Scale down for preview (50% size)
+              canvas.width = Math.round(img.naturalWidth * 0.5);
+              canvas.height = Math.round(img.naturalHeight * 0.5);
+
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+              // Lower quality for faster display
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              resolve(compressedDataUrl);
+            };
+            img.src = dataUrl;
+          });
+        }
+
+        setupPreviewModalListeners(previewModal) {
+          // Close buttons
+          const closeBtn = document.getElementById('close-preview-btn');
+          const closeModalBtn = document.getElementById('close-preview-modal');
+          const backBtn = document.getElementById('back-to-upload');
+
+          const closePreview = () => {
+            document.body.removeChild(previewModal);
+          };
+
+          if (closeBtn) closeBtn.addEventListener('click', closePreview);
+          if (closeModalBtn) closeModalBtn.addEventListener('click', closePreview);
+          if (backBtn) backBtn.addEventListener('click', closePreview);
+
+          // ESC key handler
+          const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+              closePreview();
+              document.removeEventListener('keydown', handleEscape);
+            }
+          };
+          document.addEventListener('keydown', handleEscape);
         }
 
         processUpload(options) {
@@ -3315,86 +3577,127 @@
           });
         }
 
-        async generatePhotoFormat(photo, format) {
-          console.log(`🔄 generatePhotoFormat called with format: ${format}`);
+        async generatePhotoFormat(photo, format, mode = 'download') {
+          console.log(`🔄 generatePhotoFormat called with format: ${format}, mode: ${mode}`);
+
+          // For combined photos, generate the proper layout for the specific format
+          if (photo.mode === 'mix') {
+            return this.generateCombinedPhotoForUpload(photo, format, mode);
+          }
+
+          // For regular photos (before/after), don't apply format transformations
+          // These should be uploaded in their original form only
+          console.log(`📸 Before/After photo should not be format-transformed, returning original`);
+
+          // Return the original photo data without any transformations
+          return Promise.resolve(photo.originalDataUrl || photo.dataUrl);
+        }
+
+        async generateCombinedPhotoForUpload(combinedPhoto, format, mode = 'download') {
+          console.log(`🔄 generateCombinedPhotoForUpload called with format: ${format}, mode: ${mode}`);
+
+          // Find the original before/after photos for this combined photo
+          const beforePhoto = this.photos.find(p =>
+            p.mode === 'before' &&
+            p.room === combinedPhoto.room &&
+            p.name === combinedPhoto.name
+          );
+          const afterPhoto = this.photos.find(p =>
+            p.mode === 'after' &&
+            p.room === combinedPhoto.room &&
+            p.name === combinedPhoto.name
+          );
+
+          if (!beforePhoto || !afterPhoto) {
+            console.error('Could not find original before/after photos for upload format generation');
+            // Fallback to just resizing the existing combined photo
+            return this.resizePhotoForFormat(combinedPhoto, format, mode);
+          }
+
+          // Map format to templateType and generate the proper layout
+          const templateType = this.mapFormatToTemplateType(format);
+
+          return new Promise((resolve) => {
+            this.createCombinedPhotoInMemory(
+              beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+              afterPhoto.originalDataUrl || afterPhoto.dataUrl,
+              templateType,
+              beforePhoto,
+              afterPhoto,
+              (combinedDataUrl) => {
+                resolve(combinedDataUrl);
+              }
+            );
+          });
+        }
+
+        async resizePhotoForFormat(photo, format, mode = 'download') {
+          // Fallback method - just resize existing photo
           return new Promise((resolve, reject) => {
             try {
               const img = new Image();
               img.onload = () => {
-                console.log(`📐 Converting ${photo.name} to ${format} format`);
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
+
                 // Define format dimensions
                 let targetWidth, targetHeight;
-                
+                const previewScale = mode === 'preview' ? 0.5 : 1;
+
                 switch (format) {
                   case 'instagram-facebook':
-                    // 4:5 aspect ratio (portrait)
-                    targetWidth = 1080;
-                    targetHeight = 1350;
+                    targetWidth = Math.round(1080 * previewScale);
+                    targetHeight = Math.round(1350 * previewScale);
                     break;
                   case 'square-sidebyside':
                   case 'square-stack':
-                    // 1:1 aspect ratio (square) - both split types use same dimensions
-                    targetWidth = 1080;
-                    targetHeight = 1080;
+                    targetWidth = Math.round(1080 * previewScale);
+                    targetHeight = Math.round(1080 * previewScale);
                     break;
                   case 'landscape-sidebyside':
                   case 'landscape-stack':
-                    // 16:9 aspect ratio (landscape) - both split types use same dimensions
-                    targetWidth = 1920;
-                    targetHeight = 1080;
+                    targetWidth = Math.round(1920 * previewScale);
+                    targetHeight = Math.round(1080 * previewScale);
                     break;
                   case 'instagram-landscape':
-                    // 1.91:1 aspect ratio (Instagram landscape)
-                    targetWidth = 1200;
-                    targetHeight = 630;
+                    targetWidth = Math.round(1200 * previewScale);
+                    targetHeight = Math.round(630 * previewScale);
                     break;
                   default:
-                    targetWidth = img.naturalWidth;
-                    targetHeight = img.naturalHeight;
+                    targetWidth = Math.round(img.naturalWidth * previewScale);
+                    targetHeight = Math.round(img.naturalHeight * previewScale);
                 }
-                
+
                 canvas.width = targetWidth;
                 canvas.height = targetHeight;
-                
-                console.log(`🎯 Target dimensions for ${format}: ${targetWidth}x${targetHeight}`);
-                console.log(`📏 Original image: ${img.naturalWidth}x${img.naturalHeight}`);
-                
-                // Calculate scaling to fill the target dimensions (crop instead of letterbox)
+
                 const scaleX = targetWidth / img.naturalWidth;
                 const scaleY = targetHeight / img.naturalHeight;
-                const scale = Math.max(scaleX, scaleY); // Use max to fill and crop
+                const scale = Math.max(scaleX, scaleY);
 
                 const scaledWidth = img.naturalWidth * scale;
                 const scaledHeight = img.naturalHeight * scale;
 
-                // Center the scaled image (this will crop excess)
                 const offsetX = (targetWidth - scaledWidth) / 2;
                 const offsetY = (targetHeight - scaledHeight) / 2;
 
-                // No white background needed - image will fill entire canvas
-                // Draw the scaled image (cropped to fit)
                 ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
-                
-                // Convert to data URL
+
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                console.log(`✅ Format conversion complete for ${photo.name}: ${format} (${targetWidth}x${targetHeight})`);
                 resolve(dataUrl);
               };
-              
+
               img.onerror = () => {
-                reject(new Error('Failed to load image for format conversion'));
+                reject(new Error('Failed to load image for resizing'));
               };
 
-              // Use original photo if available, otherwise fall back to cropped preview
               img.src = photo.originalDataUrl || photo.dataUrl;
             } catch (error) {
               reject(error);
             }
           });
         }
+
 
         openCameraFromGallery(room, name, mode) {
           console.log('Opening camera from gallery:', { room, name, mode });
