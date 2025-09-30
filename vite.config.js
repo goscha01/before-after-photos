@@ -60,6 +60,21 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     target: ['es2015', 'safari11'], // Target iOS Safari 11+
+    minify: 'terser', // Use terser for better compatibility
+    terserOptions: {
+      format: {
+        comments: false,
+        ascii_only: true // Ensure ASCII-only output for better compatibility
+      },
+      compress: {
+        arrows: false, // Don't use arrow functions
+        booleans: false, // Don't optimize booleans at all
+        booleans_as_integers: false // Don't convert booleans to !0/!1
+      },
+      mangle: {
+        safari10: true // Additional Safari compatibility
+      }
+    },
     rollupOptions: {
       output: {
         format: 'iife', // Use IIFE format for better compatibility
