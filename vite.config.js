@@ -14,6 +14,8 @@ function removeModuleAttribute() {
 export default defineConfig({
   plugins: [
     removeModuleAttribute(),
+    // Temporarily disable PWA to debug caching issues
+    /*
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
@@ -37,6 +39,7 @@ export default defineConfig({
         ]
       }
     })
+    */
   ],
   define: {
     // Replace environment variables in HTML file for vanilla JS
