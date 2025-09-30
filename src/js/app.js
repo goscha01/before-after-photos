@@ -5099,6 +5099,9 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         captureComparisonPhoto(video, stream, beforePhoto) {
+          // IMMEDIATE alert to confirm function is called
+          alert('captureComparisonPhoto called!');
+
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
@@ -5110,9 +5113,8 @@ import * as PhotoEditor from './photoEditor.js';
           console.log('==============================');
 
           // Visual debug for phone testing
-          const debugMsg = `AFTER Photo Captured:\n${videoWidth}x${videoHeight}\nAspect: ${(videoWidth/videoHeight).toFixed(2)}\nBefore ratio: ${beforePhoto.aspectRatio}`;
+          const debugMsg = `AFTER Photo:\nVideo: ${videoWidth}x${videoHeight}\nAspect: ${(videoWidth/videoHeight).toFixed(2)}\nBefore ratio: ${beforePhoto.aspectRatio}`;
           console.log(debugMsg);
-          // Show on screen for phone testing
           alert(debugMsg);
 
           // Store the full original photo
