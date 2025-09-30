@@ -1,217 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#F2C31B" />
-    <meta name="description" content="Mobile-first cleaning photo documentation app" />
+import * as Utils from './utils.js';
+import * as Storage from './storage.js';
+import * as PhotoEditor from './photoEditor.js';
 
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-    <!-- Prevent zoom on input fields -->
-    <meta name="format-detection" content="telephone=no" />
-
-    <!-- Status bar styling for iOS -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Cleaning App" />
-    
-    <!-- Additional iOS compatibility -->
-    <meta name="apple-touch-fullscreen" content="yes" />
-    <meta name="apple-mobile-web-app-orientations" content="portrait" />
-
-    <title>Cleaning Photo App</title>
-
-    <!-- Google Fonts - Quicksand -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-      /* Prevent flash of unstyled content */
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Quicksand', sans-serif;
-        background-color: #f8fafc;
-        color: #1e293b;
-        overscroll-behavior-y: auto;
-        overscroll-behavior-x: none;
-        overflow-x: hidden;
-        width: 100vw;
-        max-width: 100vw;
-        height: 100vh;
-      }
-      
-      * {
-        box-sizing: border-box;
-      }
-      
-      /* Hide scrollbars for swipeable elements */
-      #room-tabs-container::-webkit-scrollbar {
-        display: none;
-      }
-      
-      #room-tabs-container {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-
-      /* Loading spinner */
-      .loading-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8fafc;
-        z-index: 9999;
-      }
-
-      .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid #e2e8f0;
-        border-top: 3px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-
-      /* Hide loading once React loads */
-      #root:not(:empty) + .loading-container {
-        display: none;
-      }
-
-      /* Debug info */
-      .debug-info {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 12px;
-        z-index: 10000;
-        max-width: 300px;
-      }
-    </style>
-    <script src="config.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
-    
-    <!-- Debug info (hidden by default) -->
-    <div class="debug-info" id="debug-info" style="display: none;">
-      <div>📱 User Agent: <span id="user-agent">Loading...</span></div>
-      <div>🌐 Location: <span id="location">Loading...</span></div>
-      <div>⏰ Time: <span id="time">Loading...</span></div>
-    </div>
-    
-    <script>
-      // Basic debug info
-      
-      // Update debug info
-      document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
-      document.getElementById('location').textContent = window.location.href;
-      document.getElementById('time').textContent = new Date().toLocaleTimeString();
-      
-      // Check if we're on iOS
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      
-      if (isIOS) {
-        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">🍎 iOS Detected</div>';
-      }
-      
-      // Check if React loads
-      let loadTimer = setTimeout(() => {
-        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ Page Failed to Load</div>';
-      }, 10000);
-      
-      // Clear timer when page loads
-      window.addEventListener('load', () => {
-        clearTimeout(loadTimer);
-      });
-
-      // Check for JavaScript errors
-      window.addEventListener('error', (e) => {
-        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ JS Error: ' + e.error.message + '</div>';
-      });
-      
-      // Check for unhandled promise rejections
-      window.addEventListener('unhandledrejection', (e) => {
-        document.getElementById('debug-info').innerHTML += '<div style="color: #ff6b6b;">❌ Promise Error: ' + e.reason + '</div>';
-      });
-      
-      // Monitor script loading
-      const scripts = document.querySelectorAll('script[type="module"]');
-      scripts.forEach((script, index) => {
-        script.addEventListener('load', () => {
-          document.getElementById('debug-info').innerHTML += '<div style="color: green;">✅ Script ' + index + ' loaded</div>';
-        });
-        script.addEventListener('error', (e) => {
-          document.getElementById('debug-info').innerHTML += '<div style="color: red;">❌ Script ' + index + ' failed: ' + e.message + '</div>';
-        });
-      });
-      
-      // Check if main.jsx loads
-    </script>
-    
-    <!-- Simple JavaScript test -->
-    <script>
-      
-      // Test if we can create DOM elements
-      try {
-        const testDiv = document.createElement('div');
-        testDiv.innerHTML = '<div style="color: green;">✅ Basic JavaScript Works!</div>';
-        document.getElementById('debug-info').appendChild(testDiv);
-      } catch (e) {
-      }
-      
-    </script>
-    
-    <!-- Try a very simple inline test first -->
-    <script>
-      try {
-        const root = document.getElementById('root');
-        if (root) {
-          root.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Inline Script Works!</h1><p>JavaScript is executing on iPhone!</p></div>';
-        } else {
-        }
-      } catch (e) {
-      }
-    </script>
-    
-    <!-- Try regular script (not module) -->
-    <script>
-      
-      try {
-        const rootElement = document.getElementById('root');
-        if (rootElement) {
-          rootElement.innerHTML = '<div style="padding: 20px; color: green; font-family: Arial, sans-serif;"><h1>✅ Regular Script Works!</h1><p>This proves regular JavaScript works on iOS Safari.</p><p>Now loading bundled React app...</p></div>';
-        }
-      } catch (error) {
-      }
-    </script>
-    
-    <!-- iOS Safari Compatible Cleaning Photo App -->
-    <script>
-      
-      // Simple photo documentation app
       class CleaningPhotoApp {
         constructor() {
           this.photos = [];
@@ -221,8 +11,12 @@
           this.currentTemplate = 'default'; // Default template for all photos
           this.currentBeforeZoom = 1; // Initialize default zoom level
           this.currentAspectRatio = '4:3'; // Initialize aspect ratio
-          this.labelsEnabled = true; // Toggle for BEFORE/AFTER labels (default: on)
-          this.loadPhotos(); // Load photos first
+
+          // Load settings from storage
+          const settings = Storage.loadSettings();
+          this.labelsEnabled = settings.labelsEnabled !== undefined ? settings.labelsEnabled : true; // Toggle for BEFORE/AFTER labels (default: on)
+
+          this.photos = Storage.loadPhotos(); // Load photos from storage
           this.init();
         }
         
@@ -234,7 +28,7 @@
           
           // If no URL params, check localStorage for stored user data
           if (!cleaner || !location) {
-            const storedUserData = this.getStoredUserData();
+            const storedUserData = Storage.getStoredUserData();
             if (storedUserData.cleaner && storedUserData.location) {
               // Auto-login with stored data
               cleaner = storedUserData.cleaner;
@@ -350,7 +144,7 @@
         }
 
         populateStoredUserData() {
-          const storedData = this.getStoredUserData();
+          const storedData = Storage.getStoredUserData();
           if (storedData.cleaner || storedData.location) {
             const nameInput = document.getElementById('signin-name');
             const cityInput = document.getElementById('signin-city');
@@ -473,7 +267,7 @@
           }
 
           // Save user data to localStorage for future use
-          this.saveUserData(name, city);
+          Storage.saveUserData(name, city);
 
           // Update URL with parameters and reload
           const newUrl = `${window.location.origin}${window.location.pathname}?cleaner=${encodeURIComponent(name)}&location=${encodeURIComponent(city)}`;
@@ -496,185 +290,12 @@
         }
 
         // Modal utility functions
-        createModal(content, options = {}) {
-          const modal = document.createElement('div');
-          modal.style.cssText = options.style || `
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.8); z-index: ${options.zIndex || 1000};
-            display: flex; align-items: center; justify-content: center;
-          `;
-          modal.innerHTML = content;
-          document.body.appendChild(modal);
-          document.body.style.overflow = 'hidden';
 
-          return modal;
-        }
 
-        closeModal(modal, options = {}) {
-          if (modal && modal.parentNode) {
-            document.body.removeChild(modal);
-          }
-          document.body.style.overflow = '';
-          if (options.onClose) options.onClose();
-        }
 
-        attachModalCloseHandlers(modal, closeCallback, options = {}) {
-          const handleClose = () => {
-            closeCallback();
-            if (options.onClose) options.onClose();
-          };
-
-          // Close button
-          if (options.closeButtonId) {
-            const closeBtn = document.getElementById(options.closeButtonId);
-            if (closeBtn) {
-              closeBtn.addEventListener('click', handleClose);
-            }
-          }
-
-          // Background click to close
-          if (options.closeOnBackdrop !== false) {
-            modal.addEventListener('click', (e) => {
-              if (e.target === modal) {
-                handleClose();
-              }
-            });
-          }
-
-          // Escape key to close
-          if (options.closeOnEscape !== false) {
-            const handleEscape = (e) => {
-              if (e.key === 'Escape') {
-                handleClose();
-                document.removeEventListener('keydown', handleEscape);
-              }
-            };
-            document.addEventListener('keydown', handleEscape);
-          }
-        }
-
-        cleanupExistingModals(zIndex = null, options = {}) {
-          const selector = zIndex
-            ? `[style*="position: fixed"][style*="z-index: ${zIndex}"]`
-            : '[style*="position: fixed"][style*="z-index"]';
-
-          const existingModals = document.querySelectorAll(selector);
-          existingModals.forEach(existing => {
-            try {
-              // Skip if excluded by ID
-              if (options.excludeIds && options.excludeIds.some(id => existing.id === id || existing.id.includes(id))) {
-                return;
-              }
-
-              if (existing.parentNode) {
-                if (existing.parentNode === document.body) {
-                  document.body.removeChild(existing);
-                } else {
-                  existing.parentNode.removeChild(existing);
-                }
-              }
-            } catch (error) {
-              // Silently ignore errors during cleanup
-            }
-          });
-        }
 
         // Canvas label drawing utility
-        drawCanvasLabel(ctx, text, canvasWidth, canvasHeight, position = {}) {
-          const labelSize = Math.max(20, Math.floor(canvasWidth / 30));
-          ctx.font = `bold ${labelSize}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
 
-          const pad = labelSize * 0.5;
-          const measure = ctx.measureText(text);
-
-          const x = position.x !== undefined ? position.x : pad;
-          const y = position.y !== undefined ? position.y : pad;
-
-          const bgWidth = measure.width + pad * 2;
-          const bgHeight = labelSize + pad * 1.2;
-
-          // Background
-          ctx.fillStyle = 'rgba(0,0,0,0.8)';
-          ctx.fillRect(x, y, bgWidth, bgHeight);
-
-          // Text (centered horizontally and vertically within the background)
-          ctx.fillStyle = 'white';
-          ctx.fillText(text, x + bgWidth / 2, y + bgHeight / 2);
-        }
-
-        getTemplateSizes() {
-          // Template sizes based on mode (stack vs side-by-side) and target formats
-          return {
-            // Stack Mode Templates (horizontal originals → stacked vertically)
-            'stack-portrait': {
-              width: 1080,
-              height: 1350,
-              ratio: '4:5',
-              combinedRatio: '2:3',
-              splitType: 'horizontal-line',
-              description: 'Instagram/LinkedIn Portrait (4:5)',
-              cropInfo: 'Best fit for portrait feeds'
-            },
-            'stack-square': {
-              width: 1080,
-              height: 1080,
-              ratio: '1:1',
-              combinedRatio: '2:3',
-              splitType: 'horizontal-line',
-              description: 'Square (1:1)',
-              cropInfo: '~15% top/bottom crop'
-            },
-            'stack-landscape': {
-              width: 1920,
-              height: 1080,
-              ratio: '16:9',
-              combinedRatio: '2:3',
-              splitType: 'horizontal-line',
-              description: 'Landscape Wide (16:9)',
-              cropInfo: 'Significant crop - less ideal'
-            },
-
-            // Side-by-Side Mode Templates (vertical originals → placed left-right)
-            'sidebyside-landscape': {
-              width: 1200,
-              height: 630,
-              ratio: '1.91:1',
-              combinedRatio: '3:2',
-              splitType: 'vertical-line',
-              description: 'Instagram/Facebook Landscape (1.91:1)',
-              cropInfo: 'Best fit for landscape feeds'
-            },
-            'sidebyside-wide': {
-              width: 1920,
-              height: 1080,
-              ratio: '16:9',
-              combinedRatio: '3:2',
-              splitType: 'vertical-line',
-              description: 'Wide Landscape (16:9)',
-              cropInfo: 'Great for presentations/websites'
-            },
-            'sidebyside-square': {
-              width: 1080,
-              height: 1080,
-              ratio: '1:1',
-              combinedRatio: '3:2',
-              splitType: 'vertical-line',
-              description: 'Square (1:1)',
-              cropInfo: '~15% left/right crop'
-            },
-            'sidebyside-portrait': {
-              width: 1080,
-              height: 1350,
-              ratio: '4:5',
-              combinedRatio: '3:2',
-              splitType: 'vertical-line',
-              description: 'Portrait (4:5)',
-              cropInfo: 'Heavy crop - vertical split'
-            }
-          };
-        }
 
         calculatePhotoCropDimensions(width, height, templateType, orientation) {
           // Simple fallback for crop dimensions
@@ -688,51 +309,7 @@
           };
         }
 
-        drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions) {
-          // Horizontal Split: Stack Mode - before image on top, after image on bottom (horizontal line between them)
-          // Used for horizontal originals (4:3) stacked vertically
-          // Combined photo fills the entire template canvas - no white bars
 
-          const halfHeight = templateDimensions.targetHeight / 2;
-
-
-          // Draw before image (top half) - crop from original image to fill exactly
-          this.drawImageWithProperCrop(ctx, beforeImg, 0, 0, templateDimensions.targetWidth, halfHeight);
-
-          // Draw after image (bottom half) - crop from original image to fill exactly
-          this.drawImageWithProperCrop(ctx, afterImg, 0, halfHeight, templateDimensions.targetWidth, halfHeight);
-
-          // Draw horizontal divider line (separating top and bottom)
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(0, halfHeight);
-          ctx.lineTo(templateDimensions.targetWidth, halfHeight);
-          ctx.stroke();
-        }
-
-        drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions) {
-          // Vertical Split: Side-by-Side Mode - before image on left, after image on right (vertical line between them)
-          // Used for vertical originals (2:3) placed side-by-side
-          // Combined photo fills the entire template canvas - no white bars
-
-          const halfWidth = templateDimensions.targetWidth / 2;
-
-
-          // Draw before image (left half) - crop from original image to fill exactly
-          this.drawImageWithProperCrop(ctx, beforeImg, 0, 0, halfWidth, templateDimensions.targetHeight);
-
-          // Draw after image (right half) - crop from original image to fill exactly
-          this.drawImageWithProperCrop(ctx, afterImg, halfWidth, 0, halfWidth, templateDimensions.targetHeight);
-
-          // Draw vertical divider line (separating left and right)
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(halfWidth, 0);
-          ctx.lineTo(halfWidth, templateDimensions.targetHeight);
-          ctx.stroke();
-        }
 
         drawImageWithProperCrop(ctx, img, canvasX, canvasY, canvasWidth, canvasHeight) {
           // Calculate the aspect ratios
@@ -765,46 +342,6 @@
         }
 
 
-        addPhotoLabels(ctx, canvasWidth, canvasHeight, splitType) {
-          // Add "BEFORE" and "AFTER" labels at top-left corners
-          ctx.font = 'bold 24px Arial';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-
-          const padding = 20;
-          const labelWidth = 120;
-          const labelHeight = 40;
-
-          if (splitType === 'vertical' || splitType === 'horizontal-line') {
-            // Stack Mode - labels at top-left corners of each section
-
-            // BEFORE label (top-left of top section)
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(padding, padding, labelWidth, labelHeight);
-            ctx.fillStyle = 'white';
-            ctx.fillText('BEFORE', padding + labelWidth/2, padding + labelHeight/2);
-
-            // AFTER label (top-left of bottom section)
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(padding, canvasHeight/2 + padding, labelWidth, labelHeight);
-            ctx.fillStyle = 'white';
-            ctx.fillText('AFTER', padding + labelWidth/2, canvasHeight/2 + padding + labelHeight/2);
-          } else {
-            // Side-by-Side Mode - labels at top-left corners of each section
-
-            // BEFORE label (top-left of left section)
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(padding, padding, labelWidth, labelHeight);
-            ctx.fillStyle = 'white';
-            ctx.fillText('BEFORE', padding + labelWidth/2, padding + labelHeight/2);
-
-            // AFTER label (top-left of right section)
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(canvasWidth/2 + padding, padding, labelWidth, labelHeight);
-            ctx.fillStyle = 'white';
-            ctx.fillText('AFTER', canvasWidth/2 + padding + labelWidth/2, padding + labelHeight/2);
-          }
-        }
         
         getBeforePhotoModalHTML() {
           if (this.isLandscape) {
@@ -1170,10 +707,15 @@
                   </button>
                 </div>
 
-                <!-- Right side - Upload button -->
-                <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
-                  📤 Upload
-                </button>
+                <!-- Right side - Upload button and label toggle -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button id="label-toggle-btn" style="background: ${this.labelsEnabled ? '#303030' : '#ccc'}; color: ${this.labelsEnabled ? '#F2C31B' : '#666'}; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;" title="Toggle BEFORE/AFTER labels">
+                    🏷️
+                  </button>
+                  <button id="header-upload-btn" style="background: #303030; color: #F2C31B; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
+                    📤 Upload
+                  </button>
+                </div>
               </div>
 
               <!-- Fixed Room Tabs (at bottom) -->
@@ -1573,10 +1115,37 @@
 
           return html;
         }
-        
+
+        showToast(message, duration = 2000) {
+          const toast = document.createElement('div');
+          toast.textContent = message;
+          toast.style.cssText = `
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(48, 48, 48, 0.95);
+            color: #F2C31B;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10000;
+            animation: fadeInOut ${duration}ms ease-in-out;
+          `;
+
+          document.body.appendChild(toast);
+
+          setTimeout(() => {
+            if (toast.parentNode) {
+              document.body.removeChild(toast);
+            }
+          }, duration);
+        }
+
         showAllPhotosModal() {
           // Clean up any existing modals first
-          this.cleanupExistingModals(2500);
+          Utils.cleanupExistingModals(2500);
 
           const modal = document.createElement('div');
           modal.style.cssText = `
@@ -1688,7 +1257,7 @@
 
 
           // Close on background click
-          this.attachModalCloseHandlers(modal, () => this.closeAllPhotosModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => this.closeAllPhotosModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: false
           });
@@ -1768,7 +1337,7 @@
 
         showUploadOptionsPopup() {
           // Close any existing modals
-          this.cleanupExistingModals(3000);
+          Utils.cleanupExistingModals(3000);
 
           // Get current location from URL or default
           const urlParams = new URLSearchParams(window.location.search);
@@ -2176,7 +1745,7 @@
           });
 
           // Close on background click
-          this.attachModalCloseHandlers(modal, () => this.closeModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => Utils.closeModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: true
           });
@@ -2237,7 +1806,7 @@
           });
 
           // Close on background click
-          this.attachModalCloseHandlers(modal, () => this.closeModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => Utils.closeModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: true
           });
@@ -2649,9 +2218,9 @@
         async createCombinedPhotoForFormat(beforePhoto, afterPhoto, templateType, mode = 'download') {
           return new Promise((resolve) => {
             // Use the existing createCombinedPhotoInMemory logic but apply quality mode
-            this.createCombinedPhotoInMemory(
-              beforePhoto.originalDataUrl || beforePhoto.dataUrl,
-              afterPhoto.originalDataUrl || afterPhoto.dataUrl,
+            PhotoEditor.createCombinedPhotoInMemory(
+              beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+              afterPhoto.originalDataUrlNoLabel || afterPhoto.originalDataUrl || afterPhoto.dataUrl,
               templateType,
               beforePhoto,
               afterPhoto,
@@ -3232,9 +2801,9 @@
           const templateType = this.mapFormatToTemplateType(format);
 
           return new Promise((resolve) => {
-            this.createCombinedPhotoInMemory(
-              beforePhoto.originalDataUrl || beforePhoto.dataUrl,
-              afterPhoto.originalDataUrl || afterPhoto.dataUrl,
+            PhotoEditor.createCombinedPhotoInMemory(
+              beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+              afterPhoto.originalDataUrlNoLabel || afterPhoto.originalDataUrl || afterPhoto.dataUrl,
               templateType,
               beforePhoto,
               afterPhoto,
@@ -3776,8 +3345,8 @@
           }
 
           // Close on background click
-          this.attachModalCloseHandlers(modal, () => {
-            this.closeModal(modal);
+          Utils.attachModalCloseHandlers(modal, () => {
+            Utils.closeModal(modal);
             // Return to the appropriate view based on source
             if (source === 'allPhotosModal') {
               // Don't reopen All Photos modal - it's still there underneath
@@ -3871,9 +3440,9 @@
           }
           
           // Generate combined photo without storing it - use original full resolution photos
-          const beforeDataUrl = beforePhoto.originalDataUrl || beforePhoto.dataUrl; // Fallback to cropped if no original
-          const afterDataUrl = afterPhoto.originalDataUrl || afterPhoto.dataUrl; // Fallback to cropped if no original
-          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+          const beforeDataUrl = beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl; // Fallback chain
+          const afterDataUrl = afterPhoto.originalDataUrlNoLabel || afterPhoto.originalDataUrl || afterPhoto.dataUrl; // Fallback chain
+          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
             // Update modal with generated photo
             const imgElement = modal.querySelector('#fullscreen-photo');
             if (imgElement) {
@@ -3902,113 +3471,6 @@
           }, this.labelsEnabled);
         }
 
-        createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, callback, labelsEnabled = true) {
-
-          // Create image objects to get dimensions
-          const beforeImg = new Image();
-          const afterImg = new Image();
-          
-          let imagesLoaded = 0;
-          const totalImages = 2;
-          
-          const onImageLoad = () => {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-              // Determine layout based on actual image dimensions
-              const beforeAspectRatio = beforeImg.width / beforeImg.height;
-              const afterAspectRatio = afterImg.width / afterImg.height;
-              const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
-
-              // Use actual image dimensions to determine orientation
-              // If average aspect ratio > 1.0, images are wider than tall (horizontal/landscape)
-              // If average aspect ratio <= 1.0, images are taller than wide (vertical/portrait)
-              const isHorizontalPhoto = avgAspectRatio > 1.0;
-
-              const baseMode = isHorizontalPhoto ? 'stack' : 'sidebyside';
-
-
-              // Get template definition
-              const templates = this.getTemplateSizes();
-              let templateKey = templateType || 'default';
-
-              // Map legacy template names to new format
-
-              // Map legacy template names to new format
-              // Respect actual image orientation for better results
-              if (templateType === 'default') {
-                templateKey = baseMode === 'stack' ? 'stack-portrait' : 'sidebyside-landscape';
-              } else if (templateType === 'portrait') {
-                // For vertical originals, use side-by-side layout; for horizontal, use stack
-                templateKey = baseMode === 'stack' ? 'stack-portrait' : 'sidebyside-landscape';
-              } else if (templateType === 'square') {
-                templateKey = baseMode === 'stack' ? 'stack-square' : 'sidebyside-square';
-              } else if (templateType === 'square_stack') {
-                templateKey = 'stack-square';
-              } else if (templateType === 'square_side') {
-                templateKey = 'sidebyside-square';
-              } else if (templateType === 'landscape') {
-                // For horizontal originals, stack them; for vertical, use side-by-side
-                templateKey = baseMode === 'stack' ? 'stack-landscape' : 'sidebyside-landscape';
-              } else if (templateType === 'sidebyside_landscape') {
-                templateKey = 'sidebyside-wide';
-              } else if (templateType === 'blog') {
-                templateKey = 'sidebyside-landscape';
-              }
-
-
-              const template = templates[templateKey] || templates['stack-portrait'];
-
-              const templateDimensions = {
-                targetWidth: template.width,
-                targetHeight: template.height,
-                splitType: template.splitType,
-                ratio: template.ratio,
-                baseMode: baseMode
-              };
-
-
-              // Create canvas
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-
-              canvas.width = templateDimensions.targetWidth;
-              canvas.height = templateDimensions.targetHeight;
-
-              // No white background - images will fill the entire canvas
-              
-              // Apply cropping and positioning
-              ctx.save();
-              ctx.beginPath();
-              ctx.rect(0, 0, canvas.width, canvas.height);
-              ctx.clip();
-              
-              if (templateDimensions.splitType === 'horizontal-line') {
-                // Horizontal line split = Stack Mode (horizontal line between top/bottom)
-                this.drawHorizontalSplit(ctx, beforeImg, afterImg, templateDimensions);
-              } else {
-                // Vertical line split = Side-by-Side Mode (vertical line between left/right)
-                this.drawVerticalSplit(ctx, beforeImg, afterImg, templateDimensions);
-              }
-              
-              ctx.restore();
-
-              // Add labels only if enabled
-              if (labelsEnabled) {
-                this.addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
-              }
-
-              // Convert to data URL and return via callback
-              const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-              callback(combinedDataUrl);
-            }
-          };
-          
-          // Load images
-          beforeImg.onload = onImageLoad;
-          afterImg.onload = onImageLoad;
-          beforeImg.src = beforeDataUrl;
-          afterImg.src = afterDataUrl;
-        }
 
         updateTemplateVisualSelection(modal, selectedTemplate) {
           // Update the visual state of all template labels
@@ -4038,7 +3500,7 @@
           
           img.onload = () => {
             // Get template dimensions
-            const templateSizes = this.getTemplateSizes();
+            const templateSizes = PhotoEditor.getTemplateSizes();
             const targetTemplate = templateSizes[templateType] || templateSizes.default;
             
             // Detect photo orientation
@@ -4677,12 +4139,12 @@
           if (bottomPanel) bottomPanel.style.display = 'none';
           if (aspectRatioControls) aspectRatioControls.style.display = 'none';
           if (zoomControlsPanel) zoomControlsPanel.style.display = 'none';
-          
+
           // Restore main content padding in landscape mode
           if (this.isLandscape) {
             this.adjustMainContentForRightPanel(false);
           }
-          
+
           if (cameraBtn) {
             cameraBtn.style.display = 'none';
             // Reset camera button styling to original
@@ -4925,7 +4387,24 @@
               this.showUploadOptionsPopup();
             });
           }
-          
+
+          // Label toggle button - toggle BEFORE/AFTER labels
+          const labelToggleBtn = document.getElementById('label-toggle-btn');
+          if (labelToggleBtn) {
+            labelToggleBtn.addEventListener('click', () => {
+              this.labelsEnabled = !this.labelsEnabled;
+              Storage.saveSettings({ labelsEnabled: this.labelsEnabled });
+
+              // Update button appearance
+              labelToggleBtn.style.background = this.labelsEnabled ? '#303030' : '#ccc';
+              labelToggleBtn.style.color = this.labelsEnabled ? '#F2C31B' : '#666';
+
+              // Show feedback
+              const feedback = this.labelsEnabled ? 'Labels enabled ✓' : 'Labels disabled';
+              this.showToast(feedback);
+            });
+          }
+
           // All Photos button - show all photos modal
           const allPhotosBtn = document.getElementById('all-photos-btn');
           if (allPhotosBtn) {
@@ -4962,7 +4441,7 @@
                 this.closeSplitScreenPreview();
 
                 // Clean up any remaining modals (exclude permanent UI elements)
-                this.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+                Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
 
                 // Restore scrolling if no camera modals remain
                 this.restoreScrollingIfNoCameraModals();
@@ -5015,7 +4494,7 @@
 
         showDeleteConfirmation(photoType, room, photoIndex) {
           // Clean up any existing confirmation modals first
-          this.cleanupExistingModals(3000);
+          Utils.cleanupExistingModals(3000);
 
           const modal = document.createElement('div');
           modal.style.cssText = `
@@ -5076,7 +4555,7 @@
           });
 
           // Close on background click and Escape key
-          this.attachModalCloseHandlers(modal, () => this.closeModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => Utils.closeModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: true
           });
@@ -5174,7 +4653,7 @@
 
         showDeleteAllConfirmation() {
           // Clean up any existing confirmation modals first
-          this.cleanupExistingModals(3000);
+          Utils.cleanupExistingModals(3000);
 
           const modal = document.createElement('div');
           modal.style.cssText = `
@@ -5217,7 +4696,7 @@
           });
 
           // Close on background click and Escape key
-          this.attachModalCloseHandlers(modal, () => this.closeModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => Utils.closeModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: true
           });
@@ -5373,13 +4852,10 @@
                   const constraints = this.getIOSCameraConstraints();
                   stream = await navigator.mediaDevices.getUserMedia(constraints);
                 } catch (backCameraError) {
-                  const aspectRatio = this.getAspectRatio();
-                  const targetAspectRatio = aspectRatio.width / aspectRatio.height;
-
                   stream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                      facingMode: 'environment',
-                      aspectRatio: targetAspectRatio
+                      facingMode: 'environment'
+                      // Remove aspectRatio constraint to capture full native resolution
                     }
                   });
                 }
@@ -5460,8 +4936,8 @@
               });
 
               // Close on background click
-              this.attachModalCloseHandlers(modal, () => {
-                this.closeModal(modal);
+              Utils.attachModalCloseHandlers(modal, () => {
+                Utils.closeModal(modal);
                 // Restore UI elements when closing regular photo fullscreen
                 this.showMainRoomTabs();
               }, {
@@ -5611,8 +5087,8 @@
             });
 
             // Close on background click
-            this.attachModalCloseHandlers(modal, () => {
-              this.closeModal(modal);
+            Utils.attachModalCloseHandlers(modal, () => {
+              Utils.closeModal(modal);
               // Restore UI elements when closing regular photo fullscreen
               this.showMainRoomTabs();
             }, {
@@ -5626,6 +5102,11 @@
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
+          console.log('=== CAPTURE DEBUG ===');
+          console.log('Video dimensions:', videoWidth, 'x', videoHeight);
+          console.log('Video aspect ratio:', (videoWidth / videoHeight).toFixed(3));
+          console.log('====================');
+
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
           const originalCtx = originalCanvas.getContext('2d');
@@ -5633,8 +5114,13 @@
           originalCanvas.height = videoHeight;
           originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
 
-          // Add AFTER label to original using utility function
-          this.drawCanvasLabel(originalCtx, 'AFTER', originalCanvas.width, originalCanvas.height);
+          // Save version without label (for PhotoEditor to combine)
+          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.8);
+
+          // Add label to original if labels are enabled
+          if (this.labelsEnabled !== false) { // Default to true
+            Utils.drawCanvasLabel(originalCtx, 'AFTER', originalCanvas.width, originalCanvas.height);
+          }
 
           const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
 
@@ -5678,20 +5164,22 @@
 
           previewCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, previewCanvas.width, previewCanvas.height);
 
-          // Add AFTER label to preview using utility function
-          this.drawCanvasLabel(previewCtx, 'AFTER', previewCanvas.width, previewCanvas.height);
+          // Add AFTER label to preview if labels are enabled
+          if (this.labelsEnabled !== false) {
+            Utils.drawCanvasLabel(previewCtx, 'AFTER', previewCanvas.width, previewCanvas.height);
+          }
 
           const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
 
           // Automatically save the "after" photo with both preview and original
-          this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, beforePhoto, videoWidth, videoHeight);
+          this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
 
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
 
           // Close modal overlays only (exclude permanent UI elements)
-          this.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+          Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
 
           // Restore scrolling if no camera modals remain
           this.restoreScrollingIfNoCameraModals();
@@ -5883,7 +5371,7 @@
           this.savePhotos();
         }
 
-        saveAfterPhotoToAll(afterPhotoDataUrl, originalDataUrl, beforePhoto, videoWidth, videoHeight) {
+        saveAfterPhotoToAll(afterPhotoDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight) {
           // Check if there's already an after photo linked to this before photo
           const existingAfterPhotoIndex = this.photos.findIndex(p =>
             p.mode === 'after' && p.beforePhotoId === beforePhoto.id
@@ -5896,6 +5384,7 @@
             id: Date.now(),
             dataUrl: afterPhotoDataUrl, // Use cropped preview for display (maintains original UI)
             originalDataUrl: originalDataUrl, // Store full original for combination
+            originalDataUrlNoLabel: originalDataUrlNoLabel, // Store version without label for PhotoEditor
             room: beforePhoto.room,
             mode: 'after', // Save as after photo for split-screen display
             name: afterPhotoName,
@@ -5915,7 +5404,7 @@
           }
 
           // Create a full combined photo with format selector capability
-          this.createCombinedPhoto(beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
+          this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           this.savePhotos();
         }
@@ -5929,7 +5418,7 @@
           const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
 
           // Use createCombinedPhotoInMemory to actually create the photo
-          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
             // Save the combined photo
             this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
           }, this.labelsEnabled);
@@ -5983,7 +5472,7 @@
           );
 
           // Create new combined photo with selected template
-          this.createCombinedPhoto(beforePhoto.dataUrl, afterPhoto.dataUrl, beforePhoto.room, beforePhoto.name, templateType);
+          this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, afterPhoto.originalDataUrlNoLabel || afterPhoto.originalDataUrl || afterPhoto.dataUrl, beforePhoto.room, beforePhoto.name, templateType);
 
           // Update UI
           setTimeout(() => {
@@ -6036,8 +5525,8 @@
           
           // Create new combined photo with the selected template and store reference
           this.createCombinedPhotoWithCallback(
-            beforePhoto.dataUrl,
-            afterPhoto.dataUrl,
+            beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+            afterPhoto.originalDataUrlNoLabel || afterPhoto.originalDataUrl || afterPhoto.dataUrl,
             originalPhotoInfo.room,
             originalPhotoInfo.name,
             newTemplate,
@@ -6058,7 +5547,7 @@
           const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
 
           // Use createCombinedPhotoInMemory to actually create the photo
-          this.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
             // Save the combined photo with callback
             this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, actualTemplateType, callback);
           }, this.labelsEnabled);
@@ -6294,23 +5783,9 @@
               // Draw after photo (bottom half)
               const afterImg = images[1];
               ctx.drawImage(afterImg, 0, halfHeight, canvas.width, halfHeight);
-              
-              // Add labels
-              ctx.fillStyle = 'rgba(0,0,0,0.8)';
-              ctx.font = 'bold 18px Arial';
-              ctx.textAlign = 'center';
-              
-              // Before label
-              ctx.fillRect(canvas.width/2 - 50, 20, 100, 30);
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText('BEFORE', canvas.width/2, 40);
-              
-              // After label
-              ctx.fillStyle = 'rgba(0,0,0,0.8)';
-              ctx.fillRect(canvas.width/2 - 50, halfHeight + 20, 100, 30);
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText('AFTER', canvas.width/2, halfHeight + 40);
-              
+
+              // No need to add labels - they're already baked into the individual photos
+
               // Convert to data URL and save
               const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
               this.saveCombinedPhoto(combinedDataUrl, room);
@@ -6545,15 +6020,14 @@
 
         // Get camera constraints for maximum sensor area
         getIOSCameraConstraints() {
-
-          // Request 4:3 aspect ratio to match iPhone native camera's full sensor area
-          // iPhone sensor is 4032×3024 (4:3 ratio) - same as native camera app
+          // Request maximum resolution without constraining aspect ratio or dimensions
+          // This allows the camera to use its native orientation and sensor size
           const constraints = {
             video: {
               facingMode: 'environment',
-              aspectRatio: { ideal: 4/3 },
-              width: { ideal: 4032 },
-              height: { ideal: 3024 }
+              // Request highest available resolution in any aspect ratio
+              width: { ideal: 9999 },
+              height: { ideal: 9999 }
             }
           };
 
@@ -6902,6 +6376,11 @@
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
+          console.log('=== CAPTURE DEBUG (BEFORE) ===');
+          console.log('Video dimensions:', videoWidth, 'x', videoHeight);
+          console.log('Video aspect ratio:', (videoWidth / videoHeight).toFixed(3));
+          console.log('===============================');
+
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
           const originalCtx = originalCanvas.getContext('2d');
@@ -6909,8 +6388,13 @@
           originalCanvas.height = videoHeight;
           originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
 
-          // Add BEFORE label to original using utility function
-          this.drawCanvasLabel(originalCtx, 'BEFORE', originalCanvas.width, originalCanvas.height);
+          // Save version without label (for PhotoEditor to combine)
+          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.8);
+
+          // Add label to original if labels are enabled
+          if (this.labelsEnabled !== false) { // Default to true
+            Utils.drawCanvasLabel(originalCtx, 'BEFORE', originalCanvas.width, originalCanvas.height);
+          }
 
           const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
 
@@ -6954,17 +6438,10 @@
 
           previewCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, previewCanvas.width, previewCanvas.height);
 
-          // Add BEFORE label to preview
-          const prevLabelSize = Math.max(20, Math.floor(previewCanvas.width / 30));
-          previewCtx.font = `bold ${prevLabelSize}px Arial`;
-          previewCtx.textAlign = 'left';
-          previewCtx.textBaseline = 'top';
-          const prevPad = prevLabelSize * 0.5;
-          const prevMeasure = previewCtx.measureText('BEFORE');
-          previewCtx.fillStyle = 'rgba(0,0,0,0.8)';
-          previewCtx.fillRect(prevPad, prevPad, prevMeasure.width + prevPad * 2, prevLabelSize + prevPad * 1.2);
-          previewCtx.fillStyle = 'white';
-          previewCtx.fillText('BEFORE', prevPad * 2, prevPad * 1.1);
+          // Add BEFORE label to preview if labels are enabled
+          if (this.labelsEnabled !== false) {
+            Utils.drawCanvasLabel(previewCtx, 'BEFORE', previewCanvas.width, previewCanvas.height);
+          }
 
           const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
@@ -6979,6 +6456,7 @@
             id: Date.now(),
             dataUrl: previewDataUrl, // Use cropped preview for display (maintains original UI)
             originalDataUrl: originalDataUrl, // Store full original for combination
+            originalDataUrlNoLabel: originalDataUrlNoLabel, // Store version without label for PhotoEditor
             room: this.currentRoom,
             mode: photoMode,
             name: photoName,
@@ -7226,45 +6704,10 @@
           });
         }
         
-        loadPhotos() {
-          const saved = localStorage.getItem('cleaning-photos');
-          if (saved) {
-            this.photos = JSON.parse(saved);
-          }
-          // Load settings
-          const settings = localStorage.getItem('app-settings');
-          if (settings) {
-            const parsedSettings = JSON.parse(settings);
-            this.labelsEnabled = parsedSettings.labelsEnabled !== undefined ? parsedSettings.labelsEnabled : true;
-          }
-        }
 
         // User data storage methods
-        getStoredUserData() {
-          const stored = localStorage.getItem('user-preferences');
-          if (stored) {
-            try {
-              return JSON.parse(stored);
-            } catch (e) {
-              console.error('Error parsing stored user data:', e);
-              return {};
-            }
-          }
-          return {};
-        }
 
-        saveUserData(cleaner, location) {
-          const userData = {
-            cleaner: cleaner,
-            location: location,
-            savedAt: Date.now()
-          };
-          localStorage.setItem('user-preferences', JSON.stringify(userData));
-        }
 
-        clearUserData() {
-          localStorage.removeItem('user-preferences');
-        }
 
         showChangeUserWarning() {
           // Get current user info for the warning
@@ -7377,12 +6820,12 @@
             document.body.style.overflow = '';
             
             // Clear user data and redirect
-            this.clearUserData();
+            Storage.clearUserData();
             window.location.href = `${window.location.origin}${window.location.pathname}`;
           });
           
           // Close on backdrop click and Escape key
-          this.attachModalCloseHandlers(modal, () => this.closeModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => Utils.closeModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: true
           });
@@ -7390,7 +6833,7 @@
 
         showClearDataWarning(nameInput, cityInput, clearDataContainer) {
           // Get stored user info for the warning
-          const storedData = this.getStoredUserData();
+          const storedData = Storage.getStoredUserData();
           const storedName = storedData.cleaner || 'Unknown User';
           const storedLocation = storedData.location || 'Unknown Location';
           
@@ -7505,7 +6948,7 @@
             document.body.style.overflow = '';
             
             // Clear user data and form
-            this.clearUserData();
+            Storage.clearUserData();
             // Clear the form fields
             if (nameInput) nameInput.value = '';
             if (cityInput) cityInput.value = '';
@@ -7514,7 +6957,7 @@
           });
           
           // Close on backdrop click and Escape key
-          this.attachModalCloseHandlers(modal, () => this.closeModal(modal), {
+          Utils.attachModalCloseHandlers(modal, () => Utils.closeModal(modal), {
             closeOnBackdrop: true,
             closeOnEscape: true
           });
@@ -7627,30 +7070,14 @@
       }
       
       // Initialize app
-      const app = new CleaningPhotoApp();
 
-      // Make app available globally for debugging
-      window.app = app;
-      window.testRoomTabs = () => app.testRoomTabs();
 
-    </script>
-    
-    <!-- Fallback for browsers that don't support ES6 modules -->
-    <script nomodule>
-      document.getElementById('debug-info').innerHTML += '<div style="color: orange;">⚠️ ES6 modules not supported</div>';
-      
-      // Show a simple message instead of React app
-      setTimeout(() => {
-        document.getElementById('root').innerHTML = `
-          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-            <h1>🚫 Browser Compatibility Issue</h1>
-            <p>Your browser doesn't support ES6 modules, which are required for this app.</p>
-            <p>Please update your browser or try a different browser.</p>
-            <p style="color: #666; font-size: 14px;">iOS Safari 10.3+ is required for ES6 module support.</p>
-          </div>
-        `;
-      }, 2000);
-    </script>
-    
-  </body>
-</html>
+export default CleaningPhotoApp;
+
+// Initialize app when DOM is ready
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const app = new CleaningPhotoApp();
+    window.app = app;
+  });
+}

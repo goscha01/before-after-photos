@@ -1,0 +1,122 @@
+[
+  {
+    "name": "getSignInHTML",
+    "start": 171,
+    "end": 209,
+    "lines": 39
+  },
+  {
+    "name": "getBeforePhotoModalHTML",
+    "start": 341,
+    "end": 395,
+    "lines": 55
+  },
+  {
+    "name": "getBeforePhotosGridHTML",
+    "start": 447,
+    "end": 463,
+    "lines": 17
+  },
+  {
+    "name": "getComparisonModalHTML",
+    "start": 512,
+    "end": 569,
+    "lines": 58
+  },
+  {
+    "name": "getSplitScreenPreviewHTML",
+    "start": 619,
+    "end": 650,
+    "lines": 32
+  },
+  {
+    "name": "getAppHTML",
+    "start": 683,
+    "end": 699,
+    "lines": 17
+  },
+  {
+    "name": "getRoomTabsCarousel",
+    "start": 771,
+    "end": 817,
+    "lines": 47
+  },
+  {
+    "name": "getAllPhotosHTML",
+    "start": 820,
+    "end": 830,
+    "lines": 11
+  },
+  {
+    "name": "getTemplateDisplayName",
+    "start": 2969,
+    "end": 2998,
+    "lines": 30
+  },
+  {
+    "name": "getTemplateLayoutType",
+    "start": 3002,
+    "end": 3019,
+    "lines": 18
+  },
+  {
+    "name": "getTemplatePurpose",
+    "start": 3022,
+    "end": 3041,
+    "lines": 20
+  },
+  {
+    "name": "getTemplateMainTitle",
+    "start": 3044,
+    "end": 3063,
+    "lines": 20
+  },
+  {
+    "name": "getEnlargedPhotoHTML",
+    "start": 3066,
+    "end": 3072,
+    "lines": 7
+  },
+  {
+    "name": "getTemplateSelector",
+    "start": 3098,
+    "end": 3133,
+    "lines": 36
+  },
+  {
+    "name": "getStackModeTemplateSelector",
+    "start": 3161,
+    "end": 3168,
+    "lines": 8
+  },
+  {
+    "name": "getSideBySideModeTemplateSelector",
+    "start": 3204,
+    "end": 3211,
+    "lines": 8
+  },
+  {
+    "name": "getPhotosHTML",
+    "start": 3559,
+    "end": 3569,
+    "lines": 11
+  },
+  {
+    "name": "showSuccessNotification",
+    "start": 6915,
+    "end": 6931,
+    "lines": 17
+  },
+  {
+    "name": "removeNotification",
+    "start": 7001,
+    "end": 7007,
+    "lines": 7
+  },
+  {
+    "name": "showUploadSuccessNotification",
+    "start": 7011,
+    "end": 7014,
+    "lines": 4
+  }
+]

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#F2C31B" />
+    <meta name="description" content="Mobile-first cleaning photo documentation app" />
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Prevent zoom on input fields -->
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Status bar styling for iOS -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Cleaning App" />
+
+    <!-- Additional iOS compatibility -->
+    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="apple-mobile-web-app-orientations" content="portrait" />
+
+    <title>Cleaning Photo App</title>
+
+    <!-- Google Fonts - Quicksand -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/src/css/styles.css">
+
+    <!-- Config -->
+    <script src="config.js"></script>
+  </head>
+  <body>
+    <!-- Root element for the app -->
+    <div id="root"></div>
+
+    <!-- Loading indicator (must be directly after root for CSS selector to work) -->
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Debug info (hidden by default) -->
+    <div class="debug-info" id="debug-info" style="display: none;"></div>
+
+    <!-- Main App Module (ES6 Module) -->
+    <script type="module" src="/src/js/app.js"></script>
+  </body>
+</html>
