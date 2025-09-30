@@ -488,7 +488,7 @@ import * as PhotoEditor from './photoEditor.js';
                 <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: ${objectFit};" />
 
                 <!-- Delete button -->
-                <button class="delete-before-photo-btn" data-photo-id="${photo.id}" style="position: absolute; top: 5px; right: 5px; background: #F2C31B; color: #303030; border: none; padding: 6px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#e6b800'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#F2C31B'; this.style.transform='scale(1)'">
+                <button class="delete-before-photo-btn" data-photo-id="${photo.id}" style="position: absolute; top: 5px; right: 5px; background: #F2C31B; color: #303030; border: none; padding: 6px; border-radius: 50%; font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;">
                   ×
                 </button>
                 
@@ -4312,6 +4312,28 @@ import * as PhotoEditor from './photoEditor.js';
               });
             });
 
+            // Delete button functionality for before photos in modal
+            document.querySelectorAll('.delete-before-photo-btn').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const photoId = parseInt(e.target.dataset.photoId);
+                const photoIndex = this.photos.findIndex(p => p.id === photoId);
+                if (photoIndex !== -1) {
+                  this.deletePhoto(photoIndex);
+                }
+              });
+
+              // Add hover effects
+              btn.addEventListener('mouseenter', (e) => {
+                e.target.style.background = '#e6b800';
+                e.target.style.transform = 'scale(1.1)';
+              });
+              btn.addEventListener('mouseleave', (e) => {
+                e.target.style.background = '#F2C31B';
+                e.target.style.transform = 'scale(1)';
+              });
+            });
+
             // Retake button functionality for combined photos (original workflow)
             document.querySelectorAll('.retake-combined-btn').forEach(btn => {
               btn.addEventListener('click', (e) => {
@@ -5277,13 +5299,23 @@ import * as PhotoEditor from './photoEditor.js';
           });
 
           if (unpairedBeforePhotos.length > 0) {
-            // Sort by timestamp to get the next one chronologically
-            unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
-            const nextBeforePhoto = unpairedBeforePhotos[0];
+            console.log('Found', unpairedBeforePhotos.length, 'unpaired before photo(s) - closing camera and returning to gallery');
+            console.log('User can manually select next before photo from gallery');
 
-            console.log('Auto-cycling to next unpaired before photo:', nextBeforePhoto.id);
-            // Open comparison modal with the next before photo
-            this.showPhotoFullscreen(nextBeforePhoto);
+            // Close all camera modals completely
+            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+
+            // Restore UI and return to gallery
+            this.showMainRoomTabs();
+            this.hideActionButtons();
+            document.body.style.overflow = '';
+
+            // Update the photo grid to show current room
+            const photosContainer = document.getElementById('photos-container');
+            if (photosContainer) {
+              photosContainer.innerHTML = this.getPhotosHTML();
+              this.attachPhotoListeners();
+            }
           } else {
             console.log('No more unpaired before photos - closing camera and returning to gallery');
 
