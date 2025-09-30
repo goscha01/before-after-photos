@@ -1,8 +1,19 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Plugin to remove type="module" from script tags for iOS Safari compatibility
+function removeModuleAttribute() {
+  return {
+    name: 'remove-module-attribute',
+    transformIndexHtml(html) {
+      return html.replace(/<script type="module" crossorigin/g, '<script crossorigin');
+    }
+  }
+}
+
 export default defineConfig({
   plugins: [
+    removeModuleAttribute(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
