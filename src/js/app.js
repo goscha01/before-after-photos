@@ -1201,7 +1201,7 @@ import * as PhotoEditor from './photoEditor.js';
                     align-items: center;
                     gap: 4px;
                     transition: background 0.2s;
-                  " onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+                  ">
                     🗑️ Delete All
                   </button>
                   
@@ -1245,14 +1245,24 @@ import * as PhotoEditor from './photoEditor.js';
           });
 
           // Delete All button functionality
-          document.getElementById('delete-all-photos-btn').addEventListener('click', () => {
+          const deleteAllBtn = document.getElementById('delete-all-photos-btn');
+          deleteAllBtn.addEventListener('click', () => {
+            console.log('🗑️ Delete All button clicked');
             // Close the gallery modal first
             this.closeAllPhotosModal(modal);
-            
+
             // Show the delete all confirmation (same as upload button)
             setTimeout(() => {
               this.showDeleteAllConfirmation();
             }, 100);
+          });
+
+          // Add hover effects
+          deleteAllBtn.addEventListener('mouseenter', () => {
+            deleteAllBtn.style.background = '#b91c1c';
+          });
+          deleteAllBtn.addEventListener('mouseleave', () => {
+            deleteAllBtn.style.background = '#dc2626';
           });
 
 
@@ -1296,22 +1306,32 @@ import * as PhotoEditor from './photoEditor.js';
               });
             });
             
+            // Add delete button listeners for gallery photos
+            const deleteButtons = modal.querySelectorAll('.delete-photo-btn');
+            deleteButtons.forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const photoIndex = parseInt(e.target.dataset.photoIndex);
+                this.deletePhoto(photoIndex);
+              });
+            });
+
             // Add dummy card click handlers for camera functionality
             const dummyCards = modal.querySelectorAll('.dummy-card');
             dummyCards.forEach((card) => {
               // Remove any existing listeners by cloning the element
               const newCard = card.cloneNode(true);
               card.parentNode.replaceChild(newCard, card);
-              
+
               newCard.addEventListener('click', (e) => {
                 const room = e.currentTarget.dataset.room;
                 const name = e.currentTarget.dataset.name;
                 const mode = e.currentTarget.dataset.mode;
-                
-                
+
+
                 // Close the all photos modal first
                 this.closeAllPhotosModal(modal);
-                
+
                 // Open camera based on the dummy type
                 setTimeout(() => {
                   if (mode === 'dummy-before') {
@@ -5893,9 +5913,20 @@ import * as PhotoEditor from './photoEditor.js';
           };
 
           console.log('💾 Saving combined photo:', combinedPhoto.name, 'for room:', combinedPhoto.room, 'mode:', combinedPhoto.mode);
+          console.log('📊 BEFORE push - Photos breakdown:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
 
           // Add the combined photo
           this.photos.push(combinedPhoto);
+
+          console.log('📊 AFTER push - Photos breakdown:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
 
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
@@ -5903,7 +5934,7 @@ import * as PhotoEditor from './photoEditor.js';
           this.savePhotos();
 
           console.log('✅ Combined photo saved. Total photos now:', this.photos.length);
-          console.log('📊 Photos breakdown:', {
+          console.log('📊 AFTER savePhotos - Photos breakdown:', {
             before: this.photos.filter(p => p.mode === 'before').length,
             after: this.photos.filter(p => p.mode === 'after').length,
             mix: this.photos.filter(p => p.mode === 'mix').length
