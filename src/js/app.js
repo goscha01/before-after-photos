@@ -5299,23 +5299,13 @@ import * as PhotoEditor from './photoEditor.js';
           });
 
           if (unpairedBeforePhotos.length > 0) {
-            console.log('Found', unpairedBeforePhotos.length, 'unpaired before photo(s) - closing camera and returning to gallery');
-            console.log('User can manually select next before photo from gallery');
+            // Sort by timestamp to get the next one chronologically
+            unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
+            const nextBeforePhoto = unpairedBeforePhotos[0];
 
-            // Close all camera modals completely
-            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
-
-            // Restore UI and return to gallery
-            this.showMainRoomTabs();
-            this.hideActionButtons();
-            document.body.style.overflow = '';
-
-            // Update the photo grid to show current room
-            const photosContainer = document.getElementById('photos-container');
-            if (photosContainer) {
-              photosContainer.innerHTML = this.getPhotosHTML();
-              this.attachPhotoListeners();
-            }
+            console.log('Auto-cycling to next unpaired before photo:', nextBeforePhoto.id);
+            // Open comparison modal with the next before photo
+            this.showPhotoFullscreen(nextBeforePhoto);
           } else {
             console.log('No more unpaired before photos - closing camera and returning to gallery');
 
@@ -5466,16 +5456,31 @@ import * as PhotoEditor from './photoEditor.js';
 
           if (existingAfterPhotoIndex !== -1) {
             // Replace existing after photo
+            console.log('📝 Replacing existing after photo at index:', existingAfterPhotoIndex);
             this.photos[existingAfterPhotoIndex] = afterPhoto;
           } else {
             // Add new after photo
+            console.log('➕ Adding new after photo. Total photos before add:', this.photos.length);
             this.photos.push(afterPhoto);
+            console.log('✅ After photo added. Total photos now:', this.photos.length);
           }
+
+          console.log('📊 Before creating combined - Photos breakdown:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
 
           // Create a full combined photo with format selector capability
           this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           this.savePhotos();
+
+          console.log('📊 After savePhotos - Photos breakdown:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
         }
         
         createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
