@@ -59,7 +59,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    target: 'es2015', // Transpile to ES2015 for better iOS compatibility
+    target: ['es2015', 'safari11'], // Target iOS Safari 11+
     rollupOptions: {
       output: {
         format: 'iife', // Use IIFE format for better compatibility
