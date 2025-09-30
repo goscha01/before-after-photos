@@ -5270,21 +5270,25 @@ import * as PhotoEditor from './photoEditor.js';
           // Find all before photos in this room that don't have corresponding after photos
           const beforePhotos = this.photos.filter(p => p.room === room && p.mode === 'before');
           const afterPhotos = this.photos.filter(p => p.room === room && p.mode === 'after');
-          
+
           // Find before photos that don't have a corresponding after photo
           const unpairedBeforePhotos = beforePhotos.filter(beforePhoto => {
             return !afterPhotos.some(afterPhoto => afterPhoto.beforePhotoId === beforePhoto.id);
           });
-          
+
           if (unpairedBeforePhotos.length > 0) {
             // Sort by timestamp to get the next one chronologically
             unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
             const nextBeforePhoto = unpairedBeforePhotos[0];
-            
-            
+
+            console.log('Auto-cycling to next unpaired before photo:', nextBeforePhoto.id);
             // Open comparison modal with the next before photo
             this.showPhotoFullscreen(nextBeforePhoto);
           } else {
+            console.log('No more unpaired before photos - closing camera and returning to gallery');
+
+            // Close all camera modals completely
+            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
 
             // Restore UI when all photos are paired - return to gallery
             this.showMainRoomTabs();
@@ -5839,7 +5843,7 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         saveCombinedPhoto(combinedDataUrl, room, photoName, templateType = 'default') {
-          
+
           // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
             id: Date.now(),
@@ -5850,7 +5854,8 @@ import * as PhotoEditor from './photoEditor.js';
             templateType: templateType, // Store template type for future reference
             timestamp: Date.now()
           };
-          
+
+          console.log('💾 Saving combined photo:', combinedPhoto.name, 'for room:', combinedPhoto.room, 'mode:', combinedPhoto.mode);
 
           // Add the combined photo
           this.photos.push(combinedPhoto);
@@ -5859,6 +5864,13 @@ import * as PhotoEditor from './photoEditor.js';
           // The combined photo will appear in All Photos gallery separately
 
           this.savePhotos();
+
+          console.log('✅ Combined photo saved. Total photos now:', this.photos.length);
+          console.log('📊 Photos breakdown:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
 
           // Update UI immediately
           const photosContainer = document.getElementById('photos-container');

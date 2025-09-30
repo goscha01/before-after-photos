@@ -190,9 +190,9 @@ export function createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templat
       const isHorizontalPhoto = avgAspectRatio > 1.0;
 
       console.log('Is horizontal photo?', isHorizontalPhoto);
-      console.log('Base mode:', isHorizontalPhoto ? 'stack' : 'sidebyside');
+      console.log('Base mode:', isHorizontalPhoto ? 'sidebyside' : 'stack');
 
-      const baseMode = isHorizontalPhoto ? 'stack' : 'sidebyside';
+      const baseMode = isHorizontalPhoto ? 'sidebyside' : 'stack';
 
       // Get template definition
       const templates = getTemplateSizes();
