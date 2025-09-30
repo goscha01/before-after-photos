@@ -64,16 +64,22 @@ export default defineConfig({
     terserOptions: {
       format: {
         comments: false,
-        ascii_only: true // Ensure ASCII-only output for better compatibility
+        ascii_only: true, // Ensure ASCII-only output for better compatibility
+        ecma: 2015 // Use ES2015 syntax
       },
       compress: {
+        ecma: 2015,
         arrows: false, // Don't use arrow functions
         booleans: false, // Don't optimize booleans at all
-        booleans_as_integers: false // Don't convert booleans to !0/!1
+        booleans_as_integers: false, // Don't convert booleans to !0/!1
+        unsafe: false,
+        unsafe_math: false,
+        unsafe_proto: false
       },
       mangle: {
         safari10: true // Additional Safari compatibility
-      }
+      },
+      ecma: 2015
     },
     rollupOptions: {
       output: {

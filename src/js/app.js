@@ -198,7 +198,7 @@ import * as PhotoEditor from './photoEditor.js';
                 </select>
 
                 <!-- Start Button -->
-                <button type="submit" id="signin-btn" style="width: 100%; background: #000000 !important; background-color: #000000 !important; color: #ffffff !important; border: none !important; padding: 16px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-family: 'Quicksand', sans-serif; margin-top: 20px; position: relative; z-index: 100; box-shadow: none !important; outline: none !important; opacity: 1 !important;" onmouseover="this.style.background='#333333' !important; this.style.backgroundColor='#333333' !important; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#000000' !important; this.style.backgroundColor='#000000' !important; this.style.transform='translateY(0)'">
+                <button type="submit" id="signin-btn" style="width: 100%; background: #000000; background-color: #000000; color: #ffffff; border: none; padding: 16px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-family: 'Quicksand', sans-serif; margin-top: 20px; position: relative; z-index: 100; box-shadow: none; outline: none; opacity: 1;" onmouseover="this.style.background='#333333'; this.style.backgroundColor='#333333'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#000000'; this.style.backgroundColor='#000000'; this.style.transform='translateY(0)'">
                   Start
                 </button>
                 
