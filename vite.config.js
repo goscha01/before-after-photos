@@ -45,9 +45,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    target: 'es2015', // Transpile to ES2015 for better iOS compatibility
     rollupOptions: {
       output: {
-        format: 'es', // Keep ES format but bundle everything
+        format: 'iife', // Use IIFE format for better compatibility
         manualChunks: undefined, // Don't split into chunks
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',
