@@ -5099,11 +5099,33 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         captureComparisonPhoto(video, stream, beforePhoto) {
-          // IMMEDIATE alert to confirm function is called
-          alert('captureComparisonPhoto called!');
-
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
+
+          // Create visible debug overlay on screen
+          const debugDiv = document.createElement('div');
+          debugDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 99999;
+            font-size: 16px;
+            text-align: center;
+            max-width: 80%;
+          `;
+          debugDiv.innerHTML = `
+            <strong>AFTER PHOTO DEBUG</strong><br>
+            Video: ${videoWidth} x ${videoHeight}<br>
+            Aspect: ${(videoWidth/videoHeight).toFixed(3)}<br>
+            Before ratio: ${beforePhoto.aspectRatio}<br>
+            <button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 10px; font-size: 16px;">Close</button>
+          `;
+          document.body.appendChild(debugDiv);
 
           console.log('=== CAPTURE DEBUG (AFTER) ===');
           console.log('Video dimensions:', videoWidth, 'x', videoHeight);
@@ -5111,11 +5133,6 @@ import * as PhotoEditor from './photoEditor.js';
           console.log('Before photo aspect ratio:', beforePhoto.aspectRatio);
           console.log('Current aspect ratio:', this.currentAspectRatio);
           console.log('==============================');
-
-          // Visual debug for phone testing
-          const debugMsg = `AFTER Photo:\nVideo: ${videoWidth}x${videoHeight}\nAspect: ${(videoWidth/videoHeight).toFixed(2)}\nBefore ratio: ${beforePhoto.aspectRatio}`;
-          console.log(debugMsg);
-          alert(debugMsg);
 
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
