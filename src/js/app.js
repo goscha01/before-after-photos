@@ -5102,10 +5102,18 @@ import * as PhotoEditor from './photoEditor.js';
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
-          console.log('=== CAPTURE DEBUG ===');
+          console.log('=== CAPTURE DEBUG (AFTER) ===');
           console.log('Video dimensions:', videoWidth, 'x', videoHeight);
           console.log('Video aspect ratio:', (videoWidth / videoHeight).toFixed(3));
-          console.log('====================');
+          console.log('Before photo aspect ratio:', beforePhoto.aspectRatio);
+          console.log('Current aspect ratio:', this.currentAspectRatio);
+          console.log('==============================');
+
+          // Visual debug for phone testing
+          const debugMsg = `AFTER Photo Captured:\n${videoWidth}x${videoHeight}\nAspect: ${(videoWidth/videoHeight).toFixed(2)}\nBefore ratio: ${beforePhoto.aspectRatio}`;
+          console.log(debugMsg);
+          // Uncomment next line to see on screen:
+          // alert(debugMsg);
 
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
@@ -5173,7 +5181,13 @@ import * as PhotoEditor from './photoEditor.js';
 
 
           // Automatically save the "after" photo with both preview and original
-          this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
+          try {
+            this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
+            console.log('✓ After photo saved successfully');
+          } catch (error) {
+            console.error('✗ Error saving after photo:', error);
+            alert('Error saving photo: ' + error.message);
+          }
 
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
