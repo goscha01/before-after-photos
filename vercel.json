@@ -11,8 +11,8 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/index-modular.html"
     }
   ]
-  
+
 }
