@@ -5112,8 +5112,8 @@ import * as PhotoEditor from './photoEditor.js';
           // Visual debug for phone testing
           const debugMsg = `AFTER Photo Captured:\n${videoWidth}x${videoHeight}\nAspect: ${(videoWidth/videoHeight).toFixed(2)}\nBefore ratio: ${beforePhoto.aspectRatio}`;
           console.log(debugMsg);
-          // Uncomment next line to see on screen:
-          // alert(debugMsg);
+          // Show on screen for phone testing
+          alert(debugMsg);
 
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
