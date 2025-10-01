@@ -163,6 +163,7 @@ function calculateCrop(srcWidth, srcHeight, targetWidth, targetHeight) {
  * @param {boolean} labelsEnabled - Whether to add BEFORE/AFTER labels (default: true)
  */
 export function createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, callback, labelsEnabled = true) {
+  console.log('🎨 Creating combined photo');
   const beforeImg = new Image();
   const afterImg = new Image();
 
@@ -177,20 +178,10 @@ export function createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templat
       const afterAspectRatio = afterImg.width / afterImg.height;
       const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
 
-      // Debug logging
-      console.log('=== Photo Orientation Debug ===');
-      console.log('Before image:', beforeImg.width, 'x', beforeImg.height, '=', beforeAspectRatio);
-      console.log('After image:', afterImg.width, 'x', afterImg.height, '=', afterAspectRatio);
-      console.log('Average aspect ratio:', avgAspectRatio);
-      console.log('Template type requested:', templateType);
-
       // Use actual image dimensions to determine orientation
       // If average aspect ratio > 1.0, images are wider than tall (horizontal/landscape)
       // If average aspect ratio <= 1.0, images are taller than wide (vertical/portrait)
       const isHorizontalPhoto = avgAspectRatio > 1.0;
-
-      console.log('Is horizontal photo?', isHorizontalPhoto);
-      console.log('Base mode:', isHorizontalPhoto ? 'sidebyside' : 'stack');
 
       const baseMode = isHorizontalPhoto ? 'sidebyside' : 'stack';
 
@@ -220,11 +211,7 @@ export function createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templat
         templateKey = 'sidebyside-landscape';
       }
 
-      console.log('Template key selected:', templateKey);
-
       const template = templates[templateKey] || templates['stack-portrait'];
-      console.log('Final template:', template);
-      console.log('================================');
 
       const templateDimensions = {
         targetWidth: template.width,
