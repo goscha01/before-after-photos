@@ -4757,7 +4757,10 @@ import * as PhotoEditor from './photoEditor.js';
 
           console.log('✅ All photos deleted. New count:', this.photos.length);
 
-          // Update the UI to show empty state
+          // Close all modals including All Photos gallery
+          Utils.cleanupExistingModals(null);
+
+          // Update the main UI to show empty state
           const photosContainer = document.getElementById('photos-container');
           if (photosContainer) {
             photosContainer.innerHTML = this.getPhotosHTML();
@@ -4766,6 +4769,12 @@ import * as PhotoEditor from './photoEditor.js';
 
           // Update before photo grid in modal if it exists
           this.updateModalPhotoGrid();
+
+          // Show main room tabs
+          this.showMainRoomTabs();
+          document.body.style.overflow = '';
+
+          console.log('📱 UI updated to show empty state');
 
 
         }
@@ -5334,20 +5343,33 @@ import * as PhotoEditor from './photoEditor.js';
           } else {
             console.log('No more unpaired before photos - closing camera and returning to gallery');
 
-            // Close all camera modals completely
-            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+            // Stop all camera streams first
+            const videoElements = document.querySelectorAll('video');
+            videoElements.forEach(video => {
+              if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+              }
+            });
 
-            // Restore UI when all photos are paired - return to gallery
-            this.showMainRoomTabs();
-            this.hideActionButtons();
-            document.body.style.overflow = '';
+            // Close all camera modals completely with delay to ensure UI updates
+            setTimeout(() => {
+              Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
 
-            // Update the photo grid to show current room
-            const photosContainer = document.getElementById('photos-container');
-            if (photosContainer) {
-              photosContainer.innerHTML = this.getPhotosHTML();
-              this.attachPhotoListeners();
-            }
+              // Restore UI when all photos are paired - return to gallery
+              this.showMainRoomTabs();
+              this.hideActionButtons();
+              document.body.style.overflow = '';
+
+              // Update the photo grid to show current room
+              const photosContainer = document.getElementById('photos-container');
+              if (photosContainer) {
+                photosContainer.innerHTML = this.getPhotosHTML();
+                this.attachPhotoListeners();
+              }
+
+              console.log('✅ Camera closed and returned to main grid');
+            }, 300);
           }
         }
         
