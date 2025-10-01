@@ -4391,22 +4391,24 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         attachEventListeners() {
+          // Prevent attaching listeners multiple times
+          if (this.eventListenersAttached) {
+            return;
+          }
+          this.eventListenersAttached = true;
+
           // Room tabs with swipe support - attach with delay to ensure DOM is ready
           setTimeout(() => {
             this.attachRoomTabListeners();
           }, 100);
-          
+
           // Add swipe functionality to room tabs
           this.addSwipeListeners();
 
           // Camera button - only visible during photo capture screens
           const cameraBtn = document.getElementById('camera-btn');
           if (cameraBtn) {
-            // Remove existing listeners by cloning and replacing the button
-            const newCameraBtn = cameraBtn.cloneNode(true);
-            cameraBtn.parentNode.replaceChild(newCameraBtn, cameraBtn);
-
-            newCameraBtn.addEventListener('click', () => {
+            cameraBtn.addEventListener('click', () => {
               // Check if we're in a camera modal (before or after mode)
               const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
                                  document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
