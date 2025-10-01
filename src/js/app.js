@@ -4403,7 +4403,11 @@ import * as PhotoEditor from './photoEditor.js';
           // Camera button - only visible during photo capture screens
           const cameraBtn = document.getElementById('camera-btn');
           if (cameraBtn) {
-            cameraBtn.addEventListener('click', () => {
+            // Remove existing listeners by cloning and replacing the button
+            const newCameraBtn = cameraBtn.cloneNode(true);
+            cameraBtn.parentNode.replaceChild(newCameraBtn, cameraBtn);
+
+            newCameraBtn.addEventListener('click', () => {
               // Check if we're in a camera modal (before or after mode)
               const cameraModal = document.querySelector('[style*="position: fixed"][style*="z-index: 1000"]') ||
                                  document.querySelector('[style*="position: fixed"][style*="z-index: 2000"]') ||
