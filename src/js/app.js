@@ -4694,6 +4694,7 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         showDeleteAllConfirmation() {
+          console.log('📢 Showing delete all confirmation modal');
           // Clean up any existing confirmation modals first
           Utils.cleanupExistingModals(3000);
 
@@ -4733,6 +4734,7 @@ import * as PhotoEditor from './photoEditor.js';
           });
 
           confirmBtn.addEventListener('click', () => {
+            console.log('✅ Delete All confirmed - deleting all photos');
             document.body.removeChild(modal);
             this.deleteAllPhotos();
           });
@@ -4745,12 +4747,15 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         deleteAllPhotos() {
+          console.log('🗑️ Deleting all photos. Current count:', this.photos.length);
 
           // Clear the photos array
           this.photos = [];
 
           // Clear localStorage
           localStorage.removeItem('cleaning-photos');
+
+          console.log('✅ All photos deleted. New count:', this.photos.length);
 
           // Update the UI to show empty state
           const photosContainer = document.getElementById('photos-container');
