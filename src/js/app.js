@@ -1247,7 +1247,6 @@ import * as PhotoEditor from './photoEditor.js';
           // Delete All button functionality
           const deleteAllBtn = document.getElementById('delete-all-photos-btn');
           deleteAllBtn.addEventListener('click', () => {
-            console.log('🗑️ Delete All button clicked');
             // Close the gallery modal first
             this.closeAllPhotosModal(modal);
 
@@ -4698,7 +4697,6 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         showDeleteAllConfirmation() {
-          console.log('📢 Showing delete all confirmation modal');
           // Clean up any existing confirmation modals first
           Utils.cleanupExistingModals(3000);
 
@@ -4738,7 +4736,6 @@ import * as PhotoEditor from './photoEditor.js';
           });
 
           confirmBtn.addEventListener('click', () => {
-            console.log('✅ Delete All confirmed - deleting all photos');
             document.body.removeChild(modal);
             this.deleteAllPhotos();
           });
@@ -4751,15 +4748,11 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         deleteAllPhotos() {
-          console.log('🗑️ Deleting all photos. Current count:', this.photos.length);
-
           // Clear the photos array
           this.photos = [];
 
           // Clear localStorage
           localStorage.removeItem('cleaning-photos');
-
-          console.log('✅ All photos deleted. New count:', this.photos.length);
 
           // Close all modals including All Photos gallery
           Utils.cleanupExistingModals(null);
@@ -4777,9 +4770,6 @@ import * as PhotoEditor from './photoEditor.js';
           // Show main room tabs
           this.showMainRoomTabs();
           document.body.style.overflow = '';
-
-          console.log('📱 UI updated to show empty state');
-
 
         }
 
@@ -5187,13 +5177,6 @@ import * as PhotoEditor from './photoEditor.js';
           `;
           document.body.appendChild(debugDiv);
 
-          console.log('=== CAPTURE DEBUG (AFTER) ===');
-          console.log('Video dimensions:', videoWidth, 'x', videoHeight);
-          console.log('Video aspect ratio:', (videoWidth / videoHeight).toFixed(3));
-          console.log('Before photo aspect ratio:', beforePhoto.aspectRatio);
-          console.log('Current aspect ratio:', this.currentAspectRatio);
-          console.log('==============================');
-
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
           const originalCtx = originalCanvas.getContext('2d');
@@ -5262,7 +5245,6 @@ import * as PhotoEditor from './photoEditor.js';
           // Automatically save the "after" photo with both preview and original
           try {
             this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
-            console.log('✓ After photo saved successfully');
           } catch (error) {
             console.error('✗ Error saving after photo:', error);
             alert('Error saving photo: ' + error.message);
@@ -5341,11 +5323,9 @@ import * as PhotoEditor from './photoEditor.js';
             unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
             const nextBeforePhoto = unpairedBeforePhotos[0];
 
-            console.log('Auto-cycling to next unpaired before photo:', nextBeforePhoto.id);
             // Open comparison modal with the next before photo
             this.showPhotoFullscreen(nextBeforePhoto);
           } else {
-            console.log('No more unpaired before photos - closing camera and returning to gallery');
 
             // Stop all camera streams first
             const videoElements = document.querySelectorAll('video');
@@ -5371,8 +5351,6 @@ import * as PhotoEditor from './photoEditor.js';
                 photosContainer.innerHTML = this.getPhotosHTML();
                 this.attachPhotoListeners();
               }
-
-              console.log('✅ Camera closed and returned to main grid');
             }, 300);
           }
         }
@@ -5507,31 +5485,16 @@ import * as PhotoEditor from './photoEditor.js';
 
           if (existingAfterPhotoIndex !== -1) {
             // Replace existing after photo
-            console.log('📝 Replacing existing after photo at index:', existingAfterPhotoIndex);
             this.photos[existingAfterPhotoIndex] = afterPhoto;
           } else {
             // Add new after photo
-            console.log('➕ Adding new after photo. Total photos before add:', this.photos.length);
             this.photos.push(afterPhoto);
-            console.log('✅ After photo added. Total photos now:', this.photos.length);
           }
-
-          console.log('📊 Before creating combined - Photos breakdown:', {
-            before: this.photos.filter(p => p.mode === 'before').length,
-            after: this.photos.filter(p => p.mode === 'after').length,
-            mix: this.photos.filter(p => p.mode === 'mix').length
-          });
 
           // Create a full combined photo with format selector capability
           this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           this.savePhotos();
-
-          console.log('📊 After savePhotos - Photos breakdown:', {
-            before: this.photos.filter(p => p.mode === 'before').length,
-            after: this.photos.filter(p => p.mode === 'after').length,
-            mix: this.photos.filter(p => p.mode === 'mix').length
-          });
         }
         
         createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
@@ -5943,33 +5906,13 @@ import * as PhotoEditor from './photoEditor.js';
             timestamp: Date.now()
           };
 
-          console.log('💾 Saving combined photo:', combinedPhoto.name, 'for room:', combinedPhoto.room, 'mode:', combinedPhoto.mode);
-          console.log('📊 BEFORE push - Photos breakdown:', {
-            before: this.photos.filter(p => p.mode === 'before').length,
-            after: this.photos.filter(p => p.mode === 'after').length,
-            mix: this.photos.filter(p => p.mode === 'mix').length
-          });
-
           // Add the combined photo
           this.photos.push(combinedPhoto);
-
-          console.log('📊 AFTER push - Photos breakdown:', {
-            before: this.photos.filter(p => p.mode === 'before').length,
-            after: this.photos.filter(p => p.mode === 'after').length,
-            mix: this.photos.filter(p => p.mode === 'mix').length
-          });
 
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
 
           this.savePhotos();
-
-          console.log('✅ Combined photo saved. Total photos now:', this.photos.length);
-          console.log('📊 AFTER savePhotos - Photos breakdown:', {
-            before: this.photos.filter(p => p.mode === 'before').length,
-            after: this.photos.filter(p => p.mode === 'after').length,
-            mix: this.photos.filter(p => p.mode === 'mix').length
-          });
 
           // Update UI immediately
           const photosContainer = document.getElementById('photos-container');
@@ -6124,6 +6067,7 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         captureFromComparisonModal() {
+          console.log('📸 CAPTURE BUTTON CLICKED');
           // Get the comparison camera video element
           const video = document.getElementById('comparison-camera');
           if (!video || !video.srcObject) {
@@ -6519,11 +6463,6 @@ import * as PhotoEditor from './photoEditor.js';
         capturePhoto(video, stream) {
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
-
-          console.log('=== CAPTURE DEBUG (BEFORE) ===');
-          console.log('Video dimensions:', videoWidth, 'x', videoHeight);
-          console.log('Video aspect ratio:', (videoWidth / videoHeight).toFixed(3));
-          console.log('===============================');
 
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
