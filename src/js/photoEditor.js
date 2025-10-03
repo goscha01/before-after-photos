@@ -178,12 +178,20 @@ export function createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templat
       const afterAspectRatio = afterImg.width / afterImg.height;
       const avgAspectRatio = (beforeAspectRatio + afterAspectRatio) / 2;
 
+      console.log('🔵 [PHOTO EDITOR] Before dimensions:', beforeImg.width, 'x', beforeImg.height, 'ratio:', beforeAspectRatio.toFixed(2));
+      console.log('🔵 [PHOTO EDITOR] After dimensions:', afterImg.width, 'x', afterImg.height, 'ratio:', afterAspectRatio.toFixed(2));
+      console.log('🔵 [PHOTO EDITOR] Average aspect ratio:', avgAspectRatio.toFixed(2));
+
       // Use actual image dimensions to determine orientation
       // If average aspect ratio > 1.0, images are wider than tall (horizontal/landscape)
       // If average aspect ratio <= 1.0, images are taller than wide (vertical/portrait)
       const isHorizontalPhoto = avgAspectRatio > 1.0;
 
+      console.log('🔵 [PHOTO EDITOR] Is horizontal photo:', isHorizontalPhoto);
+
       const baseMode = isHorizontalPhoto ? 'sidebyside' : 'stack';
+
+      console.log('🔵 [PHOTO EDITOR] Base mode:', baseMode);
 
       // Get template definition
       const templates = getTemplateSizes();
