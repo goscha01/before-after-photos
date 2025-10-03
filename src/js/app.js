@@ -5529,11 +5529,19 @@ import * as PhotoEditor from './photoEditor.js';
 
           if (existingAfterPhotoIndex !== -1) {
             // Replace existing after photo
+            console.log('🔵 [SAVE AFTER] Replacing existing after photo at index:', existingAfterPhotoIndex);
             this.photos[existingAfterPhotoIndex] = afterPhoto;
           } else {
             // Add new after photo
+            console.log('🔵 [SAVE AFTER] Adding new after photo with ID:', afterPhoto.id);
             this.photos.push(afterPhoto);
           }
+
+          console.log('🔵 [SAVE AFTER] After photo saved. Photos by mode BEFORE createCombined:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
 
           // Create a full combined photo with format selector capability
           console.log('🔵 [SAVE AFTER] Creating combined photo for:', beforePhoto.name, 'room:', beforePhoto.room);
@@ -6800,9 +6808,13 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         compressPhotosAndSave() {
+          console.log('🔵 [COMPRESS] Starting compression. Current photos:', this.photos.length);
+
+          // Take a snapshot of photo IDs to compress
+          const photosToCompress = this.photos.slice(); // Create a copy
 
           // Compress images by reducing quality
-          const compressedPhotos = this.photos.map(photo => {
+          const compressedPhotos = photosToCompress.map(photo => {
             if (photo.dataUrl && photo.dataUrl.startsWith('data:image/')) {
               // Create a canvas to re-compress the image
               const canvas = document.createElement('canvas');
@@ -6838,10 +6850,26 @@ import * as PhotoEditor from './photoEditor.js';
           });
 
           Promise.all(compressedPhotos).then(compressed => {
-            this.photos = compressed;
+            console.log('🔵 [COMPRESS] Compression complete. Compressed:', compressed.length, 'Current photos:', this.photos.length);
+
+            // IMPORTANT: Don't replace this.photos entirely!
+            // Instead, update only the photos that existed when compression started
+            // This prevents race conditions with photos added during compression
+            compressed.forEach(compressedPhoto => {
+              const index = this.photos.findIndex(p => p.id === compressedPhoto.id);
+              if (index !== -1) {
+                // Update the dataUrl of existing photo
+                this.photos[index].dataUrl = compressedPhoto.dataUrl;
+              }
+            });
+
+            console.log('🔵 [COMPRESS] Photos array after update:', this.photos.length);
+
             try {
               localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+              console.log('✅ [COMPRESS] Saved compressed photos to storage');
             } catch (e) {
+              console.error('❌ [COMPRESS] Failed to save after compression:', e);
               // Fall back to removing old photos
               this.manageStorage();
             }
