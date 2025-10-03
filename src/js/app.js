@@ -5245,14 +5245,17 @@ import * as PhotoEditor from './photoEditor.js';
 
 
           // Automatically save the "after" photo with both preview and original
+          console.log('🔵 [AFTER CAPTURE] Starting save process for beforePhoto:', beforePhoto.id);
           try {
             this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
+            console.log('✅ [AFTER CAPTURE] Save completed successfully');
           } catch (error) {
             console.error('✗ Error saving after photo:', error);
             alert('Error saving photo: ' + error.message);
           }
 
           // Stop camera stream
+          console.log('🔵 [AFTER CAPTURE] Stopping camera stream');
           stream.getTracks().forEach(track => track.stop());
 
           // Close modal overlays only (exclude permanent UI elements)
@@ -5261,29 +5264,33 @@ import * as PhotoEditor from './photoEditor.js';
           // Restore scrolling if no camera modals remain
           this.restoreScrollingIfNoCameraModals();
 
+          // Clear the before photo reference IMMEDIATELY to prevent re-capture
+          const capturedBeforePhotoId = beforePhoto.id;
+          this.currentBeforePhoto = null;
+          console.log('🔵 [AFTER CAPTURE] Cleared currentBeforePhoto reference');
+
           // Small delay to ensure cleanup completes before updating gallery
           setTimeout(() => {
             // Check if photo was taken from gallery dummy card
             if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery) {
-              
+
+              console.log('🔵 [AFTER CAPTURE] Returning to All Photos gallery');
               // Clear the gallery return context
               this.galleryReturnContext = null;
-              
-              // Clear the before photo reference
-              this.currentBeforePhoto = null;
-              
+
               // Hide action buttons and restore UI
               this.hideActionButtons();
               this.showMainRoomTabs();
               document.body.style.overflow = '';
-              
+
               // Return to All Photos gallery
               setTimeout(() => {
                 this.showAllPhotosModal();
               }, 200);
-              
+
             } else {
               // Normal flow - update main gallery
+              console.log('🔵 [AFTER CAPTURE] Normal flow - updating gallery');
               const photosContainer = document.getElementById('photos-container');
               if (photosContainer) {
                 photosContainer.innerHTML = this.getPhotosHTML();
@@ -5292,16 +5299,15 @@ import * as PhotoEditor from './photoEditor.js';
 
               // Hide action buttons and return to gallery view
               this.hideActionButtons();
-              
-              // Clear the before photo reference
-              this.currentBeforePhoto = null;
-              
+
               // Auto-cycle to next unpaired before photo in current room
               // Only auto-cycle if we're still in the same room where the photo was taken
               if (this.currentRoom === beforePhoto.room) {
-                this.autoCycleToNextBeforePhoto(this.currentRoom);
+                console.log('🔵 [AFTER CAPTURE] Auto-cycling to next before photo in room:', this.currentRoom);
+                this.autoCycleToNextBeforePhoto(this.currentRoom, capturedBeforePhotoId);
               } else {
                 // User switched rooms - just restore the UI and return to gallery
+                console.log('🔵 [AFTER CAPTURE] Room changed - restoring UI');
                 this.showMainRoomTabs();
                 this.hideActionButtons();
                 document.body.style.overflow = '';
@@ -5310,51 +5316,87 @@ import * as PhotoEditor from './photoEditor.js';
           }, 100);
         }
         
-        autoCycleToNextBeforePhoto(room) {
+        autoCycleToNextBeforePhoto(room, justCapturedBeforePhotoId = null) {
+          console.log('🔵 [AUTO-CYCLE] Starting auto-cycle for room:', room, 'just captured:', justCapturedBeforePhotoId);
+
           // Find all before photos in this room that don't have corresponding after photos
           const beforePhotos = this.photos.filter(p => p.room === room && p.mode === 'before');
           const afterPhotos = this.photos.filter(p => p.room === room && p.mode === 'after');
 
+          console.log('🔵 [AUTO-CYCLE] Before photos:', beforePhotos.length, 'After photos:', afterPhotos.length);
+
           // Find before photos that don't have a corresponding after photo
           const unpairedBeforePhotos = beforePhotos.filter(beforePhoto => {
-            return !afterPhotos.some(afterPhoto => afterPhoto.beforePhotoId === beforePhoto.id);
+            const hasAfter = afterPhotos.some(afterPhoto => afterPhoto.beforePhotoId === beforePhoto.id);
+            if (!hasAfter) {
+              console.log('🔵 [AUTO-CYCLE] Unpaired before photo:', beforePhoto.id);
+            }
+            return !hasAfter;
           });
+
+          console.log('🔵 [AUTO-CYCLE] Unpaired before photos:', unpairedBeforePhotos.length);
 
           if (unpairedBeforePhotos.length > 0) {
             // Sort by timestamp to get the next one chronologically
             unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
             const nextBeforePhoto = unpairedBeforePhotos[0];
 
+            console.log('🔵 [AUTO-CYCLE] Next before photo to show:', nextBeforePhoto.id);
+
+            // Double-check: don't re-show the photo we just captured
+            if (justCapturedBeforePhotoId && nextBeforePhoto.id === justCapturedBeforePhotoId) {
+              console.warn('⚠️ [AUTO-CYCLE] Prevented re-showing just captured photo:', justCapturedBeforePhotoId);
+              // Try the next unpaired photo if available
+              if (unpairedBeforePhotos.length > 1) {
+                const alternativePhoto = unpairedBeforePhotos[1];
+                console.log('🔵 [AUTO-CYCLE] Using alternative photo:', alternativePhoto.id);
+                this.showPhotoFullscreen(alternativePhoto);
+              } else {
+                console.log('🔵 [AUTO-CYCLE] No alternative photo available - cycle complete');
+                this.completeCycleAndReturnToGallery(room);
+              }
+              return;
+            }
+
             // Open comparison modal with the next before photo
+            console.log('🔵 [AUTO-CYCLE] Opening fullscreen for next photo');
             this.showPhotoFullscreen(nextBeforePhoto);
           } else {
-
-            // Stop all camera streams first
-            const videoElements = document.querySelectorAll('video');
-            videoElements.forEach(video => {
-              if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-              }
-            });
-
-            // Close all camera modals completely with delay to ensure UI updates
-            setTimeout(() => {
-              Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
-
-              // Restore UI when all photos are paired - return to gallery
-              this.showMainRoomTabs();
-              this.hideActionButtons();
-              document.body.style.overflow = '';
-
-              // Update the photo grid to show current room
-              const photosContainer = document.getElementById('photos-container');
-              if (photosContainer) {
-                photosContainer.innerHTML = this.getPhotosHTML();
-                this.attachPhotoListeners();
-              }
-            }, 300);
+            console.log('🔵 [AUTO-CYCLE] All photos paired - completing cycle');
+            this.completeCycleAndReturnToGallery(room);
           }
+        }
+
+        completeCycleAndReturnToGallery(room) {
+          console.log('🔵 [AUTO-CYCLE] Completing cycle for room:', room);
+
+          // Stop all camera streams first
+          const videoElements = document.querySelectorAll('video');
+          videoElements.forEach(video => {
+            if (video.srcObject) {
+              video.srcObject.getTracks().forEach(track => track.stop());
+              video.srcObject = null;
+            }
+          });
+
+          // Close all camera modals completely with delay to ensure UI updates
+          setTimeout(() => {
+            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+
+            // Restore UI when all photos are paired - return to gallery
+            this.showMainRoomTabs();
+            this.hideActionButtons();
+            document.body.style.overflow = '';
+
+            // Update the photo grid to show current room
+            const photosContainer = document.getElementById('photos-container');
+            if (photosContainer) {
+              photosContainer.innerHTML = this.getPhotosHTML();
+              this.attachPhotoListeners();
+            }
+
+            console.log('✅ [AUTO-CYCLE] Cycle complete - returned to gallery');
+          }, 300);
         }
         
         async initializeComparisonCamera(modal) {
@@ -5494,8 +5536,10 @@ import * as PhotoEditor from './photoEditor.js';
           }
 
           // Create a full combined photo with format selector capability
+          console.log('🔵 [SAVE AFTER] Creating combined photo for:', beforePhoto.name, 'room:', beforePhoto.room);
           this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
+          console.log('🔵 [SAVE AFTER] Saving photos to storage. Total photos:', this.photos.length);
           this.savePhotos();
         }
         
@@ -5503,12 +5547,17 @@ import * as PhotoEditor from './photoEditor.js';
           // Use current global template if none specified
           const actualTemplateType = templateType || this.currentTemplate;
 
+          console.log('🔵 [COMBINED] Creating combined photo. Room:', room, 'Name:', photoName, 'Template:', actualTemplateType);
+
           // Find the original before/after photo objects for aspect ratio info
           const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
           const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
 
+          console.log('🔵 [COMBINED] Found before photo:', !!beforePhoto, 'Found after photo:', !!afterPhoto);
+
           // Use createCombinedPhotoInMemory to actually create the photo
           PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+            console.log('🔵 [COMBINED] PhotoEditor callback received, saving combined photo');
             // Save the combined photo
             this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
           }, this.labelsEnabled);
@@ -5897,6 +5946,8 @@ import * as PhotoEditor from './photoEditor.js';
         
         saveCombinedPhoto(combinedDataUrl, room, photoName, templateType = 'default') {
 
+          console.log('🔵 [SAVE COMBINED] Saving combined photo. Room:', room, 'Name:', photoName, 'Template:', templateType);
+
           // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
             id: Date.now(),
@@ -5911,6 +5962,13 @@ import * as PhotoEditor from './photoEditor.js';
           // Add the combined photo
           this.photos.push(combinedPhoto);
 
+          console.log('🔵 [SAVE COMBINED] Combined photo added. Total photos now:', this.photos.length);
+          console.log('🔵 [SAVE COMBINED] Photos by mode:', {
+            before: this.photos.filter(p => p.mode === 'before').length,
+            after: this.photos.filter(p => p.mode === 'after').length,
+            mix: this.photos.filter(p => p.mode === 'mix').length
+          });
+
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
 
@@ -5923,6 +5981,7 @@ import * as PhotoEditor from './photoEditor.js';
             this.attachPhotoListeners();
           }
 
+          console.log('✅ [SAVE COMBINED] Combined photo saved successfully');
           // Photo saved successfully - modal closing handled by caller
         }
         
