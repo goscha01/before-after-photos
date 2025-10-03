@@ -11,6 +11,8 @@ import * as PhotoEditor from './photoEditor.js';
           this.currentTemplate = 'default'; // Default template for all photos
           this.currentBeforeZoom = 1; // Initialize default zoom level
           this.currentAspectRatio = '4:3'; // Initialize aspect ratio
+          this.isCompressing = false; // Flag to prevent concurrent compression
+          this.isSavingPhoto = false; // Flag to track photo save operations
 
           // Load settings from storage
           const settings = Storage.loadSettings();
@@ -5269,7 +5271,8 @@ import * as PhotoEditor from './photoEditor.js';
           this.currentBeforePhoto = null;
           console.log('🔵 [AFTER CAPTURE] Cleared currentBeforePhoto reference');
 
-          // Small delay to ensure cleanup completes before updating gallery
+          // Delay to ensure ALL async operations complete (including combined photo creation)
+          // This is critical to prevent infinite loops
           setTimeout(() => {
             // Check if photo was taken from gallery dummy card
             if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery) {
@@ -5304,7 +5307,10 @@ import * as PhotoEditor from './photoEditor.js';
               // Only auto-cycle if we're still in the same room where the photo was taken
               if (this.currentRoom === beforePhoto.room) {
                 console.log('🔵 [AFTER CAPTURE] Auto-cycling to next before photo in room:', this.currentRoom);
-                this.autoCycleToNextBeforePhoto(this.currentRoom, capturedBeforePhotoId);
+                // Additional delay to ensure combined photo creation completes
+                setTimeout(() => {
+                  this.autoCycleToNextBeforePhoto(this.currentRoom, capturedBeforePhotoId);
+                }, 300);
               } else {
                 // User switched rooms - just restore the UI and return to gallery
                 console.log('🔵 [AFTER CAPTURE] Room changed - restoring UI');
@@ -5533,7 +5539,7 @@ import * as PhotoEditor from './photoEditor.js';
             this.photos[existingAfterPhotoIndex] = afterPhoto;
           } else {
             // Add new after photo
-            console.log('🔵 [SAVE AFTER] Adding new after photo with ID:', afterPhoto.id);
+            console.log('🔵 [SAVE AFTER] Adding new after photo with ID:', afterPhoto.id, 'for beforePhotoId:', beforePhoto.id);
             this.photos.push(afterPhoto);
           }
 
@@ -5542,13 +5548,26 @@ import * as PhotoEditor from './photoEditor.js';
             after: this.photos.filter(p => p.mode === 'after').length,
             mix: this.photos.filter(p => p.mode === 'mix').length
           });
+          console.log('🔵 [SAVE AFTER] After photos IDs:', this.photos.filter(p => p.mode === 'after').map(p => ({ id: p.id, beforePhotoId: p.beforePhotoId })));
 
           // Create a full combined photo with format selector capability
           console.log('🔵 [SAVE AFTER] Creating combined photo for:', beforePhoto.name, 'room:', beforePhoto.room);
           this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           console.log('🔵 [SAVE AFTER] Saving photos to storage. Total photos:', this.photos.length);
-          this.savePhotos();
+
+          // Save without triggering compression during capture workflow
+          try {
+            localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+            console.log('✅ [SAVE AFTER] Photos saved to localStorage successfully');
+          } catch (e) {
+            if (e.name === 'QuotaExceededError') {
+              console.error('❌ [SAVE AFTER] Quota exceeded! Storage full.');
+              alert('Storage is full! Please delete some old photos or clear browser data.');
+            } else {
+              console.error('❌ [SAVE AFTER] Error saving photos:', e);
+            }
+          }
         }
         
         createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
@@ -5980,7 +5999,17 @@ import * as PhotoEditor from './photoEditor.js';
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
 
-          this.savePhotos();
+          // Save directly without triggering compression during capture workflow
+          try {
+            localStorage.setItem('cleaning-photos', JSON.stringify(this.photos));
+            console.log('✅ [SAVE COMBINED] Combined photo saved to localStorage successfully');
+          } catch (e) {
+            if (e.name === 'QuotaExceededError') {
+              console.error('❌ [SAVE COMBINED] Quota exceeded! Storage full.');
+            } else {
+              console.error('❌ [SAVE COMBINED] Error saving photos:', e);
+            }
+          }
 
           // Update UI immediately
           const photosContainer = document.getElementById('photos-container');
@@ -5989,7 +6018,7 @@ import * as PhotoEditor from './photoEditor.js';
             this.attachPhotoListeners();
           }
 
-          console.log('✅ [SAVE COMBINED] Combined photo saved successfully');
+          console.log('✅ [SAVE COMBINED] Combined photo save complete');
           // Photo saved successfully - modal closing handled by caller
         }
         
@@ -6808,7 +6837,14 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         compressPhotosAndSave() {
+          // Prevent concurrent compression
+          if (this.isCompressing) {
+            console.log('⚠️ [COMPRESS] Compression already in progress, skipping');
+            return;
+          }
+
           console.log('🔵 [COMPRESS] Starting compression. Current photos:', this.photos.length);
+          this.isCompressing = true;
 
           // Take a snapshot of photo IDs to compress
           const photosToCompress = this.photos.slice(); // Create a copy
@@ -6872,7 +6908,13 @@ import * as PhotoEditor from './photoEditor.js';
               console.error('❌ [COMPRESS] Failed to save after compression:', e);
               // Fall back to removing old photos
               this.manageStorage();
+            } finally {
+              this.isCompressing = false;
+              console.log('🔵 [COMPRESS] Compression flag cleared');
             }
+          }).catch(error => {
+            console.error('❌ [COMPRESS] Compression failed:', error);
+            this.isCompressing = false;
           });
         }
         
