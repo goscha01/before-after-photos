@@ -3000,6 +3000,8 @@ import * as PhotoEditor from './photoEditor.js';
           if (photo.mode === 'mix') {
             // Combined photos get templates
             const templateType = photo.templateType || 'default';
+            console.log('🔵 [FULLSCREEN] Opening combined photo. Saved template:', photo.templateType, 'Using template:', templateType);
+            console.log('🔵 [FULLSCREEN] Layout type:', this.getTemplateLayoutType(templateType));
             modal.innerHTML = this.getEnlargedPhotoHTML(photo, templateType);
             this.setupEnlargedPhotoListeners(modal, photo, source);
           } else {
