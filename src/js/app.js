@@ -695,7 +695,7 @@ import * as PhotoEditor from './photoEditor.js';
           return `
             <div style="min-height: 100vh; background: #f8fafc; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif; display: flex; flex-direction: column; overflow-x: hidden;">
               <!-- Fixed Header -->
-              <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div id="app-header" style="position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <!-- Left side - All Photos button -->
                 <button id="all-photos-btn" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
                   📷 All Photos
@@ -4587,7 +4587,7 @@ import * as PhotoEditor from './photoEditor.js';
                 this.closeSplitScreenPreview();
 
                 // Clean up any remaining modals (exclude permanent UI elements)
-                Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+                Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container', 'app-header'] });
 
                 // Restore scrolling if no camera modals remain
                 this.restoreScrollingIfNoCameraModals();
@@ -5371,7 +5371,7 @@ import * as PhotoEditor from './photoEditor.js';
           stream.getTracks().forEach(track => track.stop());
 
           // Close modal overlays only (exclude permanent UI elements)
-          Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+          Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container', 'app-header'] });
 
           // Restore scrolling if no camera modals remain
           this.restoreScrollingIfNoCameraModals();
@@ -5498,7 +5498,7 @@ import * as PhotoEditor from './photoEditor.js';
 
           // Close all camera modals completely with delay to ensure UI updates
           setTimeout(() => {
-            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+            Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container', 'app-header'] });
 
             // Restore UI when all photos are paired - return to gallery
             this.showMainRoomTabs();
