@@ -4318,6 +4318,62 @@ import * as PhotoEditor from './photoEditor.js';
           // Users can only switch rooms through tabs
         }
         
+        attachHeaderListeners() {
+          // Attach/reattach listeners for header buttons
+          // This is called after UI updates to ensure buttons remain functional
+
+          // All Photos button
+          const allPhotosBtn = document.getElementById('all-photos-btn');
+          if (allPhotosBtn) {
+            // Remove existing listener by cloning
+            const newAllPhotosBtn = allPhotosBtn.cloneNode(true);
+            allPhotosBtn.parentNode.replaceChild(newAllPhotosBtn, allPhotosBtn);
+            newAllPhotosBtn.addEventListener('click', () => {
+              console.log('🔵 [HEADER] All Photos button clicked');
+              this.showAllPhotosModal();
+            });
+          }
+
+          // Change User button
+          const changeUserBtn = document.getElementById('change-user-btn');
+          if (changeUserBtn) {
+            const newChangeUserBtn = changeUserBtn.cloneNode(true);
+            changeUserBtn.parentNode.replaceChild(newChangeUserBtn, changeUserBtn);
+            newChangeUserBtn.addEventListener('click', () => {
+              this.showChangeUserWarning();
+            });
+          }
+
+          // Upload button
+          const headerUploadBtn = document.getElementById('header-upload-btn');
+          if (headerUploadBtn) {
+            const newUploadBtn = headerUploadBtn.cloneNode(true);
+            headerUploadBtn.parentNode.replaceChild(newUploadBtn, headerUploadBtn);
+            newUploadBtn.addEventListener('click', () => {
+              this.showUploadOptionsPopup();
+            });
+          }
+
+          // Label toggle button
+          const labelToggleBtn = document.getElementById('label-toggle-btn');
+          if (labelToggleBtn) {
+            const newLabelBtn = labelToggleBtn.cloneNode(true);
+            labelToggleBtn.parentNode.replaceChild(newLabelBtn, labelToggleBtn);
+            newLabelBtn.addEventListener('click', () => {
+              this.labelsEnabled = !this.labelsEnabled;
+              Storage.saveSettings({ labelsEnabled: this.labelsEnabled });
+
+              // Update button appearance
+              newLabelBtn.style.background = this.labelsEnabled ? '#303030' : '#ccc';
+              newLabelBtn.style.color = this.labelsEnabled ? '#F2C31B' : '#666';
+
+              // Show feedback
+              const feedback = this.labelsEnabled ? 'Labels enabled ✓' : 'Labels disabled';
+              this.showToast(feedback);
+            });
+          }
+        }
+
         attachPhotoListeners() {
           // Only attach listeners for photo elements (called after photo grid updates)
           // Clear any existing listeners first to prevent duplicates
@@ -5338,6 +5394,7 @@ import * as PhotoEditor from './photoEditor.js';
               if (photosContainer) {
                 photosContainer.innerHTML = this.getPhotosHTML();
                 this.attachPhotoListeners(); // Re-attach event listeners for new photo elements
+                this.attachHeaderListeners(); // Re-attach header button listeners
               }
 
               // Hide action buttons and return to gallery view
@@ -5439,6 +5496,7 @@ import * as PhotoEditor from './photoEditor.js';
             if (photosContainer) {
               photosContainer.innerHTML = this.getPhotosHTML();
               this.attachPhotoListeners();
+              this.attachHeaderListeners();
             }
 
             console.log('✅ [AUTO-CYCLE] Cycle complete - returned to gallery');
