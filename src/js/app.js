@@ -2272,7 +2272,7 @@ import * as PhotoEditor from './photoEditor.js';
               templateType,
               beforePhoto,
               afterPhoto,
-              (combinedDataUrl) => {
+              (combinedDataUrl, resolvedTemplateKey) => {
                 if (mode === 'preview') {
                   // For preview mode, compress/scale down the result
                   this.compressImageForPreview(combinedDataUrl).then(resolve);
@@ -2855,7 +2855,7 @@ import * as PhotoEditor from './photoEditor.js';
               templateType,
               beforePhoto,
               afterPhoto,
-              (combinedDataUrl) => {
+              (combinedDataUrl, resolvedTemplateKey) => {
                 resolve(combinedDataUrl);
               },
               this.labelsEnabled
@@ -3498,7 +3498,7 @@ import * as PhotoEditor from './photoEditor.js';
           // Generate combined photo without storing it - use original full resolution photos
           const beforeDataUrl = beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl; // Fallback chain
           const afterDataUrl = afterPhoto.originalDataUrlNoLabel || afterPhoto.originalDataUrl || afterPhoto.dataUrl; // Fallback chain
-          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templateType, beforePhoto, afterPhoto, (combinedDataUrl, resolvedTemplateKey) => {
             // Update modal with generated photo
             const imgElement = modal.querySelector('#fullscreen-photo');
             if (imgElement) {
@@ -4863,14 +4863,15 @@ import * as PhotoEditor from './photoEditor.js';
           // Clear localStorage
           localStorage.removeItem('cleaning-photos');
 
-          // Close all modals including All Photos gallery
-          Utils.cleanupExistingModals(null);
+          // Close all modals including All Photos gallery (but preserve header)
+          Utils.cleanupExistingModals(null, { excludeIds: ['app-header'] });
 
           // Update the main UI to show empty state
           const photosContainer = document.getElementById('photos-container');
           if (photosContainer) {
             photosContainer.innerHTML = this.getPhotosHTML();
             this.attachPhotoListeners();
+            this.attachHeaderListeners(); // Reattach header listeners
           }
 
           // Update before photo grid in modal if it exists
@@ -5833,9 +5834,9 @@ import * as PhotoEditor from './photoEditor.js';
           const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
 
           // Use createCombinedPhotoInMemory to actually create the photo
-          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
-            // Save the combined photo with callback
-            this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, actualTemplateType, callback);
+          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl, resolvedTemplateKey) => {
+            // Save the combined photo with callback using resolved template
+            this.saveCombinedPhotoWithCallback(combinedDataUrl, room, photoName, resolvedTemplateKey || actualTemplateType, callback);
           }, this.labelsEnabled);
         }
 
