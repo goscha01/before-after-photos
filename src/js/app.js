@@ -4321,17 +4321,31 @@ import * as PhotoEditor from './photoEditor.js';
         attachHeaderListeners() {
           // Attach/reattach listeners for header buttons
           // This is called after UI updates to ensure buttons remain functional
+          console.log('🔵 [HEADER] Attaching header listeners');
 
           // All Photos button
           const allPhotosBtn = document.getElementById('all-photos-btn');
+          console.log('🔵 [HEADER] All Photos button element:', allPhotosBtn);
           if (allPhotosBtn) {
+            // Ensure button is clickable
+            allPhotosBtn.style.pointerEvents = 'auto';
+            allPhotosBtn.style.zIndex = '201';
+
             // Remove existing listener by cloning
             const newAllPhotosBtn = allPhotosBtn.cloneNode(true);
             allPhotosBtn.parentNode.replaceChild(newAllPhotosBtn, allPhotosBtn);
+
+            // Ensure cloned button is also clickable
+            newAllPhotosBtn.style.pointerEvents = 'auto';
+            newAllPhotosBtn.style.zIndex = '201';
+
             newAllPhotosBtn.addEventListener('click', () => {
               console.log('🔵 [HEADER] All Photos button clicked');
               this.showAllPhotosModal();
             });
+            console.log('✅ [HEADER] All Photos button listener attached');
+          } else {
+            console.error('❌ [HEADER] All Photos button not found!');
           }
 
           // Change User button
