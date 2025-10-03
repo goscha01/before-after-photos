@@ -247,9 +247,9 @@ export function createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, templat
         addPhotoLabels(ctx, canvas.width, canvas.height, templateDimensions.splitType);
       }
 
-      // Convert to data URL and return via callback
+      // Convert to data URL and return via callback with resolved template key
       const combinedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-      callback(combinedDataUrl);
+      callback(combinedDataUrl, templateKey);
     }
   };
 

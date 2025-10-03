@@ -3090,18 +3090,26 @@ import * as PhotoEditor from './photoEditor.js';
           // Extract just the layout type part (Stack/Side-by-Side)
           switch(templateType) {
             case 'portrait':
-              return 'Stack (horizontal split)';
             case 'default':
             case 'square':
             case 'square_stack':
             case 'landscape':
+            case 'stack-portrait':
+            case 'stack-square':
+            case 'stack-landscape':
               return 'Stack (horizontal split)';
             case 'square_side':
             case 'sidebyside_landscape':
-              return 'Side-by-Side (vertical split)';
             case 'blog':
+            case 'sidebyside-landscape':
+            case 'sidebyside-square':
+            case 'sidebyside-wide':
               return 'Side-by-Side (vertical split)';
             default:
+              // For unknown templates, check if name contains 'sidebyside' or 'stack'
+              if (templateType && templateType.includes('sidebyside')) {
+                return 'Side-by-Side (vertical split)';
+              }
               return 'Stack (horizontal split)';
           }
         }
@@ -5695,10 +5703,10 @@ import * as PhotoEditor from './photoEditor.js';
           console.log('🔵 [COMBINED] Found before photo:', !!beforePhoto, 'Found after photo:', !!afterPhoto);
 
           // Use createCombinedPhotoInMemory to actually create the photo
-          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
-            console.log('🔵 [COMBINED] PhotoEditor callback received, saving combined photo');
-            // Save the combined photo
-            this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
+          PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl, resolvedTemplateKey) => {
+            console.log('🔵 [COMBINED] PhotoEditor callback received. Resolved template:', resolvedTemplateKey);
+            // Save the combined photo with the actual resolved template key
+            this.saveCombinedPhoto(combinedDataUrl, room, photoName, resolvedTemplateKey || actualTemplateType);
           }, this.labelsEnabled);
         }
 
