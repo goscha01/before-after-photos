@@ -830,7 +830,9 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         getAllPhotosHTML() {
-          
+          console.log('🔵 [ALL PHOTOS HTML] Starting to generate HTML');
+          console.log('🔵 [ALL PHOTOS HTML] Total photos:', this.photos.length);
+
           // Room icons for display
           const roomIcons = {
             'kitchen': '🍳',
@@ -863,6 +865,13 @@ import * as PhotoEditor from './photoEditor.js';
 
               return false;
             });
+
+          console.log('🔵 [ALL PHOTOS HTML] Filtered photos:', allPhotos.length);
+          console.log('🔵 [ALL PHOTOS HTML] Photos by mode:', {
+            before: allPhotos.filter(p => p.mode === 'before').length,
+            after: allPhotos.filter(p => p.mode === 'after').length,
+            mix: allPhotos.filter(p => p.mode === 'mix').length
+          });
 
 
           // Group photos by room and organize them: before, after, combined
@@ -1146,6 +1155,9 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         showAllPhotosModal() {
+          console.log('🔵 [ALL PHOTOS] Opening All Photos modal');
+          console.log('🔵 [ALL PHOTOS] Current photos count:', this.photos.length);
+
           // Clean up any existing modals first
           Utils.cleanupExistingModals(2500);
 
@@ -1231,12 +1243,27 @@ import * as PhotoEditor from './photoEditor.js';
                 padding: 20px;
                 background: #f8f9fa;
               ">
-                ${this.getAllPhotosHTML()}
+                Loading...
               </div>
             </div>
           `;
 
           document.body.appendChild(modal);
+
+          // Generate and insert HTML after modal is in DOM to catch errors
+          try {
+            const photosHTML = this.getAllPhotosHTML();
+            console.log('🔵 [ALL PHOTOS] Generated HTML length:', photosHTML.length);
+            document.getElementById('all-photos-content').innerHTML = photosHTML;
+          } catch (error) {
+            console.error('❌ [ALL PHOTOS] Error generating HTML:', error);
+            document.getElementById('all-photos-content').innerHTML = `
+              <div style="text-align: center; padding: 40px; color: #dc2626;">
+                <h3>Error loading photos</h3>
+                <p>${error.message}</p>
+              </div>
+            `;
+          }
 
           // Prevent background scrolling
           document.body.style.overflow = 'hidden';
