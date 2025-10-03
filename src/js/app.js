@@ -5181,22 +5181,35 @@ import * as PhotoEditor from './photoEditor.js';
           `;
           document.body.appendChild(debugDiv);
 
-          // Store the full original photo
+          // Store a reduced-size "original" photo to save storage
+          // Scale down to max 1920x1080 for storage efficiency
           const originalCanvas = document.createElement('canvas');
           const originalCtx = originalCanvas.getContext('2d');
-          originalCanvas.width = videoWidth;
-          originalCanvas.height = videoHeight;
-          originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
 
-          // Save version without label (for PhotoEditor to combine)
-          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.8);
+          const maxWidth = 1920;
+          const maxHeight = 1080;
+          let scaledWidth = videoWidth;
+          let scaledHeight = videoHeight;
+
+          if (videoWidth > maxWidth || videoHeight > maxHeight) {
+            const ratio = Math.min(maxWidth / videoWidth, maxHeight / videoHeight);
+            scaledWidth = Math.floor(videoWidth * ratio);
+            scaledHeight = Math.floor(videoHeight * ratio);
+          }
+
+          originalCanvas.width = scaledWidth;
+          originalCanvas.height = scaledHeight;
+          originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, scaledWidth, scaledHeight);
+
+          // Save version without label (for PhotoEditor to combine) at lower quality
+          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.6);
 
           // Add label to original if labels are enabled
           if (this.labelsEnabled !== false) { // Default to true
             Utils.drawCanvasLabel(originalCtx, 'AFTER', originalCanvas.width, originalCanvas.height);
           }
 
-          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
+          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.6);
 
           // Create cropped preview to match before photo aspect ratio
           const previewCanvas = document.createElement('canvas');
@@ -5207,8 +5220,8 @@ import * as PhotoEditor from './photoEditor.js';
           const videoAspectRatio = videoWidth / videoHeight;
 
           if (targetAspectRatio === '4:3') {
-            previewCanvas.width = 800;
-            previewCanvas.height = 600;
+            previewCanvas.width = 400;  // Reduced for storage efficiency
+            previewCanvas.height = 300;
             if (videoAspectRatio > (4/3)) {
               cropHeight = videoHeight;
               cropWidth = videoHeight * (4/3);
@@ -5221,8 +5234,8 @@ import * as PhotoEditor from './photoEditor.js';
               cropY = (videoHeight - cropHeight) / 2;
             }
           } else {
-            previewCanvas.width = 600;
-            previewCanvas.height = 900;
+            previewCanvas.width = 400;  // Reduced for storage efficiency
+            previewCanvas.height = 600;
             if (videoAspectRatio > (2/3)) {
               cropHeight = videoHeight;
               cropWidth = videoHeight * (2/3);
@@ -5243,7 +5256,7 @@ import * as PhotoEditor from './photoEditor.js';
             Utils.drawCanvasLabel(previewCtx, 'AFTER', previewCanvas.width, previewCanvas.height);
           }
 
-          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
+          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.5);
 
 
           // Automatically save the "after" photo with both preview and original
@@ -6562,22 +6575,35 @@ import * as PhotoEditor from './photoEditor.js';
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
-          // Store the full original photo
+          // Store a reduced-size "original" photo to save storage
+          // Scale down to max 1920x1080 for storage efficiency
           const originalCanvas = document.createElement('canvas');
           const originalCtx = originalCanvas.getContext('2d');
-          originalCanvas.width = videoWidth;
-          originalCanvas.height = videoHeight;
-          originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
 
-          // Save version without label (for PhotoEditor to combine)
-          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.8);
+          const maxWidth = 1920;
+          const maxHeight = 1080;
+          let scaledWidth = videoWidth;
+          let scaledHeight = videoHeight;
+
+          if (videoWidth > maxWidth || videoHeight > maxHeight) {
+            const ratio = Math.min(maxWidth / videoWidth, maxHeight / videoHeight);
+            scaledWidth = Math.floor(videoWidth * ratio);
+            scaledHeight = Math.floor(videoHeight * ratio);
+          }
+
+          originalCanvas.width = scaledWidth;
+          originalCanvas.height = scaledHeight;
+          originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, scaledWidth, scaledHeight);
+
+          // Save version without label (for PhotoEditor to combine) at lower quality
+          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.6);
 
           // Add label to original if labels are enabled
           if (this.labelsEnabled !== false) { // Default to true
             Utils.drawCanvasLabel(originalCtx, 'BEFORE', originalCanvas.width, originalCanvas.height);
           }
 
-          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
+          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.6);
 
           // Create cropped preview for current aspect ratio (for display)
           const previewCanvas = document.createElement('canvas');
@@ -6588,8 +6614,8 @@ import * as PhotoEditor from './photoEditor.js';
           const videoAspectRatio = videoWidth / videoHeight;
 
           if (targetAspectRatio === '4:3') {
-            previewCanvas.width = 800;
-            previewCanvas.height = 600;
+            previewCanvas.width = 400;  // Reduced for storage efficiency
+            previewCanvas.height = 300;
             if (videoAspectRatio > (4/3)) {
               cropHeight = videoHeight;
               cropWidth = videoHeight * (4/3);
@@ -6602,8 +6628,8 @@ import * as PhotoEditor from './photoEditor.js';
               cropY = (videoHeight - cropHeight) / 2;
             }
           } else {
-            previewCanvas.width = 600;
-            previewCanvas.height = 900;
+            previewCanvas.width = 400;  // Reduced for storage efficiency
+            previewCanvas.height = 600;
             if (videoAspectRatio > (2/3)) {
               cropHeight = videoHeight;
               cropWidth = videoHeight * (2/3);
@@ -6624,7 +6650,7 @@ import * as PhotoEditor from './photoEditor.js';
             Utils.drawCanvasLabel(previewCtx, 'BEFORE', previewCanvas.width, previewCanvas.height);
           }
 
-          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
+          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.5);
 
 
           // First photos are always "before" photos
