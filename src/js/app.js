@@ -3208,14 +3208,18 @@ import * as PhotoEditor from './photoEditor.js';
             );
 
             if (beforePhoto && afterPhoto) {
-              // Use the stored aspectRatio property (much simpler!)
-              // '4:3' = horizontal/landscape photos → Stack Mode
-              // '2:3' = vertical/portrait photos → Side-by-Side Mode
+              // Use the stored aspectRatio property to match PhotoEditor logic
+              // '4:3' = horizontal/landscape photos (width > height) → Side-by-Side Mode
+              // '2:3' = vertical/portrait photos (height > width) → Stack Mode
               const beforeIsHorizontal = beforePhoto.aspectRatio === '4:3';
               const afterIsHorizontal = afterPhoto.aspectRatio === '4:3';
 
-              // If either photo was taken in horizontal mode, use Stack Mode
+              // If either photo was taken in horizontal mode, use Side-by-Side Mode
               isHorizontalPhoto = beforeIsHorizontal || afterIsHorizontal;
+
+              console.log('🔵 [TEMPLATE SELECTOR] Before aspectRatio:', beforePhoto.aspectRatio, 'isHorizontal:', beforeIsHorizontal);
+              console.log('🔵 [TEMPLATE SELECTOR] After aspectRatio:', afterPhoto.aspectRatio, 'isHorizontal:', afterIsHorizontal);
+              console.log('🔵 [TEMPLATE SELECTOR] Final isHorizontalPhoto:', isHorizontalPhoto);
 
             } else {
               console.warn('Could not find original before/after photos for combined photo');
@@ -3225,26 +3229,17 @@ import * as PhotoEditor from './photoEditor.js';
               const photoAspectRatio = photoWidth / photoHeight;
               // If combined photo is landscape (aspect ratio > 1), it's likely side-by-side mode
               // If combined photo is portrait (aspect ratio < 1), it's likely stack mode
-              isHorizontalPhoto = photoAspectRatio < 1; // Portrait combined = stack mode, landscape combined = side-by-side mode
+              isHorizontalPhoto = photoAspectRatio > 1; // Landscape combined = side-by-side mode, Portrait combined = stack mode
             }
           }
 
-          // Define template info based on the rules:
-          // - Horizontal originals (4:3): Stack Mode (horizontal split line, stacked vertically)
-          // - Vertical originals (2:3): Side-by-Side Mode (vertical split line, placed left-right)
+          // Define template info based on PhotoEditor rules:
+          // - Horizontal originals (4:3, wider): Side-by-Side Mode (vertical split line, placed left-right)
+          // - Vertical originals (2:3, taller): Stack Mode (horizontal split line, stacked vertically)
           // - 1:1 format: Available to both with their respective split types
 
           if (isHorizontalPhoto) {
-            // Horizontal originals (4:3) → Stack Mode (stacked vertically with horizontal split line)
-            const stackTemplates = {
-              portrait: { ratio: '4:5', description: 'Instagram / Facebook Feed (4:5) ⭐', cropInfo: 'Best fit for portrait feeds', splitType: 'horizontal' },
-              square_stack: { ratio: '1:1', description: 'Square - LinkedIn / Yelp (1:1) - Stack', cropInfo: 'Horizontal split - before/after stacked', splitType: 'horizontal' },
-              landscape: { ratio: '16:9', description: 'Websites / Presentations (16:9) - Stack', cropInfo: 'Good for presentations', splitType: 'horizontal' }
-            };
-
-            return this.getStackModeTemplateSelector(stackTemplates, templateType);
-          } else {
-            // Vertical originals (2:3) → Side-by-Side Mode (placed left-right with vertical split line)
+            // Horizontal originals (4:3, wider) → Side-by-Side Mode (placed left-right with vertical split line)
             const sideTemplates = {
               blog: { ratio: '1.91:1', description: 'Instagram / Facebook Landscape (1.91:1) ⭐', cropInfo: 'Best fit for landscape feeds', splitType: 'vertical' },
               sidebyside_landscape: { ratio: '16:9', description: 'Websites / Presentations (16:9) - Side-by-Side', cropInfo: 'Great for presentations/websites', splitType: 'vertical' },
@@ -3252,6 +3247,15 @@ import * as PhotoEditor from './photoEditor.js';
             };
 
             return this.getSideBySideModeTemplateSelector(sideTemplates, templateType);
+          } else {
+            // Vertical originals (2:3, taller) → Stack Mode (stacked vertically with horizontal split line)
+            const stackTemplates = {
+              portrait: { ratio: '4:5', description: 'Instagram / Facebook Feed (4:5) ⭐', cropInfo: 'Best fit for portrait feeds', splitType: 'horizontal' },
+              square_stack: { ratio: '1:1', description: 'Square - LinkedIn / Yelp (1:1) - Stack', cropInfo: 'Horizontal split - before/after stacked', splitType: 'horizontal' },
+              landscape: { ratio: '16:9', description: 'Websites / Presentations (16:9) - Stack', cropInfo: 'Good for presentations', splitType: 'horizontal' }
+            };
+
+            return this.getStackModeTemplateSelector(stackTemplates, templateType);
           }
         }
 
