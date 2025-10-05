@@ -5150,7 +5150,7 @@ import * as PhotoEditor from './photoEditor.js';
           }
         }
         
-        captureComparisonPhoto(video, stream, beforePhoto) {
+        async captureComparisonPhoto(video, stream, beforePhoto) {
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
@@ -5245,8 +5245,9 @@ import * as PhotoEditor from './photoEditor.js';
 
 
           // Automatically save the "after" photo with both preview and original
+          // IMPORTANT: Wait for the save to complete before continuing
           try {
-            this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
+            await this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
           } catch (error) {
             console.error('✗ Error saving after photo:', error);
             alert('Error saving photo: ' + error.message);
@@ -5265,23 +5266,23 @@ import * as PhotoEditor from './photoEditor.js';
           setTimeout(() => {
             // Check if photo was taken from gallery dummy card
             if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery) {
-              
+
               // Clear the gallery return context
               this.galleryReturnContext = null;
-              
+
               // Clear the before photo reference
               this.currentBeforePhoto = null;
-              
+
               // Hide action buttons and restore UI
               this.hideActionButtons();
               this.showMainRoomTabs();
               document.body.style.overflow = '';
-              
+
               // Return to All Photos gallery
               setTimeout(() => {
                 this.showAllPhotosModal();
               }, 200);
-              
+
             } else {
               // Normal flow - update main gallery
               const photosContainer = document.getElementById('photos-container');
@@ -5292,10 +5293,10 @@ import * as PhotoEditor from './photoEditor.js';
 
               // Hide action buttons and return to gallery view
               this.hideActionButtons();
-              
+
               // Clear the before photo reference
               this.currentBeforePhoto = null;
-              
+
               // Auto-cycle to next unpaired before photo in current room
               // Only auto-cycle if we're still in the same room where the photo was taken
               if (this.currentRoom === beforePhoto.room) {
@@ -5514,7 +5515,7 @@ import * as PhotoEditor from './photoEditor.js';
           this.savePhotos();
         }
 
-        saveAfterPhotoToAll(afterPhotoDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight) {
+        async saveAfterPhotoToAll(afterPhotoDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight) {
           // Check if there's already an after photo linked to this before photo
           const existingAfterPhotoIndex = this.photos.findIndex(p =>
             p.mode === 'after' && p.beforePhotoId === beforePhoto.id
@@ -5546,8 +5547,8 @@ import * as PhotoEditor from './photoEditor.js';
             this.photos.push(afterPhoto);
           }
 
-          // Create a full combined photo with format selector capability
-          this.createCombinedPhoto(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
+          // Create a full combined photo with format selector capability (now awaiting it)
+          await this.createCombinedPhotoAsync(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
           this.savePhotos();
         }
@@ -5565,6 +5566,25 @@ import * as PhotoEditor from './photoEditor.js';
             // Save the combined photo
             this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
           }, this.labelsEnabled);
+        }
+
+        createCombinedPhotoAsync(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
+          return new Promise((resolve) => {
+            // Use current global template if none specified
+            const actualTemplateType = templateType || this.currentTemplate;
+
+            // Find the original before/after photo objects for aspect ratio info
+            const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
+            const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
+
+            // Use createCombinedPhotoInMemory to actually create the photo
+            PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+              // Save the combined photo
+              this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
+              // Resolve the promise when done
+              resolve();
+            }, this.labelsEnabled);
+          });
         }
 
 
