@@ -5151,11 +5151,13 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         async captureComparisonPhoto(video, stream, beforePhoto) {
+          console.log('🔵 [CAPTURE] Starting captureComparisonPhoto');
           const videoWidth = video.videoWidth;
           const videoHeight = video.videoHeight;
 
           // Create visible debug overlay on screen
           const debugDiv = document.createElement('div');
+          debugDiv.id = 'debug-overlay';
           debugDiv.style.cssText = `
             position: fixed;
             top: 50%;
@@ -5175,9 +5177,18 @@ import * as PhotoEditor from './photoEditor.js';
             Video: ${videoWidth} x ${videoHeight}<br>
             Aspect: ${(videoWidth/videoHeight).toFixed(3)}<br>
             Before ratio: ${beforePhoto.aspectRatio}<br>
+            <div id="debug-status" style="margin-top: 10px; font-size: 14px; color: yellow;">Processing...</div>
             <button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 10px; font-size: 16px;">Close</button>
           `;
           document.body.appendChild(debugDiv);
+
+          const updateDebug = (message) => {
+            console.log('🔵 [CAPTURE] ' + message);
+            const statusEl = document.getElementById('debug-status');
+            if (statusEl) {
+              statusEl.innerHTML += '<br>' + message;
+            }
+          };
 
           // Store the full original photo
           const originalCanvas = document.createElement('canvas');
@@ -5243,30 +5254,41 @@ import * as PhotoEditor from './photoEditor.js';
 
           const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
 
+          updateDebug('✓ Canvas created');
 
           // Automatically save the "after" photo with both preview and original
           // IMPORTANT: Wait for the save to complete before continuing
           try {
+            updateDebug('⏳ Starting save...');
             await this.saveAfterPhotoToAll(previewDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight);
+            updateDebug('✓ Save completed');
           } catch (error) {
             console.error('✗ Error saving after photo:', error);
+            updateDebug('❌ Save error: ' + error.message);
             alert('Error saving photo: ' + error.message);
           }
 
+          updateDebug('⏳ Stopping camera stream...');
           // Stop camera stream
           stream.getTracks().forEach(track => track.stop());
+          updateDebug('✓ Camera stopped');
 
+          updateDebug('⏳ Cleaning up modals...');
           // Close modal overlays only (exclude permanent UI elements)
           Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
+          updateDebug('✓ Modals cleaned');
 
           // Restore scrolling if no camera modals remain
           this.restoreScrollingIfNoCameraModals();
 
+          updateDebug('⏳ Updating UI in 100ms...');
           // Small delay to ensure cleanup completes before updating gallery
           setTimeout(() => {
+            updateDebug('⏳ Timeout started');
             // Check if photo was taken from gallery dummy card
             if (this.galleryReturnContext && this.galleryReturnContext.returnToGallery) {
 
+              updateDebug('📂 Gallery return context');
               // Clear the gallery return context
               this.galleryReturnContext = null;
 
@@ -5284,11 +5306,15 @@ import * as PhotoEditor from './photoEditor.js';
               }, 200);
 
             } else {
+              updateDebug('🔄 Normal flow - updating gallery');
               // Normal flow - update main gallery
               const photosContainer = document.getElementById('photos-container');
               if (photosContainer) {
+                updateDebug('⏳ Updating photos container...');
                 photosContainer.innerHTML = this.getPhotosHTML();
+                updateDebug('⏳ Attaching photo listeners...');
                 this.attachPhotoListeners(); // Re-attach event listeners for new photo elements
+                updateDebug('✓ Listeners attached');
               }
 
               // Hide action buttons and return to gallery view
@@ -5297,31 +5323,44 @@ import * as PhotoEditor from './photoEditor.js';
               // Clear the before photo reference
               this.currentBeforePhoto = null;
 
+              updateDebug(`🔄 Checking auto-cycle (current room: ${this.currentRoom}, before room: ${beforePhoto.room})`);
               // Auto-cycle to next unpaired before photo in current room
               // Only auto-cycle if we're still in the same room where the photo was taken
               if (this.currentRoom === beforePhoto.room) {
+                updateDebug('⏳ Starting auto-cycle...');
                 this.autoCycleToNextBeforePhoto(this.currentRoom);
+                updateDebug('✓ Auto-cycle called');
               } else {
+                updateDebug('⏸️ Room changed - restoring UI');
                 // User switched rooms - just restore the UI and return to gallery
                 this.showMainRoomTabs();
                 this.hideActionButtons();
                 document.body.style.overflow = '';
               }
             }
+            updateDebug('✅ Timeout completed');
           }, 100);
         }
         
         autoCycleToNextBeforePhoto(room) {
+          console.log('🔵 [AUTO-CYCLE] Starting autoCycleToNextBeforePhoto for room:', room);
+
           // Find all before photos in this room that don't have corresponding after photos
           const beforePhotos = this.photos.filter(p => p.room === room && p.mode === 'before');
           const afterPhotos = this.photos.filter(p => p.room === room && p.mode === 'after');
+
+          console.log('🔵 [AUTO-CYCLE] Before photos:', beforePhotos.length);
+          console.log('🔵 [AUTO-CYCLE] After photos:', afterPhotos.length);
 
           // Find before photos that don't have a corresponding after photo
           const unpairedBeforePhotos = beforePhotos.filter(beforePhoto => {
             return !afterPhotos.some(afterPhoto => afterPhoto.beforePhotoId === beforePhoto.id);
           });
 
+          console.log('🔵 [AUTO-CYCLE] Unpaired before photos:', unpairedBeforePhotos.length);
+
           if (unpairedBeforePhotos.length > 0) {
+            console.log('🔵 [AUTO-CYCLE] Opening next unpaired photo');
             // Sort by timestamp to get the next one chronologically
             unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
             const nextBeforePhoto = unpairedBeforePhotos[0];
@@ -5330,8 +5369,10 @@ import * as PhotoEditor from './photoEditor.js';
             this.showPhotoFullscreen(nextBeforePhoto);
           } else {
 
+            console.log('🔵 [AUTO-CYCLE] All photos paired - finishing cycle');
             // Stop all camera streams first
             const videoElements = document.querySelectorAll('video');
+            console.log('🔵 [AUTO-CYCLE] Stopping', videoElements.length, 'video streams');
             videoElements.forEach(video => {
               if (video.srcObject) {
                 video.srcObject.getTracks().forEach(track => track.stop());
@@ -5339,27 +5380,34 @@ import * as PhotoEditor from './photoEditor.js';
               }
             });
 
+            console.log('🔵 [AUTO-CYCLE] Setting 300ms timeout for cleanup');
             // Close all camera modals completely with delay to ensure UI updates
             setTimeout(() => {
+              console.log('🔵 [AUTO-CYCLE] Timeout fired - cleaning up modals');
               Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
 
+              console.log('🔵 [AUTO-CYCLE] Setting 50ms timeout for extra cleanup');
               // Extra cleanup: Remove any lingering high z-index elements that might block clicks
               setTimeout(() => {
+                console.log('🔵 [AUTO-CYCLE] Extra cleanup timeout fired');
                 const highZIndexElements = document.querySelectorAll('[style*="z-index"]');
+                console.log('🔵 [AUTO-CYCLE] Found', highZIndexElements.length, 'z-index elements');
                 highZIndexElements.forEach(el => {
                   const zIndex = parseInt(window.getComputedStyle(el).zIndex);
                   // Remove elements with z-index > 1000 that aren't our permanent UI elements
-                  if (zIndex > 1000 && el.id !== 'bottom-panel' && el.id !== 'sticky-tabs-container' && !el.id.includes('bottom-panel') && !el.id.includes('sticky-tabs')) {
+                  if (zIndex > 1000 && el.id !== 'bottom-panel' && el.id !== 'sticky-tabs-container' && !el.id.includes('bottom-panel') && !el.id.includes('sticky-tabs') && el.id !== 'debug-overlay') {
                     try {
+                      console.log('🔵 [AUTO-CYCLE] Removing high z-index element:', el.id || el.className);
                       if (el.parentNode) {
                         el.parentNode.removeChild(el);
                       }
                     } catch (e) {
-                      // Ignore errors
+                      console.error('🔵 [AUTO-CYCLE] Error removing element:', e);
                     }
                   }
                 });
 
+                console.log('🔵 [AUTO-CYCLE] Restoring UI');
                 // Restore UI when all photos are paired - return to gallery
                 this.showMainRoomTabs();
                 this.hideActionButtons();
@@ -5372,21 +5420,28 @@ import * as PhotoEditor from './photoEditor.js';
                   mainContent.style.pointerEvents = '';
                 }
 
+                console.log('🔵 [AUTO-CYCLE] Updating photo grid');
                 // Update the photo grid to show current room
                 const photosContainer = document.getElementById('photos-container');
                 if (photosContainer) {
+                  console.log('🔵 [AUTO-CYCLE] Getting photos HTML...');
                   photosContainer.innerHTML = this.getPhotosHTML();
+                  console.log('🔵 [AUTO-CYCLE] Attaching photo listeners...');
                   this.attachPhotoListeners();
+                  console.log('🔵 [AUTO-CYCLE] Photo listeners attached');
                 }
 
+                console.log('🔵 [AUTO-CYCLE] Ensuring UI elements are interactive');
                 // Ensure header and tabs are interactive
                 const header = document.getElementById('sticky-header');
                 const tabs = document.getElementById('sticky-tabs-container');
                 if (header) header.style.pointerEvents = '';
                 if (tabs) tabs.style.pointerEvents = '';
 
+                console.log('🔵 [AUTO-CYCLE] Setting 50ms timeout for button enablement');
                 // Ensure all clickable elements are enabled
                 setTimeout(() => {
+                  console.log('🔵 [AUTO-CYCLE] Button enablement timeout fired');
                   const allPhotosBtn = document.getElementById('all-photos-btn');
                   const headerUploadBtn = document.getElementById('header-upload-btn');
                   const labelToggleBtn = document.getElementById('label-toggle-btn');
@@ -5397,14 +5452,19 @@ import * as PhotoEditor from './photoEditor.js';
                     if (btn) {
                       btn.style.pointerEvents = 'auto';
                       btn.style.cursor = 'pointer';
+                      console.log('🔵 [AUTO-CYCLE] Enabled button:', btn.id);
                     }
                   });
 
                   // Ensure room tabs are clickable
-                  document.querySelectorAll('.room-tab').forEach(tab => {
+                  const roomTabs = document.querySelectorAll('.room-tab');
+                  console.log('🔵 [AUTO-CYCLE] Enabling', roomTabs.length, 'room tabs');
+                  roomTabs.forEach(tab => {
                     tab.style.pointerEvents = 'auto';
                     tab.style.cursor = 'pointer';
                   });
+
+                  console.log('✅ [AUTO-CYCLE] ALL COMPLETE - UI should be interactive now!');
                 }, 50);
               }, 50);
             }, 300);
@@ -5516,10 +5576,14 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         async saveAfterPhotoToAll(afterPhotoDataUrl, originalDataUrl, originalDataUrlNoLabel, beforePhoto, videoWidth, videoHeight) {
+          console.log('🟢 [SAVE] Starting saveAfterPhotoToAll');
+
           // Check if there's already an after photo linked to this before photo
           const existingAfterPhotoIndex = this.photos.findIndex(p =>
             p.mode === 'after' && p.beforePhotoId === beforePhoto.id
           );
+
+          console.log('🟢 [SAVE] Existing after photo index:', existingAfterPhotoIndex);
 
           // Use the same name as the before photo
           const afterPhotoName = beforePhoto.name;
@@ -5540,17 +5604,22 @@ import * as PhotoEditor from './photoEditor.js';
           };
 
           if (existingAfterPhotoIndex !== -1) {
+            console.log('🟢 [SAVE] Replacing existing after photo');
             // Replace existing after photo
             this.photos[existingAfterPhotoIndex] = afterPhoto;
           } else {
+            console.log('🟢 [SAVE] Adding new after photo');
             // Add new after photo
             this.photos.push(afterPhoto);
           }
 
+          console.log('🟢 [SAVE] Creating combined photo...');
           // Create a full combined photo with format selector capability (now awaiting it)
           await this.createCombinedPhotoAsync(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
+          console.log('🟢 [SAVE] Combined photo created, saving to localStorage...');
           this.savePhotos();
+          console.log('🟢 [SAVE] saveAfterPhotoToAll COMPLETE');
         }
         
         createCombinedPhoto(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
@@ -5569,18 +5638,27 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
         createCombinedPhotoAsync(beforeDataUrl, afterDataUrl, room, photoName, templateType = null) {
+          console.log('🟡 [COMBINED] Starting createCombinedPhotoAsync');
           return new Promise((resolve) => {
             // Use current global template if none specified
             const actualTemplateType = templateType || this.currentTemplate;
+
+            console.log('🟡 [COMBINED] Template type:', actualTemplateType);
 
             // Find the original before/after photo objects for aspect ratio info
             const beforePhoto = this.photos.find(p => p.mode === 'before' && p.room === room && p.name === photoName);
             const afterPhoto = this.photos.find(p => p.mode === 'after' && p.room === room && p.name === photoName);
 
+            console.log('🟡 [COMBINED] Found before photo:', !!beforePhoto);
+            console.log('🟡 [COMBINED] Found after photo:', !!afterPhoto);
+
+            console.log('🟡 [COMBINED] Calling PhotoEditor.createCombinedPhotoInMemory...');
             // Use createCombinedPhotoInMemory to actually create the photo
             PhotoEditor.createCombinedPhotoInMemory(beforeDataUrl, afterDataUrl, actualTemplateType, beforePhoto, afterPhoto, (combinedDataUrl) => {
+              console.log('🟡 [COMBINED] Callback fired! Combined photo created');
               // Save the combined photo
               this.saveCombinedPhoto(combinedDataUrl, room, photoName, actualTemplateType);
+              console.log('🟡 [COMBINED] Combined photo saved, resolving promise');
               // Resolve the promise when done
               resolve();
             }, this.labelsEnabled);
