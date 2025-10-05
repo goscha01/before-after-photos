@@ -5701,6 +5701,10 @@ import * as PhotoEditor from './photoEditor.js';
             this.photos.push(afterPhoto);
           }
 
+          console.log('🟢 [SAVE] Photos array length after adding after photo:', this.photos.length);
+          console.log('🟢 [SAVE] After photos count:', this.photos.filter(p => p.mode === 'after').length);
+          console.log('🟢 [SAVE] Before photos count:', this.photos.filter(p => p.mode === 'before').length);
+
           console.log('🟢 [SAVE] Creating combined photo...');
           // Create a full combined photo with format selector capability (now awaiting it)
           await this.createCombinedPhotoAsync(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
@@ -6934,13 +6938,17 @@ import * as PhotoEditor from './photoEditor.js';
 
 
         savePhotos() {
+          console.log('💾 [SAVE-PHOTOS] savePhotos called, photos count:', this.photos.length);
           try {
             // Check storage size before saving
             const photosData = JSON.stringify(this.photos);
             const sizeInMB = (photosData.length * 2) / (1024 * 1024); // Rough estimate of size in MB
 
+            console.log('💾 [SAVE-PHOTOS] Saving to localStorage, size:', sizeInMB.toFixed(2), 'MB');
             localStorage.setItem('cleaning-photos', photosData);
+            console.log('💾 [SAVE-PHOTOS] Successfully saved to localStorage');
           } catch (e) {
+            console.error('💾 [SAVE-PHOTOS] Error saving:', e);
             if (e.name === 'QuotaExceededError') {
               this.manageStorage();
             } else {
