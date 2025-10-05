@@ -4291,6 +4291,14 @@ import * as PhotoEditor from './photoEditor.js';
         
         attachPhotoListeners() {
           console.log('🟣 [LISTENERS] attachPhotoListeners called');
+
+          // Prevent multiple simultaneous calls
+          if (this.attachingListeners) {
+            console.log('🟣 [LISTENERS] Already attaching, skipping...');
+            return;
+          }
+          this.attachingListeners = true;
+
           // Only attach listeners for photo elements (called after photo grid updates)
           // Clear any existing listeners first to prevent duplicates
           setTimeout(() => {
@@ -4333,18 +4341,24 @@ import * as PhotoEditor from './photoEditor.js';
 
             console.log('🟣 [LISTENERS] All photo listeners attached');
 
-            // Delete button functionality for photos
+            // Delete button functionality for photos - clone to remove old listeners
             document.querySelectorAll('.delete-photo-btn').forEach(btn => {
-              btn.addEventListener('click', (e) => {
+              const newBtn = btn.cloneNode(true);
+              btn.parentNode.replaceChild(newBtn, btn);
+
+              newBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const photoIndex = parseInt(e.target.dataset.photoIndex);
                 this.deletePhoto(photoIndex);
               });
             });
 
-            // Delete button functionality for before photos in modal
+            // Delete button functionality for before photos in modal - clone to remove old listeners
             document.querySelectorAll('.delete-before-photo-btn').forEach(btn => {
-              btn.addEventListener('click', (e) => {
+              const newBtn = btn.cloneNode(true);
+              btn.parentNode.replaceChild(newBtn, btn);
+
+              newBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const photoId = parseInt(e.target.dataset.photoId);
                 const photoIndex = this.photos.findIndex(p => p.id === photoId);
@@ -4354,19 +4368,22 @@ import * as PhotoEditor from './photoEditor.js';
               });
 
               // Add hover effects
-              btn.addEventListener('mouseenter', (e) => {
+              newBtn.addEventListener('mouseenter', (e) => {
                 e.target.style.background = '#e6b800';
                 e.target.style.transform = 'scale(1.1)';
               });
-              btn.addEventListener('mouseleave', (e) => {
+              newBtn.addEventListener('mouseleave', (e) => {
                 e.target.style.background = '#F2C31B';
                 e.target.style.transform = 'scale(1)';
               });
             });
 
-            // Retake button functionality for combined photos (original workflow)
+            // Retake button functionality for combined photos (original workflow) - clone to remove old listeners
             document.querySelectorAll('.retake-combined-btn').forEach(btn => {
-              btn.addEventListener('click', (e) => {
+              const newBtn = btn.cloneNode(true);
+              btn.parentNode.replaceChild(newBtn, btn);
+
+              newBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const beforePhotoId = parseInt(e.target.dataset.beforePhotoId);
                 const beforePhoto = this.photos.find(p => p.id === beforePhotoId);
@@ -4378,9 +4395,12 @@ import * as PhotoEditor from './photoEditor.js';
             });
 
 
-            // Dummy photos click handlers
+            // Dummy photos click handlers - clone to remove old listeners
             document.querySelectorAll('.dummy-photo').forEach(dummy => {
-              dummy.addEventListener('click', (e) => {
+              const newDummy = dummy.cloneNode(true);
+              dummy.parentNode.replaceChild(newDummy, dummy);
+
+              newDummy.addEventListener('click', (e) => {
                 const room = e.currentTarget.dataset.room;
                 this.openCameraForRoom(room);
               });
@@ -4390,7 +4410,7 @@ import * as PhotoEditor from './photoEditor.js';
             setTimeout(() => {
               const mainScrollableContent = document.getElementById('main-scrollable-content');
               if (mainScrollableContent) {
-                
+
                 if (mainScrollableContent.scrollHeight > mainScrollableContent.clientHeight) {
                   mainScrollableContent.scrollTop = mainScrollableContent.scrollHeight;
                 } else {
@@ -4398,6 +4418,10 @@ import * as PhotoEditor from './photoEditor.js';
               } else {
               }
             }, 200);
+
+            // Reset the flag after all listeners are attached
+            this.attachingListeners = false;
+            console.log('🟣 [LISTENERS] Listener attachment complete');
           }, 100);
         }
 
@@ -7040,36 +7064,46 @@ import * as PhotoEditor from './photoEditor.js';
         savePhotos() {
           console.log('💾 [SAVE-PHOTOS] savePhotos called, photos count:', this.photos.length);
 
-          const beforeCount = this.photos.filter(p => p.mode === 'before').length;
-          const afterCount = this.photos.filter(p => p.mode === 'after').length;
-          const mixCount = this.photos.filter(p => p.mode === 'mix').length;
-          console.log(`💾 [SAVE-PHOTOS] Photo breakdown - Before: ${beforeCount}, After: ${afterCount}, Mix: ${mixCount}`);
-
-          // For localStorage, only save metadata (not full images to avoid quota issues)
-          const photosMetadata = this.photos.map(p => ({
-            id: p.id,
-            room: p.room,
-            mode: p.mode,
-            name: p.name,
-            timestamp: p.timestamp,
-            beforePhotoId: p.beforePhotoId,
-            aspectRatio: p.aspectRatio,
-            templateType: p.templateType,
-            originalWidth: p.originalWidth,
-            originalHeight: p.originalHeight
-            // Note: We DON'T save dataUrl, originalDataUrl, etc. to localStorage
-            // Photos are saved to device storage instead
-          }));
-
-          try {
-            const metadataJson = JSON.stringify(photosMetadata);
-            const sizeInKB = (metadataJson.length * 2) / 1024;
-            console.log('💾 [SAVE-PHOTOS] Saving metadata to localStorage, size:', sizeInKB.toFixed(2), 'KB');
-            localStorage.setItem('cleaning-photos-metadata', metadataJson);
-            console.log('💾 [SAVE-PHOTOS] Metadata saved successfully');
-          } catch (e) {
-            console.error('💾 [SAVE-PHOTOS] Error saving metadata:', e);
+          // Debounce to prevent excessive saves
+          if (this.savePhotosTimeout) {
+            console.log('💾 [SAVE-PHOTOS] Debouncing save...');
+            clearTimeout(this.savePhotosTimeout);
           }
+
+          this.savePhotosTimeout = setTimeout(() => {
+            const beforeCount = this.photos.filter(p => p.mode === 'before').length;
+            const afterCount = this.photos.filter(p => p.mode === 'after').length;
+            const mixCount = this.photos.filter(p => p.mode === 'mix').length;
+            console.log(`💾 [SAVE-PHOTOS] Photo breakdown - Before: ${beforeCount}, After: ${afterCount}, Mix: ${mixCount}`);
+
+            // For localStorage, only save metadata (not full images to avoid quota issues)
+            const photosMetadata = this.photos.map(p => ({
+              id: p.id,
+              room: p.room,
+              mode: p.mode,
+              name: p.name,
+              timestamp: p.timestamp,
+              beforePhotoId: p.beforePhotoId,
+              aspectRatio: p.aspectRatio,
+              templateType: p.templateType,
+              originalWidth: p.originalWidth,
+              originalHeight: p.originalHeight
+              // Note: We DON'T save dataUrl, originalDataUrl, etc. to localStorage
+              // Photos are saved to device storage instead
+            }));
+
+            try {
+              const metadataJson = JSON.stringify(photosMetadata);
+              const sizeInKB = (metadataJson.length * 2) / 1024;
+              console.log('💾 [SAVE-PHOTOS] Saving metadata to localStorage, size:', sizeInKB.toFixed(2), 'KB');
+              localStorage.setItem('cleaning-photos-metadata', metadataJson);
+              console.log('💾 [SAVE-PHOTOS] Metadata saved successfully');
+            } catch (e) {
+              console.error('💾 [SAVE-PHOTOS] Error saving metadata:', e);
+            }
+
+            this.savePhotosTimeout = null;
+          }, 100); // Debounce for 100ms
         }
 
         manageStorage() {
