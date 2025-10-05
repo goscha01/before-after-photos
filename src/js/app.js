@@ -693,7 +693,7 @@ import * as PhotoEditor from './photoEditor.js';
           return `
             <div style="min-height: 100vh; background: #f8fafc; font-family: 'EB Garamond', 'Garamond', 'Times New Roman', serif; display: flex; flex-direction: column; overflow-x: hidden;">
               <!-- Fixed Header -->
-              <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div id="sticky-header" style="position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #F2C31B; color: #303030; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; max-width: 100vw; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <!-- Left side - All Photos button -->
                 <button id="all-photos-btn" style="background: white; color: #303030; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold;">
                   📷 All Photos
@@ -5475,7 +5475,30 @@ import * as PhotoEditor from './photoEditor.js';
                     allModals.forEach((el, i) => {
                       const zIndex = window.getComputedStyle(el).zIndex;
                       const isVisible = window.getComputedStyle(el).display !== 'none';
-                      console.log(`🔍 [DEBUG]   ${i+1}. ID: ${el.id || 'no-id'}, z-index: ${zIndex}, visible: ${isVisible}`);
+                      const pointerEvents = window.getComputedStyle(el).pointerEvents;
+                      const className = el.className || 'no-class';
+                      const tagName = el.tagName;
+                      console.log(`🔍 [DEBUG]   ${i+1}. ID: ${el.id || 'no-id'}, class: ${className}, tag: ${tagName}, z-index: ${zIndex}, visible: ${isVisible}, pointer-events: ${pointerEvents}`);
+
+                      // Remove any blocking overlays that aren't our permanent UI
+                      if (el.id !== 'sticky-tabs-container' &&
+                          el.id !== 'bottom-panel' &&
+                          el.id !== 'sticky-header' &&
+                          !el.id.includes('sticky-tabs') &&
+                          !el.id.includes('bottom-panel') &&
+                          parseInt(zIndex) > 99 &&
+                          isVisible &&
+                          pointerEvents !== 'none') {
+                        console.log(`🔍 [DEBUG]   ⚠️ BLOCKING ELEMENT FOUND! Removing...`);
+                        try {
+                          if (el.parentNode) {
+                            el.parentNode.removeChild(el);
+                            console.log(`🔍 [DEBUG]   ✅ Removed blocking element`);
+                          }
+                        } catch (e) {
+                          console.error(`🔍 [DEBUG]   ❌ Failed to remove:`, e);
+                        }
+                      }
                     });
 
                     const photosContainer = document.getElementById('photos-container');
