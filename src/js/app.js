@@ -5342,17 +5342,70 @@ import * as PhotoEditor from './photoEditor.js';
             setTimeout(() => {
               Utils.cleanupExistingModals(null, { excludeIds: ['bottom-panel', 'sticky-tabs-container'] });
 
-              // Restore UI when all photos are paired - return to gallery
-              this.showMainRoomTabs();
-              this.hideActionButtons();
-              document.body.style.overflow = '';
+              // Extra cleanup: Remove any lingering high z-index elements that might block clicks
+              setTimeout(() => {
+                const highZIndexElements = document.querySelectorAll('[style*="z-index"]');
+                highZIndexElements.forEach(el => {
+                  const zIndex = parseInt(window.getComputedStyle(el).zIndex);
+                  // Remove elements with z-index > 1000 that aren't our permanent UI elements
+                  if (zIndex > 1000 && el.id !== 'bottom-panel' && el.id !== 'sticky-tabs-container' && !el.id.includes('bottom-panel') && !el.id.includes('sticky-tabs')) {
+                    try {
+                      if (el.parentNode) {
+                        el.parentNode.removeChild(el);
+                      }
+                    } catch (e) {
+                      // Ignore errors
+                    }
+                  }
+                });
 
-              // Update the photo grid to show current room
-              const photosContainer = document.getElementById('photos-container');
-              if (photosContainer) {
-                photosContainer.innerHTML = this.getPhotosHTML();
-                this.attachPhotoListeners();
-              }
+                // Restore UI when all photos are paired - return to gallery
+                this.showMainRoomTabs();
+                this.hideActionButtons();
+                document.body.style.overflow = '';
+
+                // Ensure body and main containers are clickable
+                document.body.style.pointerEvents = '';
+                const mainContent = document.getElementById('main-scrollable-content');
+                if (mainContent) {
+                  mainContent.style.pointerEvents = '';
+                }
+
+                // Update the photo grid to show current room
+                const photosContainer = document.getElementById('photos-container');
+                if (photosContainer) {
+                  photosContainer.innerHTML = this.getPhotosHTML();
+                  this.attachPhotoListeners();
+                }
+
+                // Ensure header and tabs are interactive
+                const header = document.getElementById('sticky-header');
+                const tabs = document.getElementById('sticky-tabs-container');
+                if (header) header.style.pointerEvents = '';
+                if (tabs) tabs.style.pointerEvents = '';
+
+                // Ensure all clickable elements are enabled
+                setTimeout(() => {
+                  const allPhotosBtn = document.getElementById('all-photos-btn');
+                  const headerUploadBtn = document.getElementById('header-upload-btn');
+                  const labelToggleBtn = document.getElementById('label-toggle-btn');
+                  const changeUserBtn = document.getElementById('change-user-btn');
+
+                  // Ensure all header buttons are clickable
+                  [allPhotosBtn, headerUploadBtn, labelToggleBtn, changeUserBtn].forEach(btn => {
+                    if (btn) {
+                      btn.style.pointerEvents = 'auto';
+                      btn.style.cursor = 'pointer';
+                    }
+                  });
+
+                  // Ensure room tabs are clickable
+                  document.querySelectorAll('.room-tab').forEach(tab => {
+                    tab.style.pointerEvents = 'auto';
+                    tab.style.cursor = 'pointer';
+                  });
+                }, 50);
+              }, 50);
             }, 300);
           }
         }
