@@ -5484,6 +5484,57 @@ import * as PhotoEditor from './photoEditor.js';
                     debugOverlay.parentNode.removeChild(debugOverlay);
                   }
 
+                  // CRITICAL FIX: Re-attach header button listeners
+                  console.log('🔧 [FIX] Re-attaching header button listeners...');
+                  const allPhotosBtn = document.getElementById('all-photos-btn');
+                  if (allPhotosBtn) {
+                    // Remove old listener by cloning
+                    const newAllPhotosBtn = allPhotosBtn.cloneNode(true);
+                    allPhotosBtn.parentNode.replaceChild(newAllPhotosBtn, allPhotosBtn);
+                    // Add new listener
+                    newAllPhotosBtn.addEventListener('click', () => {
+                      console.log('🟣 [LISTENERS] All Photos button CLICKED (re-attached)');
+                      this.showAllPhotosModal();
+                    });
+                    console.log('🔧 [FIX] All Photos button listener re-attached');
+                  }
+
+                  const headerUploadBtn = document.getElementById('header-upload-btn');
+                  if (headerUploadBtn) {
+                    const newUploadBtn = headerUploadBtn.cloneNode(true);
+                    headerUploadBtn.parentNode.replaceChild(newUploadBtn, headerUploadBtn);
+                    newUploadBtn.addEventListener('click', () => {
+                      console.log('🟣 [LISTENERS] Upload button CLICKED (re-attached)');
+                      document.getElementById('file-input').click();
+                    });
+                    console.log('🔧 [FIX] Upload button listener re-attached');
+                  }
+
+                  const changeUserBtn = document.getElementById('change-user-btn');
+                  if (changeUserBtn) {
+                    const newChangeBtn = changeUserBtn.cloneNode(true);
+                    changeUserBtn.parentNode.replaceChild(newChangeBtn, changeUserBtn);
+                    newChangeBtn.addEventListener('click', () => {
+                      console.log('🟣 [LISTENERS] Change User button CLICKED (re-attached)');
+                      this.showChangeUserWarning();
+                    });
+                    console.log('🔧 [FIX] Change User button listener re-attached');
+                  }
+
+                  const labelToggleBtn = document.getElementById('label-toggle-btn');
+                  if (labelToggleBtn) {
+                    const newLabelBtn = labelToggleBtn.cloneNode(true);
+                    labelToggleBtn.parentNode.replaceChild(newLabelBtn, labelToggleBtn);
+                    newLabelBtn.addEventListener('click', () => {
+                      console.log('🟣 [LISTENERS] Label toggle CLICKED (re-attached)');
+                      this.labelsEnabled = !this.labelsEnabled;
+                      newLabelBtn.style.background = this.labelsEnabled ? '#303030' : '#ccc';
+                      newLabelBtn.style.color = this.labelsEnabled ? '#F2C31B' : '#666';
+                      this.showToast(this.labelsEnabled ? 'Labels enabled ✓' : 'Labels disabled');
+                    });
+                    console.log('🔧 [FIX] Label toggle button listener re-attached');
+                  }
+
                   // Add global click detector to see if ANY clicks work
                   console.log('🟣 [LISTENERS] Adding global click detector');
                   const globalClickHandler = (e) => {
