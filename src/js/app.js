@@ -5362,7 +5362,7 @@ import * as PhotoEditor from './photoEditor.js';
           }, 100);
         }
         
-        autoCycleToNextBeforePhoto(room) {
+        async autoCycleToNextBeforePhoto(room) {
           console.log('🔵 [AUTO-CYCLE] Starting autoCycleToNextBeforePhoto for room:', room);
 
           // Find all before photos in this room that don't have corresponding after photos
@@ -5385,8 +5385,21 @@ import * as PhotoEditor from './photoEditor.js';
             unpairedBeforePhotos.sort((a, b) => a.timestamp - b.timestamp);
             const nextBeforePhoto = unpairedBeforePhotos[0];
 
+            console.log('🔵 [AUTO-CYCLE] Next photo details:', {
+              id: nextBeforePhoto.id,
+              name: nextBeforePhoto.name,
+              room: nextBeforePhoto.room,
+              hasDataUrl: !!nextBeforePhoto.dataUrl
+            });
+
             // Open comparison modal with the next before photo
-            this.showPhotoFullscreen(nextBeforePhoto);
+            try {
+              console.log('🔵 [AUTO-CYCLE] Calling showPhotoFullscreen...');
+              await this.showPhotoFullscreen(nextBeforePhoto);
+              console.log('🔵 [AUTO-CYCLE] showPhotoFullscreen completed');
+            } catch (error) {
+              console.error('🔵 [AUTO-CYCLE] Error opening photo:', error);
+            }
           } else {
 
             console.log('🔵 [AUTO-CYCLE] All photos paired - finishing cycle');
