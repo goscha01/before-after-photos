@@ -5420,16 +5420,7 @@ import * as PhotoEditor from './photoEditor.js';
                   mainContent.style.pointerEvents = '';
                 }
 
-                console.log('🔵 [AUTO-CYCLE] Updating photo grid');
-                // Update the photo grid to show current room
-                const photosContainer = document.getElementById('photos-container');
-                if (photosContainer) {
-                  console.log('🔵 [AUTO-CYCLE] Getting photos HTML...');
-                  photosContainer.innerHTML = this.getPhotosHTML();
-                  console.log('🔵 [AUTO-CYCLE] Attaching photo listeners...');
-                  this.attachPhotoListeners();
-                  console.log('🔵 [AUTO-CYCLE] Photo listeners attached');
-                }
+                console.log('🔵 [AUTO-CYCLE] Skipping photo grid update (already updated by caller)');
 
                 console.log('🔵 [AUTO-CYCLE] Ensuring UI elements are interactive');
                 // Ensure header and tabs are interactive
@@ -5465,6 +5456,53 @@ import * as PhotoEditor from './photoEditor.js';
                   });
 
                   console.log('✅ [AUTO-CYCLE] ALL COMPLETE - UI should be interactive now!');
+
+                  // Remove the debug overlay as it might be blocking clicks
+                  const debugOverlay = document.getElementById('debug-overlay');
+                  if (debugOverlay && debugOverlay.parentNode) {
+                    console.log('🔵 [AUTO-CYCLE] Removing debug overlay');
+                    debugOverlay.parentNode.removeChild(debugOverlay);
+                  }
+
+                  // FINAL DEBUG: Check what's in the DOM
+                  setTimeout(() => {
+                    console.log('🔍 [DEBUG] Final DOM check:');
+                    console.log('🔍 [DEBUG] Body overflow:', document.body.style.overflow);
+                    console.log('🔍 [DEBUG] Body pointer-events:', document.body.style.pointerEvents);
+
+                    const allModals = document.querySelectorAll('[style*="position: fixed"]');
+                    console.log('🔍 [DEBUG] Fixed position elements:', allModals.length);
+                    allModals.forEach((el, i) => {
+                      const zIndex = window.getComputedStyle(el).zIndex;
+                      const isVisible = window.getComputedStyle(el).display !== 'none';
+                      console.log(`🔍 [DEBUG]   ${i+1}. ID: ${el.id || 'no-id'}, z-index: ${zIndex}, visible: ${isVisible}`);
+                    });
+
+                    const photosContainer = document.getElementById('photos-container');
+                    console.log('🔍 [DEBUG] Photos container exists:', !!photosContainer);
+                    if (photosContainer) {
+                      console.log('🔍 [DEBUG] Photos container children:', photosContainer.children.length);
+                      console.log('🔍 [DEBUG] Photos container pointer-events:', photosContainer.style.pointerEvents);
+                    }
+
+                    const allPhotosBtn = document.getElementById('all-photos-btn');
+                    console.log('🔍 [DEBUG] All Photos button exists:', !!allPhotosBtn);
+                    if (allPhotosBtn) {
+                      console.log('🔍 [DEBUG] All Photos button pointer-events:', allPhotosBtn.style.pointerEvents);
+                      console.log('🔍 [DEBUG] All Photos button cursor:', allPhotosBtn.style.cursor);
+                    }
+
+                    // Try clicking programmatically to test
+                    console.log('🔍 [DEBUG] Testing programmatic click on All Photos button...');
+                    if (allPhotosBtn) {
+                      try {
+                        allPhotosBtn.click();
+                        console.log('🔍 [DEBUG] Programmatic click succeeded!');
+                      } catch (e) {
+                        console.log('🔍 [DEBUG] Programmatic click failed:', e);
+                      }
+                    }
+                  }, 100);
                 }, 50);
               }, 50);
             }, 300);
