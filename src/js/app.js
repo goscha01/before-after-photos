@@ -6135,6 +6135,7 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         saveCombinedPhoto(combinedDataUrl, room, photoName, templateType = 'default') {
+          console.log('💾 [SAVE-COMBINED] saveCombinedPhoto called');
 
           // Create the combined photo with the same name as before/after photos
           const combinedPhoto = {
@@ -6149,18 +6150,17 @@ import * as PhotoEditor from './photoEditor.js';
 
           // Add the combined photo
           this.photos.push(combinedPhoto);
+          console.log('💾 [SAVE-COMBINED] Combined photo added to photos array');
 
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
 
           this.savePhotos();
+          console.log('💾 [SAVE-COMBINED] Photos saved to localStorage');
 
-          // Update UI immediately
-          const photosContainer = document.getElementById('photos-container');
-          if (photosContainer) {
-            photosContainer.innerHTML = this.getPhotosHTML();
-            this.attachPhotoListeners();
-          }
+          // DO NOT update UI here - the caller will handle it
+          // Updating UI here destroys event listeners!
+          console.log('💾 [SAVE-COMBINED] Skipping UI update (caller will handle)');
 
           // Photo saved successfully - modal closing handled by caller
         }
