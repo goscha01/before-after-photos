@@ -4290,23 +4290,32 @@ import * as PhotoEditor from './photoEditor.js';
         }
         
         attachPhotoListeners() {
+          console.log('🟣 [LISTENERS] attachPhotoListeners called');
           // Only attach listeners for photo elements (called after photo grid updates)
           // Clear any existing listeners first to prevent duplicates
           setTimeout(() => {
-            document.querySelectorAll('.photo-item').forEach(item => {
+            const photoItems = document.querySelectorAll('.photo-item');
+            console.log('🟣 [LISTENERS] Found photo items:', photoItems.length);
+
+            photoItems.forEach((item, index) => {
               // Remove any existing listeners by cloning the element
               const newItem = item.cloneNode(true);
               item.parentNode.replaceChild(newItem, item);
-              
+
+              console.log(`🟣 [LISTENERS] Attaching listener to photo item ${index + 1}`);
+
               // Photo click to view fullscreen
               newItem.addEventListener('click', (e) => {
+                console.log('🟣 [LISTENERS] Photo item clicked!', e.currentTarget.dataset.photoIndex);
                 // Don't trigger if clicking delete button or retake button
                 if (e.target.classList.contains('delete-photo-btn') ||
                     e.target.classList.contains('retake-combined-btn')) {
+                  console.log('🟣 [LISTENERS] Click ignored - button clicked');
                   return;
                 }
 
                 const photoIndex = parseInt(e.currentTarget.dataset.photoIndex);
+                console.log('🟣 [LISTENERS] Opening photo at index:', photoIndex);
                 if (photoIndex >= 0 && photoIndex < this.photos.length) {
                   this.showPhotoFullscreen(this.photos[photoIndex]);
                 }
@@ -4321,6 +4330,8 @@ import * as PhotoEditor from './photoEditor.js';
                 e.currentTarget.style.transform = 'scale(1)';
               });
             });
+
+            console.log('🟣 [LISTENERS] All photo listeners attached');
 
             // Delete button functionality for photos
             document.querySelectorAll('.delete-photo-btn').forEach(btn => {
@@ -4454,18 +4465,24 @@ import * as PhotoEditor from './photoEditor.js';
 
           // All Photos button - show all photos modal
           const allPhotosBtn = document.getElementById('all-photos-btn');
+          console.log('🟣 [LISTENERS] All Photos button found:', !!allPhotosBtn);
           if (allPhotosBtn) {
             allPhotosBtn.addEventListener('click', () => {
+              console.log('🟣 [LISTENERS] All Photos button CLICKED');
               this.showAllPhotosModal();
             });
+            console.log('🟣 [LISTENERS] All Photos button listener attached');
           }
-          
+
           // Change User button - clear stored data and reload to sign-in
           const changeUserBtn = document.getElementById('change-user-btn');
+          console.log('🟣 [LISTENERS] Change User button found:', !!changeUserBtn);
           if (changeUserBtn) {
             changeUserBtn.addEventListener('click', () => {
+              console.log('🟣 [LISTENERS] Change User button CLICKED');
               this.showChangeUserWarning();
             });
+            console.log('🟣 [LISTENERS] Change User button listener attached');
           }
           
           // Location select
@@ -5463,6 +5480,16 @@ import * as PhotoEditor from './photoEditor.js';
                     console.log('🔵 [AUTO-CYCLE] Removing debug overlay');
                     debugOverlay.parentNode.removeChild(debugOverlay);
                   }
+
+                  // Add global click detector to see if ANY clicks work
+                  console.log('🟣 [LISTENERS] Adding global click detector');
+                  const globalClickHandler = (e) => {
+                    console.log('🟣 [LISTENERS] GLOBAL CLICK DETECTED at:', e.clientX, e.clientY);
+                    console.log('🟣 [LISTENERS] Target element:', e.target.tagName, e.target.id, e.target.className);
+                  };
+                  document.body.addEventListener('click', globalClickHandler, true); // Use capture phase
+                  document.addEventListener('click', globalClickHandler, true);
+                  console.log('🟣 [LISTENERS] Global click detector added');
 
                   // FINAL DEBUG: Check what's in the DOM
                   setTimeout(() => {
