@@ -5215,14 +5215,16 @@ import * as PhotoEditor from './photoEditor.js';
           originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
 
           // Save version without label (for PhotoEditor to combine)
-          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.8);
+          // Full quality for device storage
+          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.95);
 
           // Add label to original if labels are enabled
           if (this.labelsEnabled !== false) { // Default to true
             Utils.drawCanvasLabel(originalCtx, 'AFTER', originalCanvas.width, originalCanvas.height);
           }
 
-          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
+          // Full quality for device storage
+          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.95);
 
           // Create cropped preview to match before photo aspect ratio
           const previewCanvas = document.createElement('canvas');
@@ -5269,7 +5271,8 @@ import * as PhotoEditor from './photoEditor.js';
             Utils.drawCanvasLabel(previewCtx, 'AFTER', previewCanvas.width, previewCanvas.height);
           }
 
-          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
+          // High quality preview for display
+          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.85);
 
           updateDebug('✓ Canvas created');
 
@@ -5705,11 +5708,15 @@ import * as PhotoEditor from './photoEditor.js';
           console.log('🟢 [SAVE] After photos count:', this.photos.filter(p => p.mode === 'after').length);
           console.log('🟢 [SAVE] Before photos count:', this.photos.filter(p => p.mode === 'before').length);
 
+          // Save after photo to device storage
+          const afterFilename = `${beforePhoto.room}_${beforePhoto.name}_AFTER_${Date.now()}.jpg`;
+          this.savePhotoToDevice(originalDataUrl, afterFilename);
+
           console.log('🟢 [SAVE] Creating combined photo...');
           // Create a full combined photo with format selector capability (now awaiting it)
           await this.createCombinedPhotoAsync(beforePhoto.originalDataUrlNoLabel || beforePhoto.originalDataUrl || beforePhoto.dataUrl, originalDataUrlNoLabel || originalDataUrl, beforePhoto.room, beforePhoto.name, 'default');
 
-          console.log('🟢 [SAVE] Combined photo created, saving to localStorage...');
+          console.log('🟢 [SAVE] Combined photo created, saving metadata...');
           this.savePhotos();
           console.log('🟢 [SAVE] saveAfterPhotoToAll COMPLETE');
         }
@@ -6156,11 +6163,15 @@ import * as PhotoEditor from './photoEditor.js';
           this.photos.push(combinedPhoto);
           console.log('💾 [SAVE-COMBINED] Combined photo added to photos array');
 
+          // Save combined photo to device storage
+          const combinedFilename = `${room}_${photoName}_COMBINED_${templateType}_${Date.now()}.jpg`;
+          this.savePhotoToDevice(combinedDataUrl, combinedFilename);
+
           // Keep before photo in main gallery (don't move to archived)
           // The combined photo will appear in All Photos gallery separately
 
           this.savePhotos();
-          console.log('💾 [SAVE-COMBINED] Photos saved to localStorage');
+          console.log('💾 [SAVE-COMBINED] Photos metadata saved');
 
           // DO NOT update UI here - the caller will handle it
           // Updating UI here destroys event listeners!
@@ -6717,14 +6728,16 @@ import * as PhotoEditor from './photoEditor.js';
           originalCtx.drawImage(video, 0, 0, videoWidth, videoHeight, 0, 0, videoWidth, videoHeight);
 
           // Save version without label (for PhotoEditor to combine)
-          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.8);
+          // Full quality for device storage
+          const originalDataUrlNoLabel = originalCanvas.toDataURL('image/jpeg', 0.95);
 
           // Add label to original if labels are enabled
           if (this.labelsEnabled !== false) { // Default to true
             Utils.drawCanvasLabel(originalCtx, 'BEFORE', originalCanvas.width, originalCanvas.height);
           }
 
-          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.8);
+          // Full quality for device storage
+          const originalDataUrl = originalCanvas.toDataURL('image/jpeg', 0.95);
 
           // Create cropped preview for current aspect ratio (for display)
           const previewCanvas = document.createElement('canvas');
@@ -6771,7 +6784,8 @@ import * as PhotoEditor from './photoEditor.js';
             Utils.drawCanvasLabel(previewCtx, 'BEFORE', previewCanvas.width, previewCanvas.height);
           }
 
-          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
+          // High quality preview for display
+          const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.85);
 
 
           // First photos are always "before" photos
@@ -6796,6 +6810,11 @@ import * as PhotoEditor from './photoEditor.js';
           };
           
           this.photos.push(photo);
+
+          // Save before photo to device storage
+          const beforeFilename = `${this.currentRoom}_${photoName}_BEFORE_${Date.now()}.jpg`;
+          this.savePhotoToDevice(originalDataUrl, beforeFilename);
+
           this.savePhotos();
           
           // Update the before photo grid in the modal
@@ -6937,29 +6956,62 @@ import * as PhotoEditor from './photoEditor.js';
         }
 
 
+        savePhotoToDevice(dataUrl, filename) {
+          // Save photo to device storage (downloads folder on mobile/desktop)
+          console.log('📱 [DEVICE-SAVE] Saving photo to device:', filename);
+
+          try {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log('📱 [DEVICE-SAVE] Photo saved to device successfully');
+          } catch (e) {
+            console.error('📱 [DEVICE-SAVE] Error saving to device:', e);
+          }
+        }
+
         savePhotos() {
           console.log('💾 [SAVE-PHOTOS] savePhotos called, photos count:', this.photos.length);
-          try {
-            // Check storage size before saving
-            const photosData = JSON.stringify(this.photos);
-            const sizeInMB = (photosData.length * 2) / (1024 * 1024); // Rough estimate of size in MB
 
-            console.log('💾 [SAVE-PHOTOS] Saving to localStorage, size:', sizeInMB.toFixed(2), 'MB');
-            localStorage.setItem('cleaning-photos', photosData);
-            console.log('💾 [SAVE-PHOTOS] Successfully saved to localStorage');
+          const beforeCount = this.photos.filter(p => p.mode === 'before').length;
+          const afterCount = this.photos.filter(p => p.mode === 'after').length;
+          const mixCount = this.photos.filter(p => p.mode === 'mix').length;
+          console.log(`💾 [SAVE-PHOTOS] Photo breakdown - Before: ${beforeCount}, After: ${afterCount}, Mix: ${mixCount}`);
+
+          // For localStorage, only save metadata (not full images to avoid quota issues)
+          const photosMetadata = this.photos.map(p => ({
+            id: p.id,
+            room: p.room,
+            mode: p.mode,
+            name: p.name,
+            timestamp: p.timestamp,
+            beforePhotoId: p.beforePhotoId,
+            aspectRatio: p.aspectRatio,
+            templateType: p.templateType,
+            originalWidth: p.originalWidth,
+            originalHeight: p.originalHeight
+            // Note: We DON'T save dataUrl, originalDataUrl, etc. to localStorage
+            // Photos are saved to device storage instead
+          }));
+
+          try {
+            const metadataJson = JSON.stringify(photosMetadata);
+            const sizeInKB = (metadataJson.length * 2) / 1024;
+            console.log('💾 [SAVE-PHOTOS] Saving metadata to localStorage, size:', sizeInKB.toFixed(2), 'KB');
+            localStorage.setItem('cleaning-photos-metadata', metadataJson);
+            console.log('💾 [SAVE-PHOTOS] Metadata saved successfully');
           } catch (e) {
-            console.error('💾 [SAVE-PHOTOS] Error saving:', e);
-            if (e.name === 'QuotaExceededError') {
-              this.manageStorage();
-            } else {
-              console.error('Error saving photos:', e);
-            }
+            console.error('💾 [SAVE-PHOTOS] Error saving metadata:', e);
           }
         }
 
         manageStorage() {
+          console.log('🗑️ [STORAGE] manageStorage called');
           // Remove oldest photos if storage is full
-          const maxPhotos = 50; // Limit to 50 photos total
+          const maxPhotos = 20; // Reduce limit to 20 photos total (was 50)
 
           if (this.photos.length > maxPhotos) {
             // Sort by timestamp and keep only the newest photos
